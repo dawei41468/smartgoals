@@ -212,7 +212,7 @@ export default function AIBreakdown({ goalData, breakdownRequest, breakdown: ini
                               <span className={`px-2 py-1 text-xs rounded ${getPriorityColor(task.priority)}`}>
                                 {task.priority}
                               </span>
-                              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded flex items-center">
+                              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded flex items-center">
                                 <Clock className="h-3 w-3 mr-1" />
                                 {task.estimatedHours}h
                               </span>
