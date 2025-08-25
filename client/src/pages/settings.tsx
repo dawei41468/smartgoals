@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,6 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { User as UserType, UserSettings, UpdateUserProfile, UpdateUserSettings } from "@shared/schema";
 
 const profileSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -41,43 +44,114 @@ export default function Settings() {
   const { toast } = useToast();
   const { t } = useLanguage();
 
+  // Fetch user profile data
+  const { data: userProfile, isLoading: profileLoading } = useQuery({
+    queryKey: ["/api/user/profile"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch user settings data
+  const { data: userSettings, isLoading: settingsLoading } = useQuery({
+    queryKey: ["/api/user/settings"],
+    staleTime: 5 * 60 * 1000,
+  });
+
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      bio: "",
+      firstName: userProfile?.firstName || "",
+      lastName: userProfile?.lastName || "",
+      email: userProfile?.email || "",
+      bio: userProfile?.bio || "",
     },
   });
+
+  // Update form values when data loads
+  React.useEffect(() => {
+    if (userProfile) {
+      profileForm.reset({
+        firstName: userProfile.firstName || "",
+        lastName: userProfile.lastName || "",
+        email: userProfile.email || "",
+        bio: userProfile.bio || "",
+      });
+    }
+  }, [userProfile, profileForm]);
 
   const preferencesForm = useForm<PreferencesFormData>({
     resolver: zodResolver(preferencesSchema),
     defaultValues: {
-      emailNotifications: true,
-      pushNotifications: false,
-      weeklyDigest: true,
-      goalReminders: true,
-      defaultGoalDuration: "3-months",
-      aiBreakdownDetail: "detailed",
-      theme: "light",
+      emailNotifications: userSettings?.emailNotifications ?? true,
+      pushNotifications: userSettings?.pushNotifications ?? false,
+      weeklyDigest: userSettings?.weeklyDigest ?? true,
+      goalReminders: userSettings?.goalReminders ?? true,
+      defaultGoalDuration: userSettings?.defaultGoalDuration || "3-months",
+      aiBreakdownDetail: userSettings?.aiBreakdownDetail || "detailed",
+      theme: userSettings?.theme || "light",
+    },
+  });
+
+  // Update form values when settings data loads
+  React.useEffect(() => {
+    if (userSettings) {
+      preferencesForm.reset({
+        emailNotifications: userSettings.emailNotifications,
+        pushNotifications: userSettings.pushNotifications,
+        weeklyDigest: userSettings.weeklyDigest,
+        goalReminders: userSettings.goalReminders,
+        defaultGoalDuration: userSettings.defaultGoalDuration,
+        aiBreakdownDetail: userSettings.aiBreakdownDetail,
+        theme: userSettings.theme,
+      });
+    }
+  }, [userSettings, preferencesForm]);
+
+  // Profile update mutation
+  const profileMutation = useMutation({
+    mutationFn: (data: UpdateUserProfile) => 
+      apiRequest("PATCH", "/api/user/profile", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been saved successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile information.",
+        variant: "destructive",
+      });
     },
   });
 
   const onProfileSubmit = (data: ProfileFormData) => {
-    console.log("Profile data:", data);
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been saved successfully.",
-    });
+    profileMutation.mutate(data);
   };
 
+  // Settings update mutation
+  const settingsMutation = useMutation({
+    mutationFn: (data: UpdateUserSettings) => 
+      apiRequest("PATCH", "/api/user/settings", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/settings"] });
+      toast({
+        title: "Settings Updated",
+        description: "Your preferences have been saved successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update settings.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onPreferencesSubmit = (data: PreferencesFormData) => {
-    console.log("Preferences data:", data);
-    toast({
-      title: "Preferences Updated",
-      description: "Your preferences have been saved successfully.",
-    });
+    settingsMutation.mutate(data);
   };
 
   const handleLogout = () => {
@@ -217,9 +291,13 @@ export default function Settings() {
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" data-testid="button-save-profile">
+                      <Button 
+                        type="submit" 
+                        disabled={profileMutation.isPending}
+                        data-testid="button-save-profile"
+                      >
                         <Save className="h-4 w-4 mr-2" />
-                        Save Profile
+                        {profileMutation.isPending ? "Saving..." : "Save Profile"}
                       </Button>
                     </form>
                   </Form>
@@ -422,9 +500,13 @@ export default function Settings() {
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" data-testid="button-save-preferences">
+                      <Button 
+                        type="submit" 
+                        disabled={settingsMutation.isPending}
+                        data-testid="button-save-preferences"
+                      >
                         <Save className="h-4 w-4 mr-2" />
-                        Save Preferences
+                        {settingsMutation.isPending ? "Saving..." : "Save Preferences"}
                       </Button>
                     </form>
                   </Form>

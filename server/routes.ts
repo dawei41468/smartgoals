@@ -1,10 +1,65 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertGoalSchema, type AIBreakdownRequest } from "@shared/schema";
+import { insertGoalSchema, updateUserProfileSchema, updateUserSettingsSchema, type AIBreakdownRequest } from "@shared/schema";
 import { generateGoalBreakdown, regenerateGoalBreakdown } from "./services/deepseek";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // User profile endpoints
+  app.get("/api/user/profile", async (req, res) => {
+    try {
+      const userId = "demo-user"; // For demo purposes
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user profile", error: (error as Error).message });
+    }
+  });
+
+  app.patch("/api/user/profile", async (req, res) => {
+    try {
+      const userId = "demo-user"; // For demo purposes
+      const profileData = updateUserProfileSchema.parse(req.body);
+      const updatedUser = await storage.updateUserProfile(userId, profileData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid profile data", error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/user/settings", async (req, res) => {
+    try {
+      const userId = "demo-user"; // For demo purposes
+      const settings = await storage.getUserSettings(userId);
+      if (!settings) {
+        return res.status(404).json({ message: "User settings not found" });
+      }
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user settings", error: (error as Error).message });
+    }
+  });
+
+  app.patch("/api/user/settings", async (req, res) => {
+    try {
+      const userId = "demo-user"; // For demo purposes
+      const settingsData = updateUserSettingsSchema.parse(req.body);
+      const updatedSettings = await storage.updateUserSettings(userId, settingsData);
+      if (!updatedSettings) {
+        return res.status(404).json({ message: "Failed to update settings" });
+      }
+      res.json(updatedSettings);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid settings data", error: (error as Error).message });
+    }
+  });
+
   // Goals endpoints
   app.post("/api/goals", async (req, res) => {
     try {

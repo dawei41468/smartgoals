@@ -7,6 +7,26 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  email: text("email"),
+  bio: text("bio"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userSettings = pgTable("user_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  emailNotifications: boolean("email_notifications").default(true),
+  pushNotifications: boolean("push_notifications").default(false),
+  weeklyDigest: boolean("weekly_digest").default(true),
+  goalReminders: boolean("goal_reminders").default(true),
+  defaultGoalDuration: text("default_goal_duration").default("3-months"),
+  aiBreakdownDetail: text("ai_breakdown_detail").default("detailed"),
+  theme: text("theme").default("light"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const goals = pgTable("goals", {
@@ -60,6 +80,20 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
+export const updateUserProfileSchema = createInsertSchema(users).pick({
+  firstName: true,
+  lastName: true,
+  email: true,
+  bio: true,
+});
+
+export const updateUserSettingsSchema = createInsertSchema(userSettings).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertGoalSchema = createInsertSchema(goals).omit({
   id: true,
   userId: true,
@@ -86,6 +120,9 @@ export const insertDailyTaskSchema = createInsertSchema(dailyTasks).omit({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type UserSettings = typeof userSettings.$inferSelect;
+export type UpdateUserProfile = z.infer<typeof updateUserProfileSchema>;
+export type UpdateUserSettings = z.infer<typeof updateUserSettingsSchema>;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type Goal = typeof goals.$inferSelect;
 export type InsertWeeklyGoal = z.infer<typeof insertWeeklyGoalSchema>;

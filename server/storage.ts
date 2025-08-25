@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Goal, type InsertGoal, type WeeklyGoal, type InsertWeeklyGoal, type DailyTask, type InsertDailyTask, type GoalWithBreakdown } from "@shared/schema";
+import { type User, type InsertUser, type UserSettings, type UpdateUserProfile, type UpdateUserSettings, type Goal, type InsertGoal, type WeeklyGoal, type InsertWeeklyGoal, type DailyTask, type InsertDailyTask, type GoalWithBreakdown } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -6,6 +6,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserProfile(userId: string, profile: UpdateUserProfile): Promise<User | undefined>;
+  getUserSettings(userId: string): Promise<UserSettings | undefined>;
+  updateUserSettings(userId: string, settings: UpdateUserSettings): Promise<UserSettings | undefined>;
   
   // Goal methods
   createGoal(goal: InsertGoal, userId: string): Promise<Goal>;
@@ -35,15 +38,51 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private userSettings: Map<string, UserSettings>;
   private goals: Map<string, Goal>;
   private weeklyGoals: Map<string, WeeklyGoal>;
   private dailyTasks: Map<string, DailyTask>;
 
   constructor() {
     this.users = new Map();
+    this.userSettings = new Map();
     this.goals = new Map();
     this.weeklyGoals = new Map();
     this.dailyTasks = new Map();
+    
+    // Initialize demo user
+    this.initializeDemoUser();
+  }
+
+  private async initializeDemoUser() {
+    const demoUser: User = {
+      id: "demo-user",
+      username: "demo",
+      password: "demo",
+      firstName: "John",
+      lastName: "Doe", 
+      email: "john.doe@example.com",
+      bio: "",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    const demoSettings: UserSettings = {
+      id: "demo-settings",
+      userId: "demo-user",
+      emailNotifications: true,
+      pushNotifications: false,
+      weeklyDigest: true,
+      goalReminders: true,
+      defaultGoalDuration: "3-months",
+      aiBreakdownDetail: "detailed",
+      theme: "light",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.users.set("demo-user", demoUser);
+    this.userSettings.set("demo-user", demoSettings);
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -58,9 +97,62 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const now = new Date();
+    const user: User = { 
+      ...insertUser, 
+      id,
+      firstName: null,
+      lastName: null,
+      email: null,
+      bio: null,
+      createdAt: now,
+      updatedAt: now,
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUserProfile(userId: string, profile: UpdateUserProfile): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser: User = {
+      ...user,
+      ...profile,
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async getUserSettings(userId: string): Promise<UserSettings | undefined> {
+    return this.userSettings.get(userId);
+  }
+
+  async updateUserSettings(userId: string, settings: UpdateUserSettings): Promise<UserSettings | undefined> {
+    const existingSettings = this.userSettings.get(userId);
+    if (!existingSettings) {
+      // Create new settings if they don't exist
+      const newSettings: UserSettings = {
+        id: randomUUID(),
+        userId,
+        ...settings,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.userSettings.set(userId, newSettings);
+      return newSettings;
+    }
+    
+    const updatedSettings: UserSettings = {
+      ...existingSettings,
+      ...settings,
+      updatedAt: new Date(),
+    };
+    
+    this.userSettings.set(userId, updatedSettings);
+    return updatedSettings;
   }
 
   async createGoal(insertGoal: InsertGoal, userId: string): Promise<Goal> {
