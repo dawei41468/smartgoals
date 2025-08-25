@@ -7,11 +7,13 @@ import Navigation from "@/components/navigation";
 import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@shared/schema";
 
 type View = "dashboard" | "wizard" | "breakdown";
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [wizardData, setWizardData] = useState<{
     goalData: InsertGoal;
@@ -105,9 +107,9 @@ export default function Dashboard() {
           {/* Hero Section */}
           <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-6 sm:p-8 text-white">
             <div className="max-w-2xl">
-              <h1 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Transform Your Goals into Actionable Plans</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">{t('dashboard.title')}</h1>
               <p className="text-primary-foreground/90 mb-4 sm:mb-6 text-sm sm:text-base">
-                Use the SMART(ER) framework to create meaningful goals and let AI break them down into daily tasks.
+                {t('dashboard.subtitle')}
               </p>
               <Button 
                 onClick={handleStartGoalCreation}
@@ -115,7 +117,7 @@ export default function Dashboard() {
                 data-testid="button-create-goal"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Create New Goal
+                {t('dashboard.createGoal')}
               </Button>
             </div>
           </div>
@@ -129,9 +131,9 @@ export default function Dashboard() {
                     <Target className="text-secondary h-6 w-6" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-muted-foreground">Active Goals</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('dashboard.activeGoals')}</p>
                     <p className="text-xl sm:text-2xl font-bold" data-testid="stat-active-goals">
-                      {statsLoading ? "..." : stats?.activeGoalsCount || 0}
+                      {statsLoading ? t('common.loading') : stats?.activeGoalsCount || 0}
                     </p>
                   </div>
                 </div>
@@ -145,9 +147,9 @@ export default function Dashboard() {
                     <CheckSquare className="text-accent h-6 w-6" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-muted-foreground">Tasks Completed</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('dashboard.tasksCompleted')}</p>
                     <p className="text-xl sm:text-2xl font-bold" data-testid="stat-completed-tasks">
-                      {statsLoading ? "..." : stats?.completedTasksCount || 0}
+                      {statsLoading ? t('common.loading') : stats?.completedTasksCount || 0}
                     </p>
                   </div>
                 </div>
@@ -161,9 +163,9 @@ export default function Dashboard() {
                     <TrendingUp className="text-primary h-6 w-6" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('dashboard.successRate')}</p>
                     <p className="text-xl sm:text-2xl font-bold" data-testid="stat-success-rate">
-                      {statsLoading ? "..." : `${stats?.successRate || 0}%`}
+                      {statsLoading ? t('common.loading') : `${stats?.successRate || 0}%`}
                     </p>
                   </div>
                 </div>

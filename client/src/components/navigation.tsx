@@ -8,11 +8,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { languages } from "@/lib/i18n";
 
 export default function Navigation() {
   const [location] = useLocation();
+  const { t, language, setLanguage } = useLanguage();
   
   const isActive = (path: string) => location === path;
   
@@ -45,16 +51,16 @@ export default function Navigation() {
             </div>
             <nav className="hidden md:ml-10 md:flex space-x-8">
               <Link href="/" className={getNavLinkClasses("/")} data-testid="nav-dashboard">
-                Dashboard
+                {t('nav.dashboard')}
               </Link>
               <Link href="/my-goals" className={getNavLinkClasses("/my-goals")} data-testid="nav-goals">
-                My Goals
+                {t('nav.myGoals')}
               </Link>
               <Link href="/progress" className={getNavLinkClasses("/progress")} data-testid="nav-progress">
-                Progress
+                {t('nav.progress')}
               </Link>
               <Link href="/analytics" className={getNavLinkClasses("/analytics")} data-testid="nav-analytics">
-                Analytics
+                {t('nav.analytics')}
               </Link>
             </nav>
           </div>
@@ -76,24 +82,39 @@ export default function Navigation() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" data-testid="menu-language">
-                  <Globe className="mr-2 h-4 w-4" />
-                  <span>Language</span>
-                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger data-testid="menu-language">
+                    <Globe className="mr-2 h-4 w-4" />
+                    <span>{t('nav.language')}</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {languages.map((lang) => (
+                      <DropdownMenuItem
+                        key={lang.code}
+                        onClick={() => setLanguage(lang.code)}
+                        className={`cursor-pointer ${language === lang.code ? 'bg-accent' : ''}`}
+                        data-testid={`language-${lang.code}`}
+                      >
+                        <span className="mr-2">{language === lang.code ? '✓' : ' '}</span>
+                        {lang.nativeName}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuItem className="cursor-pointer" data-testid="menu-theme">
                   <Moon className="mr-2 h-4 w-4" />
-                  <span>Theme</span>
+                  <span>{t('nav.theme')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer" data-testid="menu-settings">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t('nav.settings')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer" data-testid="menu-logout">
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t('nav.logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -106,19 +127,19 @@ export default function Navigation() {
         <div className="grid grid-cols-4">
           <Link href="/" className={getBottomNavClasses("/")} data-testid="nav-mobile-dashboard">
             <Home className="h-5 w-5 mb-1" />
-            <span className="text-xs">Dashboard</span>
+            <span className="text-xs">{t('nav.dashboard')}</span>
           </Link>
           <Link href="/my-goals" className={getBottomNavClasses("/my-goals")} data-testid="nav-mobile-goals">
             <FolderOpen className="h-5 w-5 mb-1" />
-            <span className="text-xs">My Goals</span>
+            <span className="text-xs">{t('nav.myGoals')}</span>
           </Link>
           <Link href="/progress" className={getBottomNavClasses("/progress")} data-testid="nav-mobile-progress">
             <TrendingUp className="h-5 w-5 mb-1" />
-            <span className="text-xs">Progress</span>
+            <span className="text-xs">{t('nav.progress')}</span>
           </Link>
           <Link href="/analytics" className={getBottomNavClasses("/analytics")} data-testid="nav-mobile-analytics">
             <BarChart3 className="h-5 w-5 mb-1" />
-            <span className="text-xs">Analytics</span>
+            <span className="text-xs">{t('nav.analytics')}</span>
           </Link>
         </div>
       </nav>
