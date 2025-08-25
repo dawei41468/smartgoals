@@ -20,14 +20,25 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
-import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@shared/schema";
+import GoalWizard from "@/components/goal-wizard";
+import AIBreakdown from "@/components/ai-breakdown";
+import { api } from "@/lib/api";
+import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+
+type View = "goals" | "wizard" | "breakdown";
 
 export default function MyGoals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("created");
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<View>("goals");
+  const [wizardData, setWizardData] = useState<{
+    goalData: InsertGoal;
+    breakdownRequest: AIBreakdownRequest;
+    breakdown?: AIBreakdownResponse;
+  } | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
@@ -153,6 +164,59 @@ export default function MyGoals() {
     return days;
   };
 
+  const handleStartGoalCreation = () => {
+    setCurrentView("wizard");
+  };
+
+  const handleCloseWizard = () => {
+    setCurrentView("goals");
+    setWizardData(null);
+  };
+
+  const handleProceedToBreakdown = async (goalData: InsertGoal, breakdownRequest: AIBreakdownRequest) => {
+    try {
+      const breakdown = await api.generateBreakdown(breakdownRequest);
+      setWizardData({ goalData, breakdownRequest, breakdown });
+      setCurrentView("breakdown");
+    } catch (error) {
+      console.error("Failed to generate breakdown:", error);
+    }
+  };
+
+  const handleSaveComplete = () => {
+    setCurrentView("goals");
+    setWizardData(null);
+    // Refetch goals to show the newly created goal
+    queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
+  };
+
+  if (currentView === "wizard") {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <GoalWizard onClose={handleCloseWizard} onProceedToBreakdown={handleProceedToBreakdown} />
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === "breakdown" && wizardData) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <AIBreakdown
+            goalData={wizardData.goalData}
+            breakdownData={wizardData.breakdown}
+            onSaveComplete={handleSaveComplete}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -183,12 +247,10 @@ export default function MyGoals() {
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mt-2">{t('myGoals.trackProgress')}</p>
             </div>
-            <Link href="/">
-              <Button data-testid="button-create-new-goal">
-                <Plus className="h-4 w-4 mr-2" />
-                {t('myGoals.createNewGoal')}
-              </Button>
-            </Link>
+            <Button onClick={handleStartGoalCreation} data-testid="button-create-new-goal">
+              <Plus className="h-4 w-4 mr-2" />
+              {t('myGoals.createNewGoal')}
+            </Button>
           </div>
         </div>
 
@@ -247,12 +309,10 @@ export default function MyGoals() {
                   : t('myGoals.adjustSearch')}
               </p>
               {goals.length === 0 && (
-                <Link href="/">
-                  <Button data-testid="button-empty-create-goal">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t('myGoals.createFirstGoal')}
-                  </Button>
-                </Link>
+                <Button onClick={handleStartGoalCreation} data-testid="button-empty-create-goal">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('myGoals.createFirstGoal')}
+                </Button>
               )}
             </CardContent>
           </Card>
