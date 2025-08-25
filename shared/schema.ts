@@ -1,0 +1,120 @@
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, timestamp, integer, boolean, json } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+export const goals = pgTable("goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  specific: text("specific").notNull(),
+  measurable: text("measurable").notNull(),
+  achievable: text("achievable").notNull(),
+  relevant: text("relevant").notNull(),
+  timebound: text("timebound").notNull(),
+  exciting: text("exciting").notNull(),
+  deadline: text("deadline").notNull(),
+  progress: integer("progress").default(0),
+  status: text("status").default("active"), // active, completed, paused
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const weeklyGoals = pgTable("weekly_goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  goalId: varchar("goal_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  weekNumber: integer("week_number").notNull(),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  progress: integer("progress").default(0),
+  status: text("status").default("pending"), // pending, active, completed
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const dailyTasks = pgTable("daily_tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weeklyGoalId: varchar("weekly_goal_id").notNull(),
+  goalId: varchar("goal_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  day: integer("day").notNull(), // 1-7 for days of the week
+  date: text("date"),
+  completed: boolean("completed").default(false),
+  priority: text("priority").default("medium"), // low, medium, high
+  estimatedHours: integer("estimated_hours").default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export const insertGoalSchema = createInsertSchema(goals).omit({
+  id: true,
+  userId: true,
+  progress: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWeeklyGoalSchema = createInsertSchema(weeklyGoals).omit({
+  id: true,
+  progress: true,
+  status: true,
+  createdAt: true,
+});
+
+export const insertDailyTaskSchema = createInsertSchema(dailyTasks).omit({
+  id: true,
+  completed: true,
+  createdAt: true,
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type InsertGoal = z.infer<typeof insertGoalSchema>;
+export type Goal = typeof goals.$inferSelect;
+export type InsertWeeklyGoal = z.infer<typeof insertWeeklyGoalSchema>;
+export type WeeklyGoal = typeof weeklyGoals.$inferSelect;
+export type InsertDailyTask = z.infer<typeof insertDailyTaskSchema>;
+export type DailyTask = typeof dailyTasks.$inferSelect;
+
+export interface GoalWithBreakdown extends Goal {
+  weeklyGoals: (WeeklyGoal & { tasks: DailyTask[] })[];
+}
+
+export interface AIBreakdownRequest {
+  specific: string;
+  measurable: string;
+  achievable: string;
+  relevant: string;
+  timebound: string;
+  exciting: string;
+  deadline: string;
+}
+
+export interface AIBreakdownResponse {
+  weeklyGoals: {
+    title: string;
+    description: string;
+    weekNumber: number;
+    tasks: {
+      title: string;
+      description: string;
+      day: number;
+      priority: string;
+      estimatedHours: number;
+    }[];
+  }[];
+}
