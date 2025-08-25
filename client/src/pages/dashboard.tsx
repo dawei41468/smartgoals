@@ -143,8 +143,8 @@ export default function Dashboard() {
             <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
-                  <div className="p-2 bg-accent/10 rounded-lg">
-                    <CheckSquare className="text-accent h-6 w-6" />
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <CheckSquare className="text-green-600 dark:text-green-400 h-6 w-6" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-muted-foreground">{t('dashboard.tasksCompleted')}</p>
