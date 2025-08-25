@@ -9,10 +9,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [location] = useLocation();
+  
+  const isActive = (path: string) => location === path;
+  
+  const getNavLinkClasses = (path: string, isMobile: boolean = false) => {
+    const baseClasses = isMobile 
+      ? "block px-3 py-2 text-sm font-medium"
+      : "px-1 pb-4 text-sm font-medium";
+    
+    if (isActive(path)) {
+      return isMobile
+        ? `${baseClasses} text-primary bg-primary/5 border-l-4 border-primary`
+        : `${baseClasses} text-primary border-b-2 border-primary`;
+    }
+    
+    return isMobile
+      ? `${baseClasses} text-gray-500 hover:text-gray-700 hover:bg-gray-50`
+      : `${baseClasses} text-gray-500 hover:text-gray-700`;
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -24,16 +43,16 @@ export default function Navigation() {
               <span className="text-lg sm:text-xl font-bold text-gray-900">SMART Goals</span>
             </div>
             <nav className="hidden md:ml-10 md:flex space-x-8">
-              <a href="#" className="text-primary border-b-2 border-primary px-1 pb-4 text-sm font-medium" data-testid="nav-dashboard">
+              <Link href="/" className={getNavLinkClasses("/")} data-testid="nav-dashboard">
                 Dashboard
-              </a>
-              <Link href="/my-goals" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-goals">
+              </Link>
+              <Link href="/my-goals" className={getNavLinkClasses("/my-goals")} data-testid="nav-goals">
                 My Goals
               </Link>
-              <Link href="/progress" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-progress">
+              <Link href="/progress" className={getNavLinkClasses("/progress")} data-testid="nav-progress">
                 Progress
               </Link>
-              <Link href="/analytics" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-analytics">
+              <Link href="/analytics" className={getNavLinkClasses("/analytics")} data-testid="nav-analytics">
                 Analytics
               </Link>
             </nav>
@@ -91,16 +110,16 @@ export default function Navigation() {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 bg-white">
             <nav className="px-2 pt-2 pb-3 space-y-1">
-              <a href="#" className="block px-3 py-2 text-primary bg-primary/5 border-l-4 border-primary text-sm font-medium" data-testid="nav-mobile-dashboard">
+              <Link href="/" className={getNavLinkClasses("/", true)} data-testid="nav-mobile-dashboard">
                 Dashboard
-              </a>
-              <Link href="/my-goals" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-goals">
+              </Link>
+              <Link href="/my-goals" className={getNavLinkClasses("/my-goals", true)} data-testid="nav-mobile-goals">
                 My Goals
               </Link>
-              <Link href="/progress" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-progress">
+              <Link href="/progress" className={getNavLinkClasses("/progress", true)} data-testid="nav-mobile-progress">
                 Progress
               </Link>
-              <Link href="/analytics" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-analytics">
+              <Link href="/analytics" className={getNavLinkClasses("/analytics", true)} data-testid="nav-mobile-analytics">
                 Analytics
               </Link>
               <div className="border-t border-gray-200 pt-2">
