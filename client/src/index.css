@@ -107,3 +107,13 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer components {
+  .gradient-icon {
+    background: linear-gradient(135deg, hsl(270 70% 50%), hsl(220 70% 55%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 100%;
+  }
+}

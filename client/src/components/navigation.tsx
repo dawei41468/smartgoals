@@ -11,7 +11,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <Target className="text-primary text-xl sm:text-2xl mr-2 sm:mr-3" />
+              <Target className="gradient-icon text-xl sm:text-2xl mr-2 sm:mr-3" />
               <span className="text-lg sm:text-xl font-bold text-gray-900">SMART Goals</span>
             </div>
             <nav className="hidden md:ml-10 md:flex space-x-8">
