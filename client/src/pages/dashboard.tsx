@@ -284,16 +284,6 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-
-      {/* Floating Action Button */}
-      <Button
-        onClick={handleStartGoalCreation}
-        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg z-50"
-        size="icon"
-        data-testid="button-fab-create-goal"
-      >
-        <Plus className="h-5 w-5 sm:h-6 sm:w-6" />
-      </Button>
     </div>
   );
 }
