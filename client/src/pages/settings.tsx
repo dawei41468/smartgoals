@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -43,65 +44,68 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { user, updateUser } = useAuth();
 
-  // Fetch user profile data
+  // Fetch user profile data only when authenticated
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ["/api/user/profile"],
     staleTime: 5 * 60 * 1000,
+    enabled: !!user, // Only fetch when user is authenticated
   });
 
-  // Fetch user settings data
+  // Fetch user settings data only when authenticated
   const { data: userSettings, isLoading: settingsLoading } = useQuery({
     queryKey: ["/api/user/settings"],
     staleTime: 5 * 60 * 1000,
+    enabled: !!user, // Only fetch when user is authenticated
   });
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: userProfile?.firstName || "",
-      lastName: userProfile?.lastName || "",
-      email: userProfile?.email || "",
-      bio: userProfile?.bio || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      bio: user?.bio || "",
     },
   });
 
-  // Update form values when data loads
+  // Update form values when user data is available
   React.useEffect(() => {
-    if (userProfile) {
+    if (user) {
       profileForm.reset({
-        firstName: userProfile.firstName || "",
-        lastName: userProfile.lastName || "",
-        email: userProfile.email || "",
-        bio: userProfile.bio || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        bio: user.bio || "",
       });
     }
-  }, [userProfile, profileForm]);
+  }, [user, profileForm]);
 
   const preferencesForm = useForm<PreferencesFormData>({
     resolver: zodResolver(preferencesSchema),
     defaultValues: {
-      emailNotifications: userSettings?.emailNotifications ?? true,
-      pushNotifications: userSettings?.pushNotifications ?? false,
-      weeklyDigest: userSettings?.weeklyDigest ?? true,
-      goalReminders: userSettings?.goalReminders ?? true,
-      defaultGoalDuration: userSettings?.defaultGoalDuration || "3-months",
-      aiBreakdownDetail: userSettings?.aiBreakdownDetail || "detailed",
-      theme: userSettings?.theme || "light",
+      emailNotifications: true,
+      pushNotifications: false,
+      weeklyDigest: true,
+      goalReminders: true,
+      defaultGoalDuration: "3-months",
+      aiBreakdownDetail: "detailed",
+      theme: "light",
     },
   });
 
   // Update form values when settings data loads
   React.useEffect(() => {
-    if (userSettings) {
+    if (userSettings && typeof userSettings === 'object') {
       preferencesForm.reset({
-        emailNotifications: userSettings.emailNotifications,
-        pushNotifications: userSettings.pushNotifications,
-        weeklyDigest: userSettings.weeklyDigest,
-        goalReminders: userSettings.goalReminders,
-        defaultGoalDuration: userSettings.defaultGoalDuration,
-        aiBreakdownDetail: userSettings.aiBreakdownDetail,
-        theme: userSettings.theme,
+        emailNotifications: userSettings.emailNotifications ?? true,
+        pushNotifications: userSettings.pushNotifications ?? false,
+        weeklyDigest: userSettings.weeklyDigest ?? true,
+        goalReminders: userSettings.goalReminders ?? true,
+        defaultGoalDuration: userSettings.defaultGoalDuration || "3-months",
+        aiBreakdownDetail: userSettings.aiBreakdownDetail || "detailed",
+        theme: userSettings.theme || "light",
       });
     }
   }, [userSettings, preferencesForm]);
@@ -110,17 +114,37 @@ export default function Settings() {
   const profileMutation = useMutation({
     mutationFn: (data: UpdateUserProfile) => 
       apiRequest("PATCH", "/api/user/profile", data),
-    onSuccess: () => {
+    onSuccess: async (response) => {
+      // Get the updated user data from the response
+      const result = await response.json();
+      
+      // Update the auth context with new user data
+      if (result && typeof result === 'object') {
+        updateUser(result);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      
       toast({
         title: "Profile Updated",
         description: "Your profile information has been saved successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
+      let errorMessage = "Failed to update profile information.";
+      if (error?.response) {
+        try {
+          const errorData = await error.response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // Fall back to default message
+        }
+      }
+      
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update profile information.",
+        description: errorMessage,
         variant: "destructive",
       });
     },

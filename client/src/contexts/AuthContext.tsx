@@ -6,6 +6,7 @@ interface AuthContextType {
   token: string | null;
   login: (userData: UserType, token: string) => void;
   logout: () => void;
+  updateUser: (userData: UserType) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -44,6 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('auth_user', JSON.stringify(userData));
   };
 
+  const updateUser = (userData: UserType) => {
+    setUser(userData);
+    localStorage.setItem('auth_user', JSON.stringify(userData));
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -59,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       login,
       logout,
+      updateUser,
       isAuthenticated,
       isLoading,
     }}>
