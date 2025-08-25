@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Target, Menu, X, Settings, User, LogOut } from "lucide-react";
+import { Bell, Target, Settings, User, LogOut, Home, FolderOpen, TrendingUp, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,25 +12,26 @@ import {
 import { Link, useLocation } from "wouter";
 
 export default function Navigation() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   
   const isActive = (path: string) => location === path;
   
-  const getNavLinkClasses = (path: string, isMobile: boolean = false) => {
-    const baseClasses = isMobile 
-      ? "block px-3 py-2 text-sm font-medium"
-      : "px-1 pb-4 text-sm font-medium";
+  const getNavLinkClasses = (path: string) => {
+    const baseClasses = "px-1 pb-4 text-sm font-medium";
     
     if (isActive(path)) {
-      return isMobile
-        ? `${baseClasses} text-primary bg-primary/5 border-l-4 border-primary`
-        : `${baseClasses} text-primary border-b-2 border-primary`;
+      return `${baseClasses} text-primary border-b-2 border-primary`;
     }
     
-    return isMobile
-      ? `${baseClasses} text-gray-500 hover:text-gray-700 hover:bg-gray-50`
-      : `${baseClasses} text-gray-500 hover:text-gray-700`;
+    return `${baseClasses} text-gray-500 hover:text-gray-700`;
+  };
+
+  const getBottomNavClasses = (path: string) => {
+    if (isActive(path)) {
+      return "flex flex-col items-center justify-center py-2 text-primary";
+    }
+    
+    return "flex flex-col items-center justify-center py-2 text-gray-500";
   };
 
   return (
@@ -94,48 +95,31 @@ export default function Navigation() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden p-2"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              data-testid="button-mobile-menu"
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
           </div>
         </div>
-        
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
-            <nav className="px-2 pt-2 pb-3 space-y-1">
-              <Link href="/" className={getNavLinkClasses("/", true)} data-testid="nav-mobile-dashboard">
-                Dashboard
-              </Link>
-              <Link href="/my-goals" className={getNavLinkClasses("/my-goals", true)} data-testid="nav-mobile-goals">
-                My Goals
-              </Link>
-              <Link href="/progress" className={getNavLinkClasses("/progress", true)} data-testid="nav-mobile-progress">
-                Progress
-              </Link>
-              <Link href="/analytics" className={getNavLinkClasses("/analytics", true)} data-testid="nav-mobile-analytics">
-                Analytics
-              </Link>
-              <div className="border-t border-gray-200 pt-2">
-                <button className="flex items-center w-full px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="button-mobile-notifications">
-                  <Bell className="h-4 w-4 mr-2" />
-                  Notifications
-                </button>
-                <Link href="/settings" className="flex items-center w-full px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-settings">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Link>
-              </div>
-            </nav>
-          </div>
-        )}
       </div>
+      
+      {/* Bottom Navigation - Mobile Only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+        <div className="grid grid-cols-4">
+          <Link href="/" className={getBottomNavClasses("/")} data-testid="nav-mobile-dashboard">
+            <Home className="h-5 w-5 mb-1" />
+            <span className="text-xs">Dashboard</span>
+          </Link>
+          <Link href="/my-goals" className={getBottomNavClasses("/my-goals")} data-testid="nav-mobile-goals">
+            <FolderOpen className="h-5 w-5 mb-1" />
+            <span className="text-xs">My Goals</span>
+          </Link>
+          <Link href="/progress" className={getBottomNavClasses("/progress")} data-testid="nav-mobile-progress">
+            <TrendingUp className="h-5 w-5 mb-1" />
+            <span className="text-xs">Progress</span>
+          </Link>
+          <Link href="/analytics" className={getBottomNavClasses("/analytics")} data-testid="nav-mobile-analytics">
+            <BarChart3 className="h-5 w-5 mb-1" />
+            <span className="text-xs">Analytics</span>
+          </Link>
+        </div>
+      </nav>
     </header>
   );
 }
