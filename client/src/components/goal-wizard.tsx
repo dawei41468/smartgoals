@@ -112,20 +112,41 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
         </div>
         
         {/* Step Indicator */}
-        <div className="flex items-center space-x-2 sm:space-x-4 mb-6 sm:mb-8 overflow-x-auto">
-          <div className="flex items-center flex-shrink-0">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold">1</div>
-            <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-primary whitespace-nowrap">SMART(ER) Setup</span>
+        <div className="mb-6 sm:mb-8">
+          {/* Mobile compact version */}
+          <div className="flex items-center justify-between sm:hidden px-2">
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-semibold">1</div>
+              <span className="ml-1 text-xs font-medium text-primary">Setup</span>
+            </div>
+            <div className="w-8 h-px bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs font-semibold">2</div>
+              <span className="ml-1 text-xs font-medium text-gray-500">AI</span>
+            </div>
+            <div className="w-8 h-px bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs font-semibold">3</div>
+              <span className="ml-1 text-xs font-medium text-gray-500">Save</span>
+            </div>
           </div>
-          <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
-          <div className="flex items-center flex-shrink-0">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold">2</div>
-            <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-500 whitespace-nowrap">AI Breakdown</span>
-          </div>
-          <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
-          <div className="flex items-center flex-shrink-0">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold">3</div>
-            <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-500 whitespace-nowrap">Review & Save</span>
+          
+          {/* Desktop version */}
+          <div className="hidden sm:flex items-center space-x-4">
+            <div className="flex items-center flex-shrink-0">
+              <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">1</div>
+              <span className="ml-2 text-sm font-medium text-primary whitespace-nowrap">SMART(ER) Setup</span>
+            </div>
+            <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
+            <div className="flex items-center flex-shrink-0">
+              <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
+              <span className="ml-2 text-sm font-medium text-gray-500 whitespace-nowrap">AI Breakdown</span>
+            </div>
+            <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
+            <div className="flex items-center flex-shrink-0">
+              <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
+              <span className="ml-2 text-sm font-medium text-gray-500 whitespace-nowrap">Review & Save</span>
+            </div>
           </div>
         </div>
 
