@@ -103,7 +103,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="space-y-6 sm:space-y-8">
           {/* Hero Section */}
-          <div className="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 sm:p-8 text-white">
+          <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-6 sm:p-8 text-white">
             <div className="max-w-2xl">
               <h1 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Transform Your Goals into Actionable Plans</h1>
               <p className="text-primary-foreground/90 mb-4 sm:mb-6 text-sm sm:text-base">
