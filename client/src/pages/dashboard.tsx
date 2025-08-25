@@ -177,10 +177,10 @@ export default function Dashboard() {
           <Card>
             <div className="p-4 sm:p-6 border-b border-border">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
-                <h2 className="text-lg sm:text-xl font-bold">Your Active Goals</h2>
+                <h2 className="text-lg sm:text-xl font-bold">{t('dashboard.activeGoals')}</h2>
                 <Button variant="ghost" size="sm" className="self-start sm:self-auto" data-testid="button-view-all-goals">
-                  <span className="hidden sm:inline">View All Goals</span>
-                  <span className="sm:hidden">View All</span>
+                  <span className="hidden sm:inline">{t('myGoals.title')}</span>
+                  <span className="sm:hidden">{t('common.view')}</span>
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
@@ -196,13 +196,13 @@ export default function Dashboard() {
               <div className="p-4 sm:p-6">
                 <div className="text-center py-6 sm:py-8">
                   <Target className="text-secondary mx-auto h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
-                  <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">No goals yet</h3>
+                  <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">{t('dashboard.noGoals')}</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-4">
-                    Create your first SMART(ER) goal to get started on your journey to success.
+                    {t('dashboard.noGoalsDescription')}
                   </p>
                   <Button onClick={handleStartGoalCreation} className="w-full sm:w-auto" data-testid="button-create-first-goal">
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Your First Goal
+                    {t('myGoals.createFirst')}
                   </Button>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function Dashboard() {
                         {/* Progress Bar */}
                         <div className="mb-3">
                           <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                            <span>Progress</span>
+                            <span>{t('myGoals.progress')}</span>
                             <span data-testid={`text-goal-progress-${goal.id}`}>{goal.progress}%</span>
                           </div>
                           <div className="w-full bg-secondary rounded-full h-2">
@@ -244,7 +244,7 @@ export default function Dashboard() {
 
                         {/* Next Task Placeholder */}
                         <div className="text-sm">
-                          <span className="text-muted-foreground">Status: </span>
+                          <span className="text-muted-foreground">{t('myGoals.status')}: </span>
                           <span className="font-medium capitalize" data-testid={`text-goal-status-${goal.id}`}>
                             {goal.status}
                           </span>
@@ -253,10 +253,10 @@ export default function Dashboard() {
                       
                       <div className="ml-6 flex flex-col items-end space-y-2">
                         <span className="text-sm text-muted-foreground" data-testid={`text-goal-deadline-${goal.id}`}>
-                          Due: {formatDate(goal.deadline)}
+                          {t('myGoals.due')}: {formatDate(goal.deadline)}
                         </span>
                         <Button variant="ghost" size="sm" data-testid={`button-view-goal-${goal.id}`}>
-                          View Details <ArrowRight className="ml-1 h-4 w-4" />
+                          {t('myGoals.viewDetails')} <ArrowRight className="ml-1 h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -269,16 +269,16 @@ export default function Dashboard() {
           {/* Recent Activity */}
           <Card>
             <div className="p-4 sm:p-6 border-b border-border">
-              <h2 className="text-lg sm:text-xl font-bold">Recent Activity</h2>
+              <h2 className="text-lg sm:text-xl font-bold">{t('dashboard.recentActivity')}</h2>
             </div>
             <div className="p-4 sm:p-6">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-secondary rounded-full flex-shrink-0"></div>
-                  <span className="text-xs sm:text-sm text-muted-foreground">Welcome to SMART Goals! Create your first goal to see activity here.</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.welcomeMessage')}</span>
                   <span className="text-xs text-muted-foreground flex-shrink-0">
                     <Clock className="inline h-3 w-3 mr-1" />
-                    Just now
+                    {t('dashboard.justNow')}
                   </span>
                 </div>
               </div>

@@ -81,7 +81,20 @@ export const translations = {
       viewDetails: "View Details",
       due: "Due",
       overdue: "Overdue",
-      completed: "Completed"
+      completed: "Completed",
+      status: "Status",
+      searchGoals: "Search goals...",
+      allStatus: "All Status",
+      active: "Active",
+      paused: "Paused",
+      trackProgress: "Track your progress and manage your SMART(ER) goals",
+      createNewGoal: "Create New Goal",
+      noGoalsYet: "No Goals Yet",
+      noGoalsFound: "No Goals Found",
+      startJourney: "Start your journey by creating your first SMART(ER) goal.",
+      adjustSearch: "Try adjusting your search or filter criteria.",
+      createFirstGoal: "Create Your First Goal",
+      daysLeft: "days left"
     },
     // Progress  
     progressPage: {
@@ -95,7 +108,9 @@ export const translations = {
       noActivity: "No recent activity",
       noActivityDescription: "Complete some tasks to see your progress here.",
       taskCompleted: "Task completed",
-      milestoneReached: "Milestone reached"
+      milestoneReached: "Milestone reached",
+      dailyMotivation: "Daily Motivation",
+      goalsAchieved: "Goals Achieved"
     },
     // Analytics
     analytics: {
@@ -111,7 +126,20 @@ export const translations = {
       streakDays: "Current Streak",
       days: "days",
       noData: "No data available",
-      noDataDescription: "Create and complete some goals to see analytics."
+      noDataDescription: "Create and complete some goals to see analytics.",
+      thisQuarter: "This Quarter",
+      thisYear: "This Year",
+      vsLastMonth: "vs last month",
+      timeToComplete: "Time to complete goals",
+      personalBest: "Personal best",
+      acrossAllGoals: "Across all goals",
+      patterns: "Patterns",
+      categories: "Categories",
+      insights: "Insights",
+      weeklyProgressTrend: "Weekly Progress Trend",
+      taskCompletionRate: "Your task completion rate over the past 7 days",
+      goalStatusDistribution: "Goal Status Distribution",
+      currentStatusGoals: "Current status of all your goals"
     },
     // Settings
     settings: {
@@ -171,7 +199,8 @@ export const translations = {
       thisWeek: "This Week",
       lastWeek: "Last Week",
       thisMonth: "This Month",
-      lastMonth: "Last Month"
+      lastMonth: "Last Month",
+      title: "Title"
     }
   },
   zh: {
@@ -256,7 +285,20 @@ export const translations = {
       viewDetails: "查看详情",
       due: "到期",
       overdue: "逾期",
-      completed: "已完成"
+      completed: "已完成",
+      status: "状态",
+      searchGoals: "搜索目标...",
+      allStatus: "所有状态",
+      active: "活跃",
+      paused: "暂停",
+      trackProgress: "跟踪您的进度并管理您的SMART(ER)目标",
+      createNewGoal: "创建新目标",
+      noGoalsYet: "还没有目标",
+      noGoalsFound: "未找到目标",
+      startJourney: "通过创建您的第一个SMART(ER)目标开始您的旅程。",
+      adjustSearch: "尝试调整您的搜索或筛选条件。",
+      createFirstGoal: "创建您的第一个目标",
+      daysLeft: "天剩余"
     },
     // Progress  
     progressPage: {
@@ -270,7 +312,15 @@ export const translations = {
       noActivity: "无最近活动",
       noActivityDescription: "完成一些任务以在此处查看您的进度。",
       taskCompleted: "任务已完成",
-      milestoneReached: "里程碑已达到"
+      milestoneReached: "里程碑已达到",
+      dailyMotivation: "每日激励",
+      goalsAchieved: "已实现目标",
+      achievements: "成就",
+      timeline: "时间线",
+      daysInRow: "连续天数",
+      tasksCompleted: "任务已完成",
+      totalCompleted: "总完成数",
+      daysPerGoal: "每目标天数"
     },
     // Analytics
     analytics: {
@@ -286,7 +336,20 @@ export const translations = {
       streakDays: "当前连续天数",
       days: "天",
       noData: "无可用数据",
-      noDataDescription: "创建并完成一些目标以查看分析数据。"
+      noDataDescription: "创建并完成一些目标以查看分析数据。",
+      thisQuarter: "本季度",
+      thisYear: "今年",
+      vsLastMonth: "与上月比较",
+      timeToComplete: "完成目标所需时间",
+      personalBest: "个人最佳",
+      acrossAllGoals: "跨所有目标",
+      patterns: "模式",
+      categories: "类别",
+      insights: "洞察",
+      weeklyProgressTrend: "每周进度趋势",
+      taskCompletionRate: "您过去7天的任务完成率",
+      goalStatusDistribution: "目标状态分布",
+      currentStatusGoals: "您所有目标的当前状态"
     },
     // Settings
     settings: {
@@ -346,7 +409,8 @@ export const translations = {
       thisWeek: "本周",
       lastWeek: "上周",
       thisMonth: "本月",
-      lastMonth: "上月"
+      lastMonth: "上月",
+      title: "标题"
     }
   }
 } as const;

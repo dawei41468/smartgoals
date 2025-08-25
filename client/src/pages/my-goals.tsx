@@ -179,14 +179,14 @@ export default function MyGoals() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
                 <Target className="text-secondary mr-3 h-7 w-7" />
-                My Goals
+                {t('myGoals.title')}
               </h1>
-              <p className="text-gray-600 mt-2">Track your progress and manage your SMART(ER) goals</p>
+              <p className="text-gray-600 mt-2">{t('myGoals.trackProgress')}</p>
             </div>
             <Link href="/">
               <Button data-testid="button-create-new-goal">
                 <Plus className="h-4 w-4 mr-2" />
-                Create New Goal
+                {t('myGoals.createNewGoal')}
               </Button>
             </Link>
           </div>
@@ -198,7 +198,7 @@ export default function MyGoals() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search goals..."
+                placeholder={t('myGoals.searchGoals')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -213,10 +213,10 @@ export default function MyGoals() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
+                <SelectItem value="all">{t('myGoals.allStatus')}</SelectItem>
+                <SelectItem value="active">{t('myGoals.active')}</SelectItem>
+                <SelectItem value="completed">{t('myGoals.completed')}</SelectItem>
+                <SelectItem value="paused">{t('myGoals.paused')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
@@ -224,10 +224,10 @@ export default function MyGoals() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="created">Newest</SelectItem>
-                <SelectItem value="deadline">Deadline</SelectItem>
-                <SelectItem value="progress">Progress</SelectItem>
-                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="created">{t('myGoals.newest')}</SelectItem>
+                <SelectItem value="deadline">{t('myGoals.deadline')}</SelectItem>
+                <SelectItem value="progress">{t('myGoals.progress')}</SelectItem>
+                <SelectItem value="title">{t('common.title')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -239,18 +239,18 @@ export default function MyGoals() {
             <CardContent>
               <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {goals.length === 0 ? "No Goals Yet" : "No Goals Found"}
+                {goals.length === 0 ? t('myGoals.noGoalsYet') : t('myGoals.noGoalsFound')}
               </h3>
               <p className="text-gray-600 mb-6">
                 {goals.length === 0 
-                  ? "Start your journey by creating your first SMART(ER) goal."
-                  : "Try adjusting your search or filter criteria."}
+                  ? t('myGoals.startJourney')
+                  : t('myGoals.adjustSearch')}
               </p>
               {goals.length === 0 && (
                 <Link href="/">
                   <Button data-testid="button-empty-create-goal">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Goal
+                    {t('myGoals.createFirstGoal')}
                   </Button>
                 </Link>
               )}
@@ -280,7 +280,7 @@ export default function MyGoals() {
                             {goal.deadline && getDaysUntilDeadline(goal.deadline) >= 0 && (
                               <div className="flex items-center text-sm text-gray-600">
                                 <Clock className="h-4 w-4 mr-1" />
-                                {getDaysUntilDeadline(goal.deadline)} days left
+                                {getDaysUntilDeadline(goal.deadline)} {t('myGoals.daysLeft')}
                               </div>
                             )}
                           </div>

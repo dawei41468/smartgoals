@@ -228,9 +228,9 @@ export default function Progress() {
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
             <TrendingUp className="text-secondary mr-3 h-7 w-7" />
-            Progress Tracker
+            {t('progressPage.title')}
           </h1>
-          <p className="text-gray-600 mt-2">Track your achievements and stay motivated</p>
+          <p className="text-gray-600 mt-2">{t('progressPage.description')}</p>
         </div>
 
         {/* Motivational Message */}
@@ -238,7 +238,7 @@ export default function Progress() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Daily Motivation</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('progressPage.dailyMotivation')}</h3>
                 <p className="text-primary-foreground/90">{getMotivationalMessage()}</p>
               </div>
               <Zap className="h-8 w-8 text-white/80" />
@@ -254,8 +254,8 @@ export default function Progress() {
                 <Flame className="h-6 w-6 text-orange-500 mr-2" />
                 <span className="text-2xl font-bold">{stats?.currentStreak || 0}</span>
               </div>
-              <p className="text-sm text-gray-600">Current Streak</p>
-              <p className="text-xs text-gray-500 mt-1">days in a row</p>
+              <p className="text-sm text-gray-600">{t('analytics.streakDays')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('progressPage.daysInRow')}</p>
             </CardContent>
           </Card>
           
@@ -265,8 +265,8 @@ export default function Progress() {
                 <CheckCircle className="h-6 w-6 text-green-500 mr-2" />
                 <span className="text-2xl font-bold">{completedThisWeek}</span>
               </div>
-              <p className="text-sm text-gray-600">This Week</p>
-              <p className="text-xs text-gray-500 mt-1">tasks completed</p>
+              <p className="text-sm text-gray-600">{t('common.thisWeek')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('progressPage.tasksCompleted')}</p>
             </CardContent>
           </Card>
           
@@ -276,8 +276,8 @@ export default function Progress() {
                 <Target className="h-6 w-6 text-blue-500 mr-2" />
                 <span className="text-2xl font-bold">{stats?.completedGoals || 0}</span>
               </div>
-              <p className="text-sm text-gray-600">Goals Achieved</p>
-              <p className="text-xs text-gray-500 mt-1">total completed</p>
+              <p className="text-sm text-gray-600">{t('progressPage.goalsAchieved')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('progressPage.totalCompleted')}</p>
             </CardContent>
           </Card>
           
@@ -287,17 +287,17 @@ export default function Progress() {
                 <Clock className="h-6 w-6 text-purple-500 mr-2" />
                 <span className="text-2xl font-bold">{stats?.avgCompletionTime || 0}</span>
               </div>
-              <p className="text-sm text-gray-600">Avg. Completion</p>
-              <p className="text-xs text-gray-500 mt-1">days per goal</p>
+              <p className="text-sm text-gray-600">{t('analytics.avgCompletionTime')}</p>
+              <p className="text-xs text-gray-500 mt-1">{t('progressPage.daysPerGoal')}</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="week">This Week</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsTrigger value="week">{t('common.thisWeek')}</TabsTrigger>
+            <TabsTrigger value="achievements">{t('progressPage.achievements')}</TabsTrigger>
+            <TabsTrigger value="timeline">{t('progressPage.timeline')}</TabsTrigger>
           </TabsList>
 
           {/* This Week Tab */}

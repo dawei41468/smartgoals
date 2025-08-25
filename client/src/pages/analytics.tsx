@@ -205,9 +205,9 @@ export default function Analytics() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
                 <BarChart3 className="text-secondary mr-3 h-7 w-7" />
-                Goal Analytics
+                {t('analytics.title')}
               </h1>
-              <p className="text-gray-600 mt-2">Insights to optimize your goal-setting effectiveness</p>
+              <p className="text-gray-600 mt-2">{t('analytics.description')}</p>
             </div>
             <div className="flex gap-2">
               <Select value={timePeriod} onValueChange={setTimePeriod}>
@@ -215,10 +215,10 @@ export default function Analytics() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="quarter">This Quarter</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="week">{t('common.thisWeek')}</SelectItem>
+                  <SelectItem value="month">{t('common.thisMonth')}</SelectItem>
+                  <SelectItem value="quarter">{t('analytics.thisQuarter')}</SelectItem>
+                  <SelectItem value="year">{t('analytics.thisYear')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -231,7 +231,7 @@ export default function Analytics() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Success Rate</p>
+                  <p className="text-sm font-medium text-gray-600">{t('dashboard.successRate')}</p>
                   <p className="text-2xl font-bold text-green-600">{analyticsData.goalSuccessRate}%</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
@@ -245,7 +245,7 @@ export default function Analytics() {
                   <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
                 )}
                 <span className={`text-sm ${analyticsData.monthlyComparison.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Math.abs(analyticsData.monthlyComparison.change)}% vs last month
+                  {Math.abs(analyticsData.monthlyComparison.change)}% {t('analytics.vsLastMonth')}
                 </span>
               </div>
             </CardContent>
@@ -255,14 +255,14 @@ export default function Analytics() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Avg. Completion</p>
+                  <p className="text-sm font-medium text-gray-600">{t('analytics.avgCompletionTime')}</p>
                   <p className="text-2xl font-bold text-blue-600">{analyticsData.avgCompletionTime} days</p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
                   <Clock className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">Time to complete goals</p>
+              <p className="text-sm text-gray-500 mt-2">{t('analytics.timeToComplete')}</p>
             </CardContent>
           </Card>
 
@@ -270,14 +270,14 @@ export default function Analytics() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Current Streak</p>
+                  <p className="text-sm font-medium text-gray-600">{t('analytics.streakDays')}</p>
                   <p className="text-2xl font-bold text-orange-600">{analyticsData.currentStreak} days</p>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-full">
                   <Zap className="h-6 w-6 text-orange-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">Personal best: {analyticsData.longestStreak} days</p>
+              <p className="text-sm text-gray-500 mt-2">{t('analytics.personalBest')}: {analyticsData.longestStreak} {t('analytics.days')}</p>
             </CardContent>
           </Card>
 
@@ -285,24 +285,24 @@ export default function Analytics() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Tasks Completed</p>
+                  <p className="text-sm font-medium text-gray-600">{t('dashboard.tasksCompleted')}</p>
                   <p className="text-2xl font-bold text-purple-600">{analyticsData.totalTasksCompleted}</p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
                   <CheckCircle className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">Across all goals</p>
+              <p className="text-sm text-gray-500 mt-2">{t('analytics.acrossAllGoals')}</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="patterns">Patterns</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
+            <TabsTrigger value="overview">{t('analytics.overview')}</TabsTrigger>
+            <TabsTrigger value="patterns">{t('analytics.patterns')}</TabsTrigger>
+            <TabsTrigger value="categories">{t('analytics.categories')}</TabsTrigger>
+            <TabsTrigger value="insights">{t('analytics.insights')}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -312,9 +312,9 @@ export default function Analytics() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <TrendingUp className="mr-2 h-5 w-5" />
-                    Weekly Progress Trend
+                    {t('analytics.weeklyProgressTrend')}
                   </CardTitle>
-                  <CardDescription>Your task completion rate over the past 7 days</CardDescription>
+                  <CardDescription>{t('analytics.taskCompletionRate')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -336,16 +336,16 @@ export default function Analytics() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <PieChart className="mr-2 h-5 w-5" />
-                    Goal Status Distribution
+                    {t('analytics.goalStatusDistribution')}
                   </CardTitle>
-                  <CardDescription>Current status of all your goals</CardDescription>
+                  <CardDescription>{t('analytics.currentStatusGoals')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="text-sm">Completed</span>
+                        <span className="text-sm">{t('myGoals.completed')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{analyticsData.completedGoals}</span>
@@ -357,7 +357,7 @@ export default function Analytics() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm">Active</span>
+                        <span className="text-sm">{t('myGoals.active')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{analyticsData.activeGoals}</span>
@@ -369,7 +369,7 @@ export default function Analytics() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                        <span className="text-sm">Paused</span>
+                        <span className="text-sm">{t('myGoals.paused')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{analyticsData.pausedGoals}</span>
