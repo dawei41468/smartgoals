@@ -30,9 +30,9 @@ export default function Navigation() {
               <Link href="/my-goals" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-goals">
                 My Goals
               </Link>
-              <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-progress">
+              <Link href="/progress" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-progress">
                 Progress
-              </a>
+              </Link>
               <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-analytics">
                 Analytics
               </a>
@@ -97,9 +97,9 @@ export default function Navigation() {
               <Link href="/my-goals" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-goals">
                 My Goals
               </Link>
-              <a href="#" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-progress">
+              <Link href="/progress" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-progress">
                 Progress
-              </a>
+              </Link>
               <a href="#" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-analytics">
                 Analytics
               </a>
