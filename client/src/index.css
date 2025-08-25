@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@config "./tailwind.config.js";
+@config "../tailwind.config.js";
 
 :root {
   --background: hsl(0 0% 100%);
