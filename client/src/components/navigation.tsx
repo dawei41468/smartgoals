@@ -77,7 +77,7 @@ export default function Navigation() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer" data-testid="menu-profile">
+                  <Link href="/settings" className="cursor-pointer" data-testid="menu-profile">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
