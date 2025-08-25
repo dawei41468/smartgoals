@@ -9,7 +9,9 @@ export const translations = {
       settings: "Settings",
       language: "Language",
       theme: "Theme",
-      logout: "Log out"
+      logout: "Log out",
+      switchToDark: "Switch to dark mode",
+      switchToLight: "Switch to light mode"
     },
     // Dashboard
     dashboard: {
@@ -252,7 +254,9 @@ export const translations = {
       settings: "设置", 
       language: "语言",
       theme: "主题",
-      logout: "登出"
+      logout: "登出",
+      switchToDark: "切换到深色模式",
+      switchToLight: "切换到浅色模式"
     },
     // Dashboard
     dashboard: {

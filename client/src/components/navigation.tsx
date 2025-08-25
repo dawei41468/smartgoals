@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Target, Settings, User, LogOut, Home, FolderOpen, TrendingUp, BarChart3, Globe, Moon } from "lucide-react";
+import { Bell, Target, Settings, User, LogOut, Home, FolderOpen, TrendingUp, BarChart3, Globe, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { languages } from "@/lib/i18n";
 
 export default function Navigation() {
   const [location] = useLocation();
   const { t, language, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   
   const isActive = (path: string) => location === path;
   
@@ -29,7 +31,7 @@ export default function Navigation() {
       return `${baseClasses} text-primary border-b-2 border-primary`;
     }
     
-    return `${baseClasses} text-gray-500 hover:text-gray-700`;
+    return `${baseClasses} text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white`;
   };
 
   const getBottomNavClasses = (path: string) => {
@@ -37,17 +39,17 @@ export default function Navigation() {
       return "flex flex-col items-center justify-center py-2 text-primary";
     }
     
-    return "flex flex-col items-center justify-center py-2 text-gray-500";
+    return "flex flex-col items-center justify-center py-2 text-gray-500 dark:text-gray-400";
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Target className="text-secondary text-xl sm:text-2xl mr-2 sm:mr-3" />
-              <span className="text-lg sm:text-xl font-bold text-gray-900">SMART Goals</span>
+              <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">SMART Goals</span>
             </div>
             <nav className="hidden md:ml-10 md:flex space-x-8">
               <Link href="/" className={getNavLinkClasses("/")} data-testid="nav-dashboard">
@@ -65,7 +67,15 @@ export default function Navigation() {
             </nav>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <button className="hidden sm:block text-gray-400 hover:text-gray-500" data-testid="button-notifications">
+            <button 
+              onClick={toggleTheme}
+              className="hidden sm:block text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300 transition-colors" 
+              data-testid="button-theme-toggle"
+              title={theme === 'light' ? t('nav.switchToDark') : t('nav.switchToLight')}
+            >
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </button>
+            <button className="hidden sm:block text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300" data-testid="button-notifications">
               <Bell className="h-5 w-5" />
             </button>
             <DropdownMenu>
@@ -101,9 +111,13 @@ export default function Navigation() {
                     ))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                <DropdownMenuItem className="cursor-pointer" data-testid="menu-theme">
-                  <Moon className="mr-2 h-4 w-4" />
-                  <span>{t('nav.theme')}</span>
+                <DropdownMenuItem 
+                  onClick={toggleTheme}
+                  className="cursor-pointer" 
+                  data-testid="menu-theme"
+                >
+                  {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                  <span>{theme === 'light' ? t('nav.switchToDark') : t('nav.switchToLight')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer" data-testid="menu-settings">
@@ -123,7 +137,7 @@ export default function Navigation() {
       </div>
       
       {/* Bottom Navigation - Mobile Only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 z-50">
         <div className="grid grid-cols-4">
           <Link href="/" className={getBottomNavClasses("/")} data-testid="nav-mobile-dashboard">
             <Home className="h-5 w-5 mb-1" />
