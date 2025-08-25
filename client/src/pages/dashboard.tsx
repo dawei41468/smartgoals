@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Target, CheckSquare, TrendingUp, ArrowRight, Clock } from "lucide-react";
+import { Plus, Target, CheckSquare, TrendingUp, ArrowRight, Clock, User, Settings, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/navigation";
@@ -8,7 +8,7 @@ import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@shared/schema";
+import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse, Activity } from "@shared/schema";
 
 type View = "dashboard" | "wizard" | "breakdown";
 
@@ -29,6 +29,11 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/analytics/stats"],
     queryFn: () => api.getStats(),
+  });
+
+  const { data: activities = [], isLoading: activitiesLoading } = useQuery({
+    queryKey: ["/api/activities"],
+    queryFn: () => api.getActivities(),
   });
 
   const handleStartGoalCreation = () => {
@@ -272,16 +277,73 @@ export default function Dashboard() {
               <h2 className="text-lg sm:text-xl font-bold">{t('dashboard.recentActivity')}</h2>
             </div>
             <div className="p-4 sm:p-6">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-secondary rounded-full flex-shrink-0"></div>
-                  <span className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.welcomeMessage')}</span>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                    <Clock className="inline h-3 w-3 mr-1" />
-                    {t('dashboard.justNow')}
-                  </span>
+              {activitiesLoading ? (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-secondary rounded-full flex-shrink-0 animate-pulse"></div>
+                    <span className="text-xs sm:text-sm text-muted-foreground">Loading activities...</span>
+                  </div>
                 </div>
-              </div>
+              ) : activities.length > 0 ? (
+                <div className="space-y-4">
+                  {activities.map((activity) => {
+                    const getActivityIcon = (type: string) => {
+                      switch (type) {
+                        case 'goal_created':
+                          return <Target className="h-3 w-3 text-primary" />;
+                        case 'task_completed':
+                          return <CheckSquare className="h-3 w-3 text-green-600" />;
+                        case 'profile_updated':
+                          return <User className="h-3 w-3 text-blue-600" />;
+                        case 'settings_updated':
+                          return <Settings className="h-3 w-3 text-gray-600" />;
+                        default:
+                          return <Trophy className="h-3 w-3 text-secondary" />;
+                      }
+                    };
+
+                    const formatTime = (date: string | Date) => {
+                      const now = new Date();
+                      const activityDate = new Date(date);
+                      const diffMs = now.getTime() - activityDate.getTime();
+                      const diffMins = Math.floor(diffMs / (1000 * 60));
+                      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+                      if (diffMins < 1) return 'Just now';
+                      if (diffMins < 60) return `${diffMins}m ago`;
+                      if (diffHours < 24) return `${diffHours}h ago`;
+                      return `${diffDays}d ago`;
+                    };
+
+                    return (
+                      <div key={activity.id} className="flex items-center space-x-3" data-testid={`activity-${activity.type}-${activity.id}`}>
+                        <div className="flex-shrink-0">
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <span className="text-xs sm:text-sm text-muted-foreground flex-1" data-testid={`text-activity-description-${activity.id}`}>
+                          {activity.description}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0" data-testid={`text-activity-time-${activity.id}`}>
+                          <Clock className="inline h-3 w-3 mr-1" />
+                          {formatTime(activity.createdAt)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-secondary rounded-full flex-shrink-0"></div>
+                    <span className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.welcomeMessage')}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      <Clock className="inline h-3 w-3 mr-1" />
+                      {t('dashboard.justNow')}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         </div>

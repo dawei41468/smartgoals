@@ -1,5 +1,5 @@
 import { apiRequest } from "./queryClient";
-import type { Goal, InsertGoal, AIBreakdownRequest, AIBreakdownResponse, GoalWithBreakdown, DailyTask } from "@shared/schema";
+import type { Goal, InsertGoal, AIBreakdownRequest, AIBreakdownResponse, GoalWithBreakdown, DailyTask, Activity } from "@shared/schema";
 
 export const api = {
   // Goals
@@ -52,6 +52,13 @@ export const api = {
   // Analytics
   getStats: async (): Promise<{ activeGoalsCount: number; completedTasksCount: number; successRate: number }> => {
     const response = await apiRequest("GET", "/api/analytics/stats");
+    return response.json();
+  },
+
+  // Activities
+  getActivities: async (limit?: number): Promise<Activity[]> => {
+    const params = limit ? `?limit=${limit}` : "";
+    const response = await apiRequest("GET", `/api/activities${params}`);
     return response.json();
   },
 };

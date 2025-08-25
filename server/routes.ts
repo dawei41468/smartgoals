@@ -121,6 +121,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Log activity
+      await storage.createActivity({
+        userId: req.user.id,
+        type: "profile_updated",
+        description: "Updated profile information",
+        metadata: { updatedFields: Object.keys(profileData) }
+      });
+      
       // Don't send password in response
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -156,6 +164,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedSettings) {
         return res.status(404).json({ message: "Failed to update settings" });
       }
+      
+      // Log activity
+      await storage.createActivity({
+        userId: req.user.id,
+        type: "settings_updated",
+        description: "Updated account settings",
+        metadata: { updatedSettings: Object.keys(settingsData) }
+      });
+      
       res.json(updatedSettings);
     } catch (error) {
       res.status(400).json({ message: "Invalid settings data", error: (error as Error).message });
@@ -171,6 +188,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const goalData = insertGoalSchema.parse(req.body);
       const goal = await storage.createGoal(goalData, req.user.id);
+      
+      // Log activity
+      await storage.createActivity({
+        userId: req.user.id,
+        type: "goal_created",
+        description: `Created new goal: ${goal.title}`,
+        metadata: { goalId: goal.id, goalTitle: goal.title }
+      });
+      
       res.json(goal);
     } catch (error) {
       res.status(400).json({ message: "Invalid goal data", error: (error as Error).message });
@@ -299,15 +325,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Task management endpoints
-  app.patch("/api/tasks/:id", async (req, res) => {
+  app.patch("/api/tasks/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const task = await storage.updateDailyTask(req.params.id, req.body);
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
+      
+      // Log activity if task was marked as completed
+      if (req.body.completed === true && task.completed) {
+        await storage.createActivity({
+          userId: req.user.id,
+          type: "task_completed",
+          description: `Completed task: ${task.title}`,
+          metadata: { taskId: task.id, taskTitle: task.title }
+        });
+      }
+      
       res.json(task);
     } catch (error) {
       res.status(500).json({ message: "Failed to update task", error: (error as Error).message });
+    }
+  });
+
+  // Activity endpoints
+  app.get("/api/activities", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const activities = await storage.getUserActivities(req.user.id, limit);
+      res.json(activities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch activities", error: (error as Error).message });
     }
   });
 

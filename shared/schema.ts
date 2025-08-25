@@ -75,6 +75,15 @@ export const dailyTasks = pgTable("daily_tasks", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const activities = pgTable("activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(), // goal_created, goal_completed, task_completed, profile_updated, etc.
+  description: text("description").notNull(),
+  metadata: json("metadata"), // Additional data specific to the activity type
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -130,6 +139,11 @@ export const insertDailyTaskSchema = createInsertSchema(dailyTasks).omit({
   createdAt: true,
 });
 
+export const insertActivitySchema = createInsertSchema(activities).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type UserSettings = typeof userSettings.$inferSelect;
@@ -143,6 +157,8 @@ export type InsertWeeklyGoal = z.infer<typeof insertWeeklyGoalSchema>;
 export type WeeklyGoal = typeof weeklyGoals.$inferSelect;
 export type InsertDailyTask = z.infer<typeof insertDailyTaskSchema>;
 export type DailyTask = typeof dailyTasks.$inferSelect;
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type Activity = typeof activities.$inferSelect;
 
 export interface GoalWithBreakdown extends Goal {
   weeklyGoals: (WeeklyGoal & { tasks: DailyTask[] })[];

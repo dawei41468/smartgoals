@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UserSettings, type UpdateUserProfile, type UpdateUserSettings, type LoginData, type RegisterData, type Goal, type InsertGoal, type WeeklyGoal, type InsertWeeklyGoal, type DailyTask, type InsertDailyTask, type GoalWithBreakdown } from "@shared/schema";
+import { type User, type InsertUser, type UserSettings, type UpdateUserProfile, type UpdateUserSettings, type LoginData, type RegisterData, type Goal, type InsertGoal, type WeeklyGoal, type InsertWeeklyGoal, type DailyTask, type InsertDailyTask, type GoalWithBreakdown, type Activity, type InsertActivity } from "@shared/schema";
 import { hashPassword } from "./auth";
 import { randomUUID } from "crypto";
 
@@ -37,6 +37,10 @@ export interface IStorage {
     completedTasksCount: number;
     successRate: number;
   }>;
+  
+  // Activity methods
+  createActivity(activity: InsertActivity): Promise<Activity>;
+  getUserActivities(userId: string, limit?: number): Promise<Activity[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -45,6 +49,7 @@ export class MemStorage implements IStorage {
   private goals: Map<string, Goal>;
   private weeklyGoals: Map<string, WeeklyGoal>;
   private dailyTasks: Map<string, DailyTask>;
+  private activities: Map<string, Activity>;
 
   constructor() {
     this.users = new Map();
@@ -52,6 +57,7 @@ export class MemStorage implements IStorage {
     this.goals = new Map();
     this.weeklyGoals = new Map();
     this.dailyTasks = new Map();
+    this.activities = new Map();
     
     // Initialize demo user
     this.initializeDemoUser();
@@ -356,6 +362,29 @@ export class MemStorage implements IStorage {
       completedTasksCount,
       successRate,
     };
+  }
+
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const id = randomUUID();
+    const activity: Activity = {
+      ...insertActivity,
+      id,
+      metadata: insertActivity.metadata || null,
+      createdAt: new Date(),
+    };
+    this.activities.set(id, activity);
+    return activity;
+  }
+
+  async getUserActivities(userId: string, limit: number = 10): Promise<Activity[]> {
+    return Array.from(this.activities.values())
+      .filter(activity => activity.userId === userId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, limit);
   }
 }
 
