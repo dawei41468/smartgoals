@@ -1,42 +1,141 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertGoalSchema, updateUserProfileSchema, updateUserSettingsSchema, type AIBreakdownRequest } from "@shared/schema";
+import { insertGoalSchema, updateUserProfileSchema, updateUserSettingsSchema, loginSchema, registerSchema, type AIBreakdownRequest } from "@shared/schema";
 import { generateGoalBreakdown, regenerateGoalBreakdown } from "./services/deepseek";
+import { generateToken, comparePassword, authenticateToken, type AuthRequest } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // User profile endpoints
-  app.get("/api/user/profile", async (req, res) => {
+  // Authentication endpoints
+  app.post("/api/auth/register", async (req, res) => {
     try {
-      const userId = "demo-user"; // For demo purposes
-      const user = await storage.getUser(userId);
+      const userData = registerSchema.parse(req.body);
+      const user = await storage.registerUser(userData);
+      
+      // Generate JWT token
+      const token = generateToken(user);
+      
+      // Don't send password in response
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(201).json({
+        user: userWithoutPassword,
+        token,
+        message: "User registered successfully",
+      });
+    } catch (error) {
+      if ((error as Error).message.includes("already exists")) {
+        res.status(409).json({ message: (error as Error).message });
+      } else {
+        res.status(400).json({ message: "Invalid registration data", error: (error as Error).message });
+      }
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = loginSchema.parse(req.body);
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Verify password
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Generate JWT token
+      const token = generateToken(user);
+      
+      // Don't send password in response
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        user: userWithoutPassword,
+        token,
+        message: "Login successful",
+      });
+    } catch (error) {
+      res.status(400).json({ message: "Invalid login data", error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    // With JWT, logout is handled client-side by removing the token
+    res.json({ message: "Logout successful" });
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Fetch fresh user data
+      const user = await storage.getUser(req.user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json(user);
+      
+      // Don't send password in response
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user data", error: (error as Error).message });
+    }
+  });
+
+  // User profile endpoints
+  app.get("/api/user/profile", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't send password in response
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user profile", error: (error as Error).message });
     }
   });
 
-  app.patch("/api/user/profile", async (req, res) => {
+  app.patch("/api/user/profile", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = "demo-user"; // For demo purposes
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const profileData = updateUserProfileSchema.parse(req.body);
-      const updatedUser = await storage.updateUserProfile(userId, profileData);
+      const updatedUser = await storage.updateUserProfile(req.user.id, profileData);
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json(updatedUser);
+      
+      // Don't send password in response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
     } catch (error) {
       res.status(400).json({ message: "Invalid profile data", error: (error as Error).message });
     }
   });
 
-  app.get("/api/user/settings", async (req, res) => {
+  app.get("/api/user/settings", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = "demo-user"; // For demo purposes
-      const settings = await storage.getUserSettings(userId);
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const settings = await storage.getUserSettings(req.user.id);
       if (!settings) {
         return res.status(404).json({ message: "User settings not found" });
       }
@@ -46,11 +145,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/user/settings", async (req, res) => {
+  app.patch("/api/user/settings", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = "demo-user"; // For demo purposes
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const settingsData = updateUserSettingsSchema.parse(req.body);
-      const updatedSettings = await storage.updateUserSettings(userId, settingsData);
+      const updatedSettings = await storage.updateUserSettings(req.user.id, settingsData);
       if (!updatedSettings) {
         return res.status(404).json({ message: "Failed to update settings" });
       }
@@ -61,24 +163,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Goals endpoints
-  app.post("/api/goals", async (req, res) => {
+  app.post("/api/goals", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const goalData = insertGoalSchema.parse(req.body);
-      // For demo purposes, using a fixed user ID
-      const userId = "demo-user";
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
       
-      const goal = await storage.createGoal(goalData, userId);
+      const goalData = insertGoalSchema.parse(req.body);
+      const goal = await storage.createGoal(goalData, req.user.id);
       res.json(goal);
     } catch (error) {
       res.status(400).json({ message: "Invalid goal data", error: (error as Error).message });
     }
   });
 
-  app.get("/api/goals", async (req, res) => {
+  app.get("/api/goals", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // For demo purposes, using a fixed user ID
-      const userId = "demo-user";
-      const goals = await storage.getGoalsByUserId(userId);
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const goals = await storage.getGoalsByUserId(req.user.id);
       res.json(goals);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch goals", error: (error as Error).message });
@@ -207,10 +312,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics endpoints
-  app.get("/api/analytics/stats", async (req, res) => {
+  app.get("/api/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = "demo-user";
-      const stats = await storage.getUserStats(userId);
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const stats = await storage.getUserStats(req.user.id);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stats", error: (error as Error).message });

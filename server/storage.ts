@@ -1,11 +1,14 @@
-import { type User, type InsertUser, type UserSettings, type UpdateUserProfile, type UpdateUserSettings, type Goal, type InsertGoal, type WeeklyGoal, type InsertWeeklyGoal, type DailyTask, type InsertDailyTask, type GoalWithBreakdown } from "@shared/schema";
+import { type User, type InsertUser, type UserSettings, type UpdateUserProfile, type UpdateUserSettings, type LoginData, type RegisterData, type Goal, type InsertGoal, type WeeklyGoal, type InsertWeeklyGoal, type DailyTask, type InsertDailyTask, type GoalWithBreakdown } from "@shared/schema";
+import { hashPassword } from "./auth";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  registerUser(userData: RegisterData): Promise<User>;
   updateUserProfile(userId: string, profile: UpdateUserProfile): Promise<User | undefined>;
   getUserSettings(userId: string): Promise<UserSettings | undefined>;
   updateUserSettings(userId: string, settings: UpdateUserSettings): Promise<UserSettings | undefined>;
@@ -112,6 +115,57 @@ export class MemStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email,
+    );
+  }
+
+  async registerUser(userData: RegisterData): Promise<User> {
+    // Check if user already exists
+    const existingUser = await this.getUserByEmail(userData.email);
+    if (existingUser) {
+      throw new Error("User with this email already exists");
+    }
+
+    const id = randomUUID();
+    const now = new Date();
+    const hashedPassword = await hashPassword(userData.password);
+    
+    const user: User = {
+      id,
+      username: userData.email.split('@')[0], // Use email prefix as username
+      password: hashedPassword,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      bio: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    this.users.set(id, user);
+
+    // Create default settings for new user
+    const defaultSettings: UserSettings = {
+      id: randomUUID(),
+      userId: id,
+      emailNotifications: true,
+      pushNotifications: false,
+      weeklyDigest: true,
+      goalReminders: true,
+      defaultGoalDuration: "3-months",
+      aiBreakdownDetail: "detailed",
+      theme: "light",
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    this.userSettings.set(id, defaultSettings);
+    
+    return user;
+  }
+
   async updateUserProfile(userId: string, profile: UpdateUserProfile): Promise<User | undefined> {
     const user = this.users.get(userId);
     if (!user) return undefined;
@@ -137,7 +191,13 @@ export class MemStorage implements IStorage {
       const newSettings: UserSettings = {
         id: randomUUID(),
         userId,
-        ...settings,
+        emailNotifications: settings.emailNotifications ?? true,
+        pushNotifications: settings.pushNotifications ?? false,
+        weeklyDigest: settings.weeklyDigest ?? true,
+        goalReminders: settings.goalReminders ?? true,
+        defaultGoalDuration: settings.defaultGoalDuration || "3-months",
+        aiBreakdownDetail: settings.aiBreakdownDetail || "detailed",
+        theme: settings.theme || "light",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -162,6 +222,7 @@ export class MemStorage implements IStorage {
       ...insertGoal,
       id,
       userId,
+      description: insertGoal.description || null,
       progress: 0,
       status: "active",
       createdAt: now,
@@ -212,6 +273,7 @@ export class MemStorage implements IStorage {
     const weeklyGoal: WeeklyGoal = {
       ...insertWeeklyGoal,
       id,
+      description: insertWeeklyGoal.description || null,
       progress: 0,
       status: "pending",
       createdAt: new Date(),
@@ -240,6 +302,10 @@ export class MemStorage implements IStorage {
     const task: DailyTask = {
       ...insertDailyTask,
       id,
+      description: insertDailyTask.description || null,
+      date: insertDailyTask.date || null,
+      priority: insertDailyTask.priority || "medium",
+      estimatedHours: insertDailyTask.estimatedHours || 1,
       completed: false,
       createdAt: new Date(),
     };

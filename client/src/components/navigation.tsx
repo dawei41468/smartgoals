@@ -15,12 +15,14 @@ import {
 import { Link, useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { languages } from "@/lib/i18n";
 
 export default function Navigation() {
   const [location] = useLocation();
   const { t, language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
   
   const isActive = (path: string) => location === path;
   
@@ -81,14 +83,20 @@ export default function Navigation() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-8 h-8 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors" data-testid="avatar-user">
-                  <span className="text-white text-sm font-medium">JD</span>
+                  <span className="text-white text-sm font-medium">
+                    {user ? (user.firstName?.[0] || '') + (user.lastName?.[0] || '') : 'U'}
+                  </span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">John Doe</p>
-                    <p className="text-xs leading-none text-muted-foreground">john.doe@example.com</p>
+                    <p className="text-sm font-medium leading-none">
+                      {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'User'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email || ''}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -126,7 +134,11 @@ export default function Navigation() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" data-testid="menu-logout">
+                <DropdownMenuItem 
+                  onClick={logout}
+                  className="cursor-pointer" 
+                  data-testid="menu-logout"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>{t('nav.logout')}</span>
                 </DropdownMenuItem>
