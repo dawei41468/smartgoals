@@ -110,7 +110,30 @@ export const translations = {
       taskCompleted: "Task completed",
       milestoneReached: "Milestone reached",
       dailyMotivation: "Daily Motivation",
-      goalsAchieved: "Goals Achieved"
+      goalsAchieved: "Goals Achieved",
+      achievements: "Achievements",
+      timeline: "Timeline",
+      daysInRow: "days in a row",
+      tasksCompleted: "tasks completed",
+      totalCompleted: "total completed",
+      daysPerGoal: "days per goal",
+      tasks: "tasks",
+      motivationalMessages: {
+        everyStep: "Every small step counts towards your bigger picture! 🌟",
+        progressNotPerfection: "Progress, not perfection. You're doing amazing! 💪",
+        futureself: "Your future self will thank you for today's efforts! 🚀",
+        consistency: "Consistency is key. Keep building those habits! 🔥",
+        smallImprovements: "Small daily improvements lead to stunning yearly results! ✨"
+      },
+      daysOfWeek: {
+        sunday: "Sunday",
+        monday: "Monday", 
+        tuesday: "Tuesday",
+        wednesday: "Wednesday",
+        thursday: "Thursday",
+        friday: "Friday",
+        saturday: "Saturday"
+      }
     },
     // Analytics
     analytics: {
@@ -139,7 +162,23 @@ export const translations = {
       weeklyProgressTrend: "Weekly Progress Trend",
       taskCompletionRate: "Your task completion rate over the past 7 days",
       goalStatusDistribution: "Goal Status Distribution",
-      currentStatusGoals: "Current status of all your goals"
+      currentStatusGoals: "Current status of all your goals",
+      productivityPatterns: "Productivity Patterns",
+      productivityDescription: "Understand when you're most productive to optimize your scheduling",
+      bestPerformingDay: "Best Performing Day",
+      scheduleImportantTasks: "Schedule important tasks on this day",
+      mostProductiveHour: "Most Productive Hour",
+      peakFocusTime: "Your peak focus time",
+      weeklyPerformance: "Weekly Performance",
+      goalCategoryPerformance: "Goal Category Performance",
+      categoryDescription: "See which types of goals you excel at and where you can improve",
+      noCategoriesYet: "No Categories Yet",
+      createCategoriesForInsights: "Create goals with categories to see performance insights",
+      goal: "goal",
+      goals: "goals",
+      na: "N/A",
+      aiPoweredInsights: "AI-Powered Insights",
+      personalizedRecommendations: "Personalized recommendations to improve your goal achievement"
     },
     // Settings
     settings: {
@@ -320,7 +359,24 @@ export const translations = {
       daysInRow: "连续天数",
       tasksCompleted: "任务已完成",
       totalCompleted: "总完成数",
-      daysPerGoal: "每目标天数"
+      daysPerGoal: "每目标天数",
+      tasks: "任务",
+      motivationalMessages: {
+        everyStep: "每一小步都在朝着更大的目标前进！🌟",
+        progressNotPerfection: "重在进步，而非完美。你做得很棒！💪",
+        futureself: "未来的你会感谢今天的努力！🚀",
+        consistency: "坚持是关键。继续建立这些习惯！🔥",
+        smallImprovements: "每日小进步带来年度大成果！✨"
+      },
+      daysOfWeek: {
+        sunday: "周日",
+        monday: "周一", 
+        tuesday: "周二",
+        wednesday: "周三",
+        thursday: "周四",
+        friday: "周五",
+        saturday: "周六"
+      }
     },
     // Analytics
     analytics: {
@@ -349,7 +405,23 @@ export const translations = {
       weeklyProgressTrend: "每周进度趋势",
       taskCompletionRate: "您过去7天的任务完成率",
       goalStatusDistribution: "目标状态分布",
-      currentStatusGoals: "您所有目标的当前状态"
+      currentStatusGoals: "您所有目标的当前状态",
+      productivityPatterns: "生产力模式",
+      productivityDescription: "了解您最有效率的时间以优化日程安排",
+      bestPerformingDay: "最佳表现日",
+      scheduleImportantTasks: "在这一天安排重要任务",
+      mostProductiveHour: "最有效率的时段",
+      peakFocusTime: "您的专注高峰时间",
+      weeklyPerformance: "每周表现",
+      goalCategoryPerformance: "目标类别表现",
+      categoryDescription: "查看您擅长哪些类型的目标以及可以改进的地方",
+      noCategoriesYet: "还没有类别",
+      createCategoriesForInsights: "创建带类别的目标以查看表现洞察",
+      goal: "目标",
+      goals: "目标",
+      na: "无",
+      aiPoweredInsights: "AI驱动的洞察",
+      personalizedRecommendations: "个性化建议以提高您的目标实现能力"
     },
     // Settings
     settings: {

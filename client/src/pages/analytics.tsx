@@ -390,35 +390,35 @@ export default function Analytics() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Activity className="mr-2 h-5 w-5" />
-                  Productivity Patterns
+                  {t('analytics.productivityPatterns')}
                 </CardTitle>
                 <CardDescription>
-                  Understand when you're most productive to optimize your scheduling
+                  {t('analytics.productivityDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="p-4 bg-blue-50 rounded-lg">
-                      <h3 className="font-semibold text-blue-900 mb-1">Best Performing Day</h3>
+                      <h3 className="font-semibold text-blue-900 mb-1">{t('analytics.bestPerformingDay')}</h3>
                       <p className="text-2xl font-bold text-blue-600">{analyticsData.bestPerformingDay}</p>
-                      <p className="text-sm text-blue-700">Schedule important tasks on this day</p>
+                      <p className="text-sm text-blue-700">{t('analytics.scheduleImportantTasks')}</p>
                     </div>
                     <div className="p-4 bg-purple-50 rounded-lg">
-                      <h3 className="font-semibold text-purple-900 mb-1">Most Productive Hour</h3>
+                      <h3 className="font-semibold text-purple-900 mb-1">{t('analytics.mostProductiveHour')}</h3>
                       <p className="text-2xl font-bold text-purple-600">{analyticsData.mostProductiveHour}:00 AM</p>
-                      <p className="text-sm text-purple-700">Your peak focus time</p>
+                      <p className="text-sm text-purple-700">{t('analytics.peakFocusTime')}</p>
                     </div>
                   </div>
                   
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900">Weekly Performance</h3>
+                    <h3 className="font-semibold text-gray-900">{t('analytics.weeklyPerformance')}</h3>
                     {productivityPatterns.map((pattern) => (
                       <div key={pattern.dayOfWeek} className="flex items-center gap-4">
                         <span className="text-sm font-medium w-20">{pattern.dayOfWeek}</span>
                         <ProgressBar value={pattern.completionRate} className="flex-1" />
                         <span className="text-sm text-gray-600 w-16">{pattern.completionRate}%</span>
-                        <span className="text-xs text-gray-500 w-16">{pattern.tasksCompleted} tasks</span>
+                        <span className="text-xs text-gray-500 w-16">{pattern.tasksCompleted} {t('progressPage.tasks')}</span>
                       </div>
                     ))}
                   </div>
@@ -431,17 +431,17 @@ export default function Analytics() {
           <TabsContent value="categories" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Goal Category Performance</CardTitle>
+                <CardTitle>{t('analytics.goalCategoryPerformance')}</CardTitle>
                 <CardDescription>
-                  See which types of goals you excel at and where you can improve
+                  {t('analytics.categoryDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {goalCategories.length === 0 ? (
                   <div className="text-center py-8">
                     <Folder className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Categories Yet</h3>
-                    <p className="text-gray-600">Create goals with categories to see performance insights</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">{t('analytics.noCategoriesYet')}</h3>
+                    <p className="text-gray-600">{t('analytics.createCategoriesForInsights')}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -449,20 +449,20 @@ export default function Analytics() {
                       <div key={category.name} className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-3">
                           <h3 className="font-semibold">{category.name}</h3>
-                          <Badge variant="secondary">{category.count} goal{category.count !== 1 ? 's' : ''}</Badge>
+                          <Badge variant="secondary">{category.count} {category.count !== 1 ? t('analytics.goals') : t('analytics.goal')}</Badge>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">Success Rate</p>
+                            <p className="text-sm text-gray-600 mb-1">{t('dashboard.successRate')}</p>
                             <div className="flex items-center gap-2">
                               <ProgressBar value={category.successRate} className="flex-1" />
                               <span className="text-sm font-medium">{category.successRate}%</span>
                             </div>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">Avg. Completion Time</p>
+                            <p className="text-sm text-gray-600 mb-1">{t('analytics.avgCompletionTime')}</p>
                             <p className="text-lg font-semibold">
-                              {category.avgTimeToComplete > 0 ? `${category.avgTimeToComplete} days` : 'N/A'}
+                              {category.avgTimeToComplete > 0 ? `${category.avgTimeToComplete} ${t('analytics.days')}` : t('analytics.na')}
                             </p>
                           </div>
                         </div>
@@ -480,10 +480,10 @@ export default function Analytics() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Brain className="mr-2 h-5 w-5" />
-                  AI-Powered Insights
+                  {t('analytics.aiPoweredInsights')}
                 </CardTitle>
                 <CardDescription>
-                  Personalized recommendations to improve your goal achievement
+                  {t('analytics.personalizedRecommendations')}
                 </CardDescription>
               </CardHeader>
               <CardContent>

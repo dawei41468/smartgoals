@@ -163,11 +163,11 @@ export default function Progress() {
 
   const getMotivationalMessage = () => {
     const messages = [
-      "Every small step counts towards your bigger picture! 🌟",
-      "Progress, not perfection. You're doing amazing! 💪",
-      "Your future self will thank you for today's efforts! 🚀",
-      "Consistency is key. Keep building those habits! 🔥",
-      "Small daily improvements lead to stunning yearly results! ✨",
+      t('progressPage.motivationalMessages.everyStep'),
+      t('progressPage.motivationalMessages.progressNotPerfection'),
+      t('progressPage.motivationalMessages.futureself'),
+      t('progressPage.motivationalMessages.consistency'),
+      t('progressPage.motivationalMessages.smallImprovements'),
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   };
@@ -181,7 +181,15 @@ export default function Progress() {
   };
 
   const getDaysOfWeek = () => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      t('progressPage.daysOfWeek.sunday'),
+      t('progressPage.daysOfWeek.monday'), 
+      t('progressPage.daysOfWeek.tuesday'),
+      t('progressPage.daysOfWeek.wednesday'),
+      t('progressPage.daysOfWeek.thursday'),
+      t('progressPage.daysOfWeek.friday'),
+      t('progressPage.daysOfWeek.saturday')
+    ];
     const today = new Date();
     const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
     
