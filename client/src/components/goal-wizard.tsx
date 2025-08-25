@@ -138,7 +138,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
-                        <Target className="gradient-icon mr-2 h-4 w-4" />
+                        <Target className="mr-2 h-4 w-4" style={{background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent'}} />
                         Specific
                       </FormLabel>
                       <p className="text-sm text-gray-600 mb-3">What exactly do you want to accomplish? Be clear and detailed.</p>

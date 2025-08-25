@@ -126,7 +126,7 @@ export default function Dashboard() {
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
                   <div className="p-2 bg-secondary/10 rounded-lg">
-                    <Target className="gradient-icon h-6 w-6" />
+                    <Target className="h-6 w-6" style={{background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent'}} />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-muted-foreground">Active Goals</p>
@@ -193,7 +193,7 @@ export default function Dashboard() {
             ) : goals.length === 0 ? (
               <div className="p-4 sm:p-6">
                 <div className="text-center py-6 sm:py-8">
-                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 gradient-icon mb-3 sm:mb-4" />
+                  <Target className="mx-auto h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" style={{background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent'}} />
                   <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">No goals yet</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-4">
                     Create your first SMART(ER) goal to get started on your journey to success.
