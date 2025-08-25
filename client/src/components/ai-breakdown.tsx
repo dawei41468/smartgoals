@@ -111,17 +111,18 @@ export default function AIBreakdown({ goalData, breakdownRequest, breakdown: ini
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">AI-Generated Goal Breakdown</h1>
-            <p className="text-gray-600">Review and customize your weekly goals and daily tasks</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">AI-Generated Goal Breakdown</h1>
+            <p className="text-sm sm:text-base text-gray-600">Review and customize your weekly goals and daily tasks</p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <Button 
               variant="outline" 
               onClick={handleRegenerate}
               disabled={isRegenerating}
+              className="w-full sm:w-auto"
               data-testid="button-regenerate"
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
@@ -130,6 +131,7 @@ export default function AIBreakdown({ goalData, breakdownRequest, breakdown: ini
             <Button 
               onClick={handleSave}
               disabled={saveGoalMutation.isPending}
+              className="w-full sm:w-auto"
               data-testid="button-save-goal"
             >
               <Save className="mr-2 h-4 w-4" />
@@ -139,11 +141,11 @@ export default function AIBreakdown({ goalData, breakdownRequest, breakdown: ini
         </div>
 
         {/* Goal Summary */}
-        <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4" data-testid="text-goal-title">
+        <div className="bg-gray-50 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4" data-testid="text-goal-title">
             Goal: {goalData.title || goalData.specific.substring(0, 50)}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <span className="text-sm font-medium text-gray-500">Timeline:</span>
               <span className="text-sm text-gray-900 ml-2" data-testid="text-timeline">
@@ -196,7 +198,7 @@ export default function AIBreakdown({ goalData, breakdownRequest, breakdown: ini
               </div>
               
               {expandedWeeks.has(week.weekNumber) && (
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className={`border-l-4 ${getWeekBorderColor(week.weekNumber)} pl-4`}>
                     <div className="space-y-4">
                       {week.tasks.map((task, taskIndex) => (

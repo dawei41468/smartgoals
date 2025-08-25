@@ -101,35 +101,35 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Create Your SMART(ER) Goal</h1>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Create Your SMART(ER) Goal</h1>
           <Button variant="ghost" size="sm" onClick={onClose} data-testid="button-close-wizard">
             <X className="h-5 w-5" />
           </Button>
         </div>
         
         {/* Step Indicator */}
-        <div className="flex items-center space-x-4 mb-8">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">1</div>
-            <span className="ml-2 text-sm font-medium text-primary">SMART(ER) Setup</span>
+        <div className="flex items-center space-x-2 sm:space-x-4 mb-6 sm:mb-8 overflow-x-auto">
+          <div className="flex items-center flex-shrink-0">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold">1</div>
+            <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-primary whitespace-nowrap">SMART(ER) Setup</span>
           </div>
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
-            <span className="ml-2 text-sm font-medium text-gray-500">AI Breakdown</span>
+          <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
+          <div className="flex items-center flex-shrink-0">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold">2</div>
+            <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-500 whitespace-nowrap">AI Breakdown</span>
           </div>
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
-            <span className="ml-2 text-sm font-medium text-gray-500">Review & Save</span>
+          <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
+          <div className="flex items-center flex-shrink-0">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold">3</div>
+            <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-500 whitespace-nowrap">Review & Save</span>
           </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               <div className="space-y-6">
                 {/* Specific */}
                 <FormField
@@ -319,20 +319,23 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-              <Button type="button" variant="outline" data-testid="button-save-draft">
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" data-testid="button-save-draft">
                 Save as Draft
               </Button>
               <Button 
                 type="submit" 
                 disabled={isGenerating}
+                className="w-full sm:w-auto"
                 data-testid="button-generate-breakdown"
               >
                 {isGenerating ? (
                   "Generating..."
                 ) : (
                   <>
-                    Generate AI Breakdown <ArrowRight className="ml-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Generate AI Breakdown</span>
+                    <span className="sm:hidden">Generate Breakdown</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
               </Button>
