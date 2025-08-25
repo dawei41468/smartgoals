@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Target, Settings, User, LogOut, Home, FolderOpen, TrendingUp, BarChart3 } from "lucide-react";
+import { Bell, Target, Settings, User, LogOut, Home, FolderOpen, TrendingUp, BarChart3, Globe, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -76,11 +76,13 @@ export default function Navigation() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer" data-testid="menu-profile">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
+                <DropdownMenuItem className="cursor-pointer" data-testid="menu-language">
+                  <Globe className="mr-2 h-4 w-4" />
+                  <span>Language</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" data-testid="menu-theme">
+                  <Moon className="mr-2 h-4 w-4" />
+                  <span>Theme</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer" data-testid="menu-settings">
