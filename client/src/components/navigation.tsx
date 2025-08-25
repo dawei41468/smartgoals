@@ -33,9 +33,9 @@ export default function Navigation() {
               <Link href="/progress" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-progress">
                 Progress
               </Link>
-              <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-analytics">
+              <Link href="/analytics" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-analytics">
                 Analytics
-              </a>
+              </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -100,9 +100,9 @@ export default function Navigation() {
               <Link href="/progress" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-progress">
                 Progress
               </Link>
-              <a href="#" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-analytics">
+              <Link href="/analytics" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-analytics">
                 Analytics
-              </a>
+              </Link>
               <div className="border-t border-gray-200 pt-2">
                 <button className="flex items-center w-full px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="button-mobile-notifications">
                   <Bell className="h-4 w-4 mr-2" />
