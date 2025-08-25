@@ -605,7 +605,7 @@ export default function Settings() {
           <Button
             variant="outline"
             onClick={handleLogout}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto logout-button"
             data-testid="button-logout"
           >
             <LogOut className="h-4 w-4 mr-2" />

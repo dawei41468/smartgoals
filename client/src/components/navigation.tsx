@@ -136,7 +136,7 @@ export default function Navigation() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={logout}
-                  className="cursor-pointer" 
+                  className="cursor-pointer logout-menu-item" 
                   data-testid="menu-logout"
                 >
                   <LogOut className="mr-2 h-4 w-4" />

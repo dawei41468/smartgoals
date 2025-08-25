@@ -119,6 +119,29 @@
     background-size: 100%;
     color: transparent;
   }
+
+  /* Logout button red highlighting */
+  .logout-button:hover {
+    border-color: rgb(239 68 68) !important;
+    background-color: rgb(254 242 242) !important;
+    color: rgb(185 28 28) !important;
+  }
+
+  .dark .logout-button:hover {
+    border-color: rgb(239 68 68) !important;
+    background-color: rgb(127 29 29) !important;
+    color: rgb(254 202 202) !important;
+  }
+
+  .logout-menu-item:hover {
+    background-color: rgb(254 242 242) !important;
+    color: rgb(185 28 28) !important;
+  }
+
+  .dark .logout-menu-item:hover {
+    background-color: rgb(127 29 29) !important;
+    color: rgb(254 202 202) !important;
+  }
 }
 
 /* Mobile bottom navigation spacing */
