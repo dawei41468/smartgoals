@@ -14,6 +14,7 @@ export const goals = pgTable("goals", {
   userId: varchar("user_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  category: text("category").notNull(), // Health, Work, Family, Personal
   specific: text("specific").notNull(),
   measurable: text("measurable").notNull(),
   achievable: text("achievable").notNull(),
@@ -66,6 +67,8 @@ export const insertGoalSchema = createInsertSchema(goals).omit({
   status: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  category: z.enum(["Health", "Work", "Family", "Personal"]),
 });
 
 export const insertWeeklyGoalSchema = createInsertSchema(weeklyGoals).omit({

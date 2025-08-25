@@ -14,7 +14,8 @@ import {
   PieChart,
   ArrowUpRight,
   ArrowDownRight,
-  Zap
+  Zap,
+  Folder
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,12 +96,27 @@ export default function Analytics() {
     },
   };
 
-  const goalCategories: GoalCategory[] = [
-    { name: "Health & Fitness", count: 3, successRate: 85, avgTimeToComplete: 21 },
-    { name: "Career", count: 2, successRate: 75, avgTimeToComplete: 45 },
-    { name: "Learning", count: 4, successRate: 90, avgTimeToComplete: 30 },
-    { name: "Personal", count: 1, successRate: 100, avgTimeToComplete: 15 },
-  ];
+  // Calculate real category performance from goals data
+  const goalCategories: GoalCategory[] = ["Health", "Work", "Family", "Personal"].map(category => {
+    const categoryGoals = goals.filter(goal => goal.category === category);
+    const completedGoals = categoryGoals.filter(goal => goal.status === 'completed');
+    const successRate = categoryGoals.length > 0 ? Math.round((completedGoals.length / categoryGoals.length) * 100) : 0;
+    
+    // Calculate average time to complete (mock calculation for now)
+    const avgTimeToComplete = completedGoals.length > 0 ? 
+      Math.round(completedGoals.reduce((acc, goal) => {
+        const created = new Date(goal.createdAt || 0);
+        const updated = new Date(goal.updatedAt || 0);
+        return acc + Math.max(1, Math.ceil((updated.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
+      }, 0) / completedGoals.length) : 0;
+    
+    return {
+      name: category,
+      count: categoryGoals.length,
+      successRate,
+      avgTimeToComplete,
+    };
+  }).filter(category => category.count > 0); // Only show categories with goals
 
   const productivityPatterns: ProductivityPattern[] = [
     { dayOfWeek: "Monday", completionRate: 78, tasksCompleted: 12 },
@@ -419,29 +435,39 @@ export default function Analytics() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {goalCategories.map((category) => (
-                    <div key={category.name} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold">{category.name}</h3>
-                        <Badge variant="secondary">{category.count} goals</Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-600 mb-1">Success Rate</p>
-                          <div className="flex items-center gap-2">
-                            <ProgressBar value={category.successRate} className="flex-1" />
-                            <span className="text-sm font-medium">{category.successRate}%</span>
+                {goalCategories.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Folder className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Categories Yet</h3>
+                    <p className="text-gray-600">Create goals with categories to see performance insights</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {goalCategories.map((category) => (
+                      <div key={category.name} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-semibold">{category.name}</h3>
+                          <Badge variant="secondary">{category.count} goal{category.count !== 1 ? 's' : ''}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Success Rate</p>
+                            <div className="flex items-center gap-2">
+                              <ProgressBar value={category.successRate} className="flex-1" />
+                              <span className="text-sm font-medium">{category.successRate}%</span>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Avg. Completion Time</p>
+                            <p className="text-lg font-semibold">
+                              {category.avgTimeToComplete > 0 ? `${category.avgTimeToComplete} days` : 'N/A'}
+                            </p>
                           </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600 mb-1">Avg. Completion Time</p>
-                          <p className="text-lg font-semibold">{category.avgTimeToComplete} days</p>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { X, Target, Ruler, Mountain, Crosshair, Calendar, Star, ArrowRight } from "lucide-react";
+import { X, Target, Ruler, Mountain, Crosshair, Calendar, Star, ArrowRight, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { insertGoalSchema } from "@shared/schema";
 import type { InsertGoal, AIBreakdownRequest } from "@shared/schema";
@@ -26,6 +27,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
     defaultValues: {
       title: "",
       description: "",
+      category: "Health" as const,
       specific: "",
       measurable: "",
       achievable: "",
@@ -129,6 +131,35 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Category Field */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                    <Folder className="text-secondary mr-2 h-4 w-4" />
+                    Goal Category
+                  </FormLabel>
+                  <p className="text-sm text-gray-600 mb-3">Choose the area of your life this goal focuses on.</p>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-category">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Health">Health</SelectItem>
+                      <SelectItem value="Work">Work</SelectItem>
+                      <SelectItem value="Family">Family</SelectItem>
+                      <SelectItem value="Personal">Personal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               <div className="space-y-6">
                 {/* Specific */}
