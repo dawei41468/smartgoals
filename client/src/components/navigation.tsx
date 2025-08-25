@@ -27,9 +27,9 @@ export default function Navigation() {
               <a href="#" className="text-primary border-b-2 border-primary px-1 pb-4 text-sm font-medium" data-testid="nav-dashboard">
                 Dashboard
               </a>
-              <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-goals">
+              <Link href="/my-goals" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-goals">
                 My Goals
-              </a>
+              </Link>
               <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium" data-testid="nav-progress">
                 Progress
               </a>
@@ -94,9 +94,9 @@ export default function Navigation() {
               <a href="#" className="block px-3 py-2 text-primary bg-primary/5 border-l-4 border-primary text-sm font-medium" data-testid="nav-mobile-dashboard">
                 Dashboard
               </a>
-              <a href="#" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-goals">
+              <Link href="/my-goals" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-goals">
                 My Goals
-              </a>
+              </Link>
               <a href="#" className="block px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-sm font-medium" data-testid="nav-mobile-progress">
                 Progress
               </a>
