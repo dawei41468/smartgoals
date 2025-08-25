@@ -23,7 +23,9 @@ export const translations = {
       recentGoals: "Recent Goals",
       recentActivity: "Recent Activity",
       welcomeMessage: "Welcome to SMART Goals! Create your first goal to see activity here.",
-      justNow: "Just now"
+      justNow: "Just now",
+      noGoals: "No goals yet",
+      noGoalsDescription: "Create your first goal to get started!"
     },
     // Goal Creation
     goalWizard: {
@@ -52,7 +54,98 @@ export const translations = {
       saveDraft: "Save as Draft",
       generateBreakdown: "Generate AI Breakdown",
       generateBreakdownMobile: "Generate Breakdown",
-      generating: "Generating..."
+      generating: "Generating...",
+      placeholders: {
+        specific: "Clearly describe what you want to achieve...",
+        measurable: "How will you measure progress or success?",
+        achievable: "Is this goal realistic given your current situation?",
+        relevant: "Why is this goal important to you right now?",
+        timebound: "When do you want to achieve this goal?",
+        exciting: "What makes this goal exciting and motivating for you?"
+      }
+    },
+    // My Goals
+    myGoals: {
+      title: "My Goals",
+      description: "Track and manage all your SMART(ER) goals in one place.",
+      filterBy: "Filter by category",
+      allCategories: "All Categories",
+      sortBy: "Sort by",
+      newest: "Newest First",
+      oldest: "Oldest First",
+      deadline: "Deadline",
+      progress: "Progress",
+      noGoals: "No goals found",
+      noGoalsDescription: "Start by creating your first SMART goal!",
+      createFirst: "Create First Goal",
+      viewDetails: "View Details",
+      due: "Due",
+      overdue: "Overdue",
+      completed: "Completed"
+    },
+    // Progress  
+    progressPage: {
+      title: "Progress Tracking",
+      description: "Monitor your journey towards achieving your goals.",
+      weeklyProgress: "Weekly Progress",
+      completionRate: "Completion Rate",
+      tasksThisWeek: "Tasks This Week",
+      upcomingTasks: "Upcoming Tasks",
+      recentActivity: "Recent Activity",
+      noActivity: "No recent activity",
+      noActivityDescription: "Complete some tasks to see your progress here.",
+      taskCompleted: "Task completed",
+      milestoneReached: "Milestone reached"
+    },
+    // Analytics
+    analytics: {
+      title: "Analytics Dashboard",
+      description: "Insights into your goal achievement patterns and progress.",
+      overview: "Overview",
+      goalsOverTime: "Goals Over Time",
+      categoryBreakdown: "Category Breakdown",
+      completionTrends: "Completion Trends",
+      performance: "Performance Metrics",
+      avgCompletionTime: "Avg. Completion Time",
+      mostActive: "Most Active Category",
+      streakDays: "Current Streak",
+      days: "days",
+      noData: "No data available",
+      noDataDescription: "Create and complete some goals to see analytics."
+    },
+    // Settings
+    settings: {
+      title: "Settings",
+      description: "Customize your SMART Goals experience.",
+      appearance: "Appearance",
+      notifications: "Notifications",
+      data: "Data Management",
+      about: "About",
+      darkMode: "Dark Mode",
+      language: "Language",
+      emailNotifications: "Email Notifications",
+      pushNotifications: "Push Notifications",
+      weeklyReports: "Weekly Progress Reports",
+      exportData: "Export Data", 
+      importData: "Import Data",
+      clearData: "Clear All Data",
+      version: "Version",
+      support: "Support",
+      privacy: "Privacy Policy",
+      terms: "Terms of Service"
+    },
+    // AI Breakdown
+    aiBreakdown: {
+      title: "AI Goal Breakdown",
+      description: "Your goal has been broken down into weekly milestones and daily tasks.",
+      weeklyMilestones: "Weekly Milestones",
+      dailyTasks: "Daily Tasks",
+      saveGoal: "Save Goal",
+      regenerate: "Regenerate",
+      week: "Week",
+      day: "Day",
+      milestone: "Milestone",
+      task: "Task"
     },
     // Common
     common: {
@@ -63,7 +156,22 @@ export const translations = {
       save: "Save",
       delete: "Delete",
       edit: "Edit",
-      close: "Close"
+      close: "Close",
+      back: "Back",
+      next: "Next",
+      previous: "Previous",
+      search: "Search",
+      filter: "Filter",
+      sort: "Sort",
+      create: "Create",
+      update: "Update",
+      view: "View",
+      today: "Today",
+      yesterday: "Yesterday",
+      thisWeek: "This Week",
+      lastWeek: "Last Week",
+      thisMonth: "This Month",
+      lastMonth: "Last Month"
     }
   },
   zh: {
@@ -90,7 +198,9 @@ export const translations = {
       recentGoals: "最近目标",
       recentActivity: "最近活动",
       welcomeMessage: "欢迎使用SMART目标！创建您的第一个目标来查看活动。",
-      justNow: "刚刚"
+      justNow: "刚刚",
+      noGoals: "还没有目标",
+      noGoalsDescription: "创建您的第一个目标开始使用！"
     },
     // Goal Creation
     goalWizard: {
@@ -119,7 +229,98 @@ export const translations = {
       saveDraft: "保存草稿",
       generateBreakdown: "生成AI分解",
       generateBreakdownMobile: "生成分解",
-      generating: "生成中..."
+      generating: "生成中...",
+      placeholders: {
+        specific: "清楚地描述您想要实现的目标...",
+        measurable: "您将如何衡量进度或成功？",
+        achievable: "考虑到您目前的情况，这个目标现实吗？",
+        relevant: "为什么这个目标对您现在很重要？",
+        timebound: "您希望何时实现这个目标？",
+        exciting: "是什么让这个目标对您来说令人兴奋和有动力？"
+      }
+    },
+    // My Goals
+    myGoals: {
+      title: "我的目标",
+      description: "在一个地方跟踪和管理您所有的SMART(ER)目标。",
+      filterBy: "按类别筛选",
+      allCategories: "所有类别",
+      sortBy: "排序方式",
+      newest: "最新优先",
+      oldest: "最旧优先",
+      deadline: "截止日期",
+      progress: "进度",
+      noGoals: "未找到目标",
+      noGoalsDescription: "从创建您的第一个SMART目标开始！",
+      createFirst: "创建第一个目标",
+      viewDetails: "查看详情",
+      due: "到期",
+      overdue: "逾期",
+      completed: "已完成"
+    },
+    // Progress  
+    progressPage: {
+      title: "进度跟踪",
+      description: "监控您实现目标的旅程。",
+      weeklyProgress: "每周进度",
+      completionRate: "完成率",
+      tasksThisWeek: "本周任务",
+      upcomingTasks: "即将到来的任务",
+      recentActivity: "最近活动",
+      noActivity: "无最近活动",
+      noActivityDescription: "完成一些任务以在此处查看您的进度。",
+      taskCompleted: "任务已完成",
+      milestoneReached: "里程碑已达到"
+    },
+    // Analytics
+    analytics: {
+      title: "分析仪表板",
+      description: "深入了解您的目标实现模式和进度。",
+      overview: "概览",
+      goalsOverTime: "目标随时间变化",
+      categoryBreakdown: "类别分解",
+      completionTrends: "完成趋势",
+      performance: "性能指标",
+      avgCompletionTime: "平均完成时间",
+      mostActive: "最活跃类别",
+      streakDays: "当前连续天数",
+      days: "天",
+      noData: "无可用数据",
+      noDataDescription: "创建并完成一些目标以查看分析数据。"
+    },
+    // Settings
+    settings: {
+      title: "设置",
+      description: "自定义您的SMART目标体验。",
+      appearance: "外观",
+      notifications: "通知",
+      data: "数据管理",
+      about: "关于",
+      darkMode: "深色模式",
+      language: "语言",
+      emailNotifications: "邮件通知",
+      pushNotifications: "推送通知",
+      weeklyReports: "每周进度报告",
+      exportData: "导出数据", 
+      importData: "导入数据",
+      clearData: "清除所有数据",
+      version: "版本",
+      support: "支持",
+      privacy: "隐私政策",
+      terms: "服务条款"
+    },
+    // AI Breakdown
+    aiBreakdown: {
+      title: "AI目标分解",
+      description: "您的目标已被分解为每周里程碑和日常任务。",
+      weeklyMilestones: "每周里程碑",
+      dailyTasks: "日常任务",
+      saveGoal: "保存目标",
+      regenerate: "重新生成",
+      week: "第",
+      day: "第",
+      milestone: "里程碑",
+      task: "任务"
     },
     // Common
     common: {
@@ -130,7 +331,22 @@ export const translations = {
       save: "保存",
       delete: "删除",
       edit: "编辑",
-      close: "关闭"
+      close: "关闭",
+      back: "返回",
+      next: "下一步",
+      previous: "上一步",
+      search: "搜索",
+      filter: "筛选",
+      sort: "排序",
+      create: "创建",
+      update: "更新",
+      view: "查看",
+      today: "今天",
+      yesterday: "昨天",
+      thisWeek: "本周",
+      lastWeek: "上周",
+      thisMonth: "本月",
+      lastMonth: "上月"
     }
   }
 } as const;

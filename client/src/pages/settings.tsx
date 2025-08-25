@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 
@@ -38,6 +39,7 @@ type PreferencesFormData = z.infer<typeof preferencesSchema>;
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),

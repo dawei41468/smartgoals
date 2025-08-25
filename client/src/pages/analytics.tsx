@@ -23,6 +23,7 @@ import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Navigation from "@/components/navigation";
 import type { Goal, GoalWithBreakdown } from "@shared/schema";
 
@@ -69,6 +70,7 @@ interface Insight {
 export default function Analytics() {
   const [timePeriod, setTimePeriod] = useState("month");
   const [selectedMetric, setSelectedMetric] = useState("completion_rate");
+  const { t } = useLanguage();
 
   // Fetch goals with detailed breakdown
   const { data: goals = [], isLoading: goalsLoading } = useQuery<GoalWithBreakdown[]>({

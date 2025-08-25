@@ -19,6 +19,7 @@ import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@shared/schema";
@@ -49,6 +50,7 @@ interface Achievement {
 export default function Progress() {
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   // Fetch goals with detailed breakdown

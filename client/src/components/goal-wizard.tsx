@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { insertGoalSchema } from "@shared/schema";
 import type { InsertGoal, AIBreakdownRequest } from "@shared/schema";
 import { api } from "@/lib/api";
@@ -21,6 +22,7 @@ interface GoalWizardProps {
 export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizardProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const form = useForm<InsertGoal>({
     resolver: zodResolver(insertGoalSchema),

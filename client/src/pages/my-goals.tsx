@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@shared/schema";
@@ -28,6 +29,7 @@ export default function MyGoals() {
   const [sortBy, setSortBy] = useState("created");
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   // Fetch goals with breakdown data
