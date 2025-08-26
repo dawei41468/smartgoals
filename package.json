@@ -1,8 +1,16 @@
 {
-  "name": "goalforge",
+  "name": "smartgoals",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dawei41468/smartgoals.git"
+  },
+  "homepage": "https://github.com/dawei41468/smartgoals#readme",
+  "bugs": {
+    "url": "https://github.com/dawei41468/smartgoals/issues"
+  },
   "scripts": {
     "dev": "npm run api:dev & npm run client:dev",
     "build": "vite build",

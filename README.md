@@ -1,4 +1,9 @@
 # SmartGoals
+ 
+[![CI](https://github.com/dawei41468/smartgoals/actions/workflows/ci.yml/badge.svg)](https://github.com/dawei41468/smartgoals/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)
 
 SMART goals, task breakdown, and progress tracking. Frontend: React + TypeScript + Tailwind CSS v4 (Vite). Backend: FastAPI + MongoDB + JWT. Optional AI assistance via DeepSeek.
 
