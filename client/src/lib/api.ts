@@ -1,10 +1,15 @@
 import { apiRequest } from "./queryClient";
-import type { Goal, InsertGoal, AIBreakdownRequest, AIBreakdownResponse, GoalWithBreakdown, DailyTask, Activity } from "@shared/schema";
+import type { Goal, InsertGoal, AIBreakdownRequest, AIBreakdownResponse, GoalWithBreakdown, DailyTask, Activity } from "@/lib/schema";
 
 export const api = {
   // Goals
   createGoal: async (goalData: InsertGoal): Promise<Goal> => {
     const response = await apiRequest("POST", "/api/goals", goalData);
+    return response.json();
+  },
+
+  createGoalDraft: async (goalData: InsertGoal): Promise<Goal> => {
+    const response = await apiRequest("POST", "/api/goals?draft=true", goalData);
     return response.json();
   },
 

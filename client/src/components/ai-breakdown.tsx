@@ -4,7 +4,7 @@ import { RefreshCw, Save, ChevronDown, ChevronUp, Plus, Clock, AlertTriangle, Li
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@shared/schema";
+import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
 import { api } from "@/lib/api";
 
 interface AIBreakdownProps {

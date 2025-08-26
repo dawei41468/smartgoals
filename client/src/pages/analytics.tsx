@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Navigation from "@/components/navigation";
-import type { Goal, GoalWithBreakdown } from "@shared/schema";
+import type { Goal, GoalWithBreakdown } from "@/lib/schema";
 
 interface AnalyticsData {
   goalSuccessRate: number;

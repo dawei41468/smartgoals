@@ -18,7 +18,8 @@ import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { User as UserType, UserSettings, UpdateUserProfile, UpdateUserSettings } from "@shared/schema";
+import type { User as UserType, UserSettings, UpdateUserProfile, UpdateUserSettings } from "@/lib/schema";
+import { enablePush, disablePush } from "@/lib/push";
 
 const profileSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -98,14 +99,15 @@ export default function Settings() {
   // Update form values when settings data loads
   React.useEffect(() => {
     if (userSettings && typeof userSettings === 'object') {
+      const us = userSettings as Partial<UserSettings>;
       preferencesForm.reset({
-        emailNotifications: userSettings.emailNotifications ?? true,
-        pushNotifications: userSettings.pushNotifications ?? false,
-        weeklyDigest: userSettings.weeklyDigest ?? true,
-        goalReminders: userSettings.goalReminders ?? true,
-        defaultGoalDuration: userSettings.defaultGoalDuration || "3-months",
-        aiBreakdownDetail: userSettings.aiBreakdownDetail || "detailed",
-        theme: userSettings.theme || "light",
+        emailNotifications: us.emailNotifications ?? true,
+        pushNotifications: us.pushNotifications ?? false,
+        weeklyDigest: us.weeklyDigest ?? true,
+        goalReminders: us.goalReminders ?? true,
+        defaultGoalDuration: us.defaultGoalDuration || "3-months",
+        aiBreakdownDetail: us.aiBreakdownDetail || "detailed",
+        theme: us.theme || "light",
       });
     }
   }, [userSettings, preferencesForm]);
@@ -158,7 +160,23 @@ export default function Settings() {
   const settingsMutation = useMutation({
     mutationFn: (data: UpdateUserSettings) => 
       apiRequest("PATCH", "/api/user/settings", data),
-    onSuccess: () => {
+    onSuccess: async (_res, variables) => {
+      // Apply push subscription changes based on the submitted value
+      try {
+        if (typeof variables?.pushNotifications === 'boolean') {
+          if (variables.pushNotifications) {
+            const ok = await enablePush();
+            if (!ok) {
+              toast({ title: "Push Setup", description: "Unable to enable push notifications on this device.", variant: "destructive" });
+            }
+          } else {
+            await disablePush();
+          }
+        }
+      } catch (_) {
+        // ignore subscription errors; user settings already saved
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/user/settings"] });
       toast({
         title: "Settings Updated",

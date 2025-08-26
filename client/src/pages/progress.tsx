@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
-import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@shared/schema";
+import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@/lib/schema";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ProgressStats {
@@ -151,8 +151,8 @@ export default function Progress() {
       queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
       queryClient.invalidateQueries({ queryKey: ["/api/progress/stats"] });
       toast({
-        title: "Task Updated",
-        description: "Task status updated successfully.",
+        title: t('progressPage.taskUpdatedTitle'),
+        description: t('progressPage.taskUpdatedDescription'),
       });
     },
   });
@@ -181,15 +181,16 @@ export default function Progress() {
   };
 
   const getDaysOfWeek = () => {
-    const days = [
-      t('progressPage.daysOfWeek.sunday'),
-      t('progressPage.daysOfWeek.monday'), 
-      t('progressPage.daysOfWeek.tuesday'),
-      t('progressPage.daysOfWeek.wednesday'),
-      t('progressPage.daysOfWeek.thursday'),
-      t('progressPage.daysOfWeek.friday'),
-      t('progressPage.daysOfWeek.saturday')
-    ];
+    const dayKeys = [
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday'
+    ] as const;
+    const days = dayKeys.map(k => t(`progressPage.daysOfWeek.${k}`));
     const today = new Date();
     const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
     
@@ -202,6 +203,7 @@ export default function Progress() {
       });
       
       return {
+        key: dayKeys[index],
         name: day,
         date,
         tasks: dayTasks,
@@ -314,16 +316,16 @@ export default function Progress() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Calendar className="mr-2 h-5 w-5" />
-                  Weekly Progress
+                  {t('progressPage.weeklyProgress')}
                 </CardTitle>
                 <CardDescription>
-                  Complete your daily tasks to maintain your streak
+                  {t('progressPage.completeDailyTasks')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-2">
-                    <span>Weekly Progress</span>
+                    <span>{t('progressPage.weeklyProgress')}</span>
                     <span>{weekProgress}%</span>
                   </div>
                   <ProgressBar value={weekProgress} className="h-3" />
@@ -344,11 +346,13 @@ export default function Progress() {
                           : 'border-gray-200'
                       }`}
                     >
-                      <div className="text-xs font-medium text-gray-700">{day.name.slice(0, 3)}</div>
+                      <div className="text-xs font-medium text-gray-700 whitespace-nowrap">
+                        {t(`progressPage.daysOfWeekShort.${day.key}`)}
+                      </div>
                       <div className="text-xs text-gray-500 mt-1">{day.date.getDate()}</div>
                       {day.total > 0 && (
                         <div className="mt-2">
-                          <div className={`w-6 h-6 rounded-full mx-auto flex items-center justify-center text-xs ${
+                          <div className={`w-7 h-7 sm:w-6 sm:h-6 rounded-full mx-auto flex items-center justify-center text-[10px] sm:text-xs ${
                             day.completed === day.total
                               ? 'bg-green-500 text-white'
                               : day.completed > 0
@@ -372,8 +376,8 @@ export default function Progress() {
             }).length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Today's Tasks</CardTitle>
-                  <CardDescription>Focus on these tasks to maintain your progress</CardDescription>
+                  <CardTitle>{t('progressPage.todaysTasks')}</CardTitle>
+                  <CardDescription>{t('progressPage.todaysTasksSubtitle')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -418,10 +422,10 @@ export default function Progress() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Award className="mr-2 h-5 w-5" />
-                  Your Achievements
+                  {t('progressPage.achievementsTitle')}
                 </CardTitle>
                 <CardDescription>
-                  Unlock badges by reaching milestones and maintaining good habits
+                  {t('progressPage.achievementsSubtitle')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -445,7 +449,7 @@ export default function Progress() {
                         {achievement.unlockedAt ? (
                           <Badge className="mt-2 bg-yellow-100 text-yellow-800">
                             <Star className="w-3 h-3 mr-1" />
-                            Unlocked
+                            {t('progressPage.unlocked')}
                           </Badge>
                         ) : achievement.target && achievement.progress !== undefined ? (
                           <div className="mt-2">
@@ -458,7 +462,7 @@ export default function Progress() {
                             </p>
                           </div>
                         ) : (
-                          <Badge variant="secondary" className="mt-2">Locked</Badge>
+                          <Badge variant="secondary" className="mt-2">{t('progressPage.locked')}</Badge>
                         )}
                       </div>
                     </div>
@@ -472,19 +476,19 @@ export default function Progress() {
           <TabsContent value="timeline" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Progress Timeline</CardTitle>
-                <CardDescription>A visual journey of your goal achievements</CardDescription>
+                <CardTitle>{t('progressPage.timelineTitle')}</CardTitle>
+                <CardDescription>{t('progressPage.timelineSubtitle')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {goals.length === 0 ? (
                   <div className="text-center py-8">
                     <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Goals Yet</h3>
-                    <p className="text-gray-600 mb-4">Start your journey by creating your first goal</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">{t('myGoals.noGoalsYet')}</h3>
+                    <p className="text-gray-600 mb-4">{t('myGoals.startJourney')}</p>
                     <Link href="/">
                       <Button>
                         <Plus className="h-4 w-4 mr-2" />
-                        Create Your First Goal
+                        {t('myGoals.createFirstGoal')}
                       </Button>
                     </Link>
                   </div>

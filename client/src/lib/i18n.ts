@@ -120,6 +120,17 @@ export const translations = {
       totalCompleted: "total completed",
       daysPerGoal: "days per goal",
       tasks: "tasks",
+      completeDailyTasks: "Complete your daily tasks to maintain your streak",
+      todaysTasks: "Today's Tasks",
+      todaysTasksSubtitle: "Focus on these tasks to maintain your progress",
+      achievementsTitle: "Your Achievements",
+      achievementsSubtitle: "Unlock badges by reaching milestones and maintaining good habits",
+      unlocked: "Unlocked",
+      locked: "Locked",
+      timelineTitle: "Progress Timeline",
+      timelineSubtitle: "A visual journey of your goal achievements",
+      taskUpdatedTitle: "Task Updated",
+      taskUpdatedDescription: "Task status updated successfully.",
       motivationalMessages: {
         everyStep: "Every small step counts towards your bigger picture! 🌟",
         progressNotPerfection: "Progress, not perfection. You're doing amazing! 💪",
@@ -135,6 +146,15 @@ export const translations = {
         thursday: "Thursday",
         friday: "Friday",
         saturday: "Saturday"
+      },
+      daysOfWeekShort: {
+        sunday: "Sun",
+        monday: "Mon",
+        tuesday: "Tue",
+        wednesday: "Wed",
+        thursday: "Thu",
+        friday: "Fri",
+        saturday: "Sat"
       }
     },
     // Analytics
@@ -365,6 +385,17 @@ export const translations = {
       totalCompleted: "总完成数",
       daysPerGoal: "每目标天数",
       tasks: "任务",
+      completeDailyTasks: "完成您的每日任务以保持连续记录",
+      todaysTasks: "今天的任务",
+      todaysTasksSubtitle: "专注于这些任务以保持您的进度",
+      achievementsTitle: "您的成就",
+      achievementsSubtitle: "通过达到里程碑并保持良好习惯来解锁徽章",
+      unlocked: "已解锁",
+      locked: "未解锁",
+      timelineTitle: "进度时间线",
+      timelineSubtitle: "您目标成就的可视化之旅",
+      taskUpdatedTitle: "任务已更新",
+      taskUpdatedDescription: "任务状态更新成功。",
       motivationalMessages: {
         everyStep: "每一小步都在朝着更大的目标前进！🌟",
         progressNotPerfection: "重在进步，而非完美。你做得很棒！💪",
@@ -375,6 +406,15 @@ export const translations = {
       daysOfWeek: {
         sunday: "周日",
         monday: "周一", 
+        tuesday: "周二",
+        wednesday: "周三",
+        thursday: "周四",
+        friday: "周五",
+        saturday: "周六"
+      },
+      daysOfWeekShort: {
+        sunday: "周日",
+        monday: "周一",
         tuesday: "周二",
         wednesday: "周三",
         thursday: "周四",

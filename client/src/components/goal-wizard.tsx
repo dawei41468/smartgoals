@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { insertGoalSchema } from "@shared/schema";
-import type { InsertGoal, AIBreakdownRequest } from "@shared/schema";
+import { insertGoalSchema } from "@/lib/schema";
+import type { InsertGoal, AIBreakdownRequest } from "@/lib/schema";
 import { api } from "@/lib/api";
 
 interface GoalWizardProps {
@@ -40,6 +40,37 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
     },
   });
 
+  const onSaveDraft = async () => {
+    const values = form.getValues();
+    const goalData: InsertGoal = {
+      ...values,
+      title: values.title || values.specific.substring(0, 50) + (values.specific.length > 50 ? "..." : ""),
+      description: values.description || values.specific,
+    };
+    await saveDraftMutation.mutateAsync(goalData);
+  };
+
+  const saveDraftMutation = useMutation({
+    mutationFn: async (goalData: InsertGoal) => {
+      return api.createGoalDraft(goalData);
+    },
+    onSuccess: (goal) => {
+      toast({
+        title: "Draft saved",
+        description: `Saved draft goal: ${goal.title}`,
+      });
+      onClose();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Save draft error:", error);
+    },
+  });
+
   const generateBreakdownMutation = useMutation({
     mutationFn: async (goalData: InsertGoal) => {
       const breakdownRequest: AIBreakdownRequest = {
@@ -51,7 +82,6 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
         exciting: goalData.exciting,
         deadline: goalData.deadline,
       };
-      
       return api.generateBreakdown(breakdownRequest);
     },
     onSuccess: (breakdown, goalData) => {
@@ -105,9 +135,9 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Create Your SMART(ER) Goal</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Create Your SMART(ER) Goal</h1>
           <Button variant="ghost" size="sm" onClick={onClose} data-testid="button-close-wizard">
             <X className="h-5 w-5" />
           </Button>
@@ -121,15 +151,15 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
               <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-semibold">1</div>
               <span className="ml-1 text-xs font-medium text-primary">Setup</span>
             </div>
-            <div className="w-8 h-px bg-gray-300"></div>
+            <div className="w-8 h-px bg-gray-300 dark:bg-gray-700"></div>
             <div className="flex items-center">
-              <div className="w-6 h-6 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs font-semibold">2</div>
-              <span className="ml-1 text-xs font-medium text-gray-500">AI</span>
+              <div className="w-6 h-6 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-xs font-semibold">2</div>
+              <span className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400">AI</span>
             </div>
-            <div className="w-8 h-px bg-gray-300"></div>
+            <div className="w-8 h-px bg-gray-300 dark:bg-gray-700"></div>
             <div className="flex items-center">
-              <div className="w-6 h-6 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-xs font-semibold">3</div>
-              <span className="ml-1 text-xs font-medium text-gray-500">Save</span>
+              <div className="w-6 h-6 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-xs font-semibold">3</div>
+              <span className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400">Save</span>
             </div>
           </div>
           
@@ -139,15 +169,15 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
               <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">1</div>
               <span className="ml-2 text-sm font-medium text-primary whitespace-nowrap">SMART(ER) Setup</span>
             </div>
-            <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
+            <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700 min-w-4"></div>
             <div className="flex items-center flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
-              <span className="ml-2 text-sm font-medium text-gray-500 whitespace-nowrap">AI Breakdown</span>
+              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
+              <span className="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">AI Breakdown</span>
             </div>
-            <div className="flex-1 h-px bg-gray-300 min-w-4"></div>
+            <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700 min-w-4"></div>
             <div className="flex items-center flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
-              <span className="ml-2 text-sm font-medium text-gray-500 whitespace-nowrap">Review & Save</span>
+              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
+              <span className="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Review & Save</span>
             </div>
           </div>
         </div>
@@ -160,11 +190,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                  <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
                     <Folder className="text-secondary mr-2 h-4 w-4" />
                     Goal Category
                   </FormLabel>
-                  <p className="text-sm text-gray-600 mb-3">Choose the area of your life this goal focuses on.</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Choose the area of your life this goal focuses on.</p>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-category">
@@ -191,11 +221,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                   name="specific"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
                         <Target className="text-secondary mr-2 h-4 w-4" />
                         Specific
                       </FormLabel>
-                      <p className="text-sm text-gray-600 mb-3">What exactly do you want to accomplish? Be clear and detailed.</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">What exactly do you want to accomplish? Be clear and detailed.</p>
                       <FormControl>
                         <Textarea 
                           {...field}
@@ -205,7 +235,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                           data-testid="input-specific"
                         />
                       </FormControl>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {getValidationIcon(field.value)} {validateField(field.value)}
                       </div>
                       <FormMessage />
@@ -219,11 +249,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                   name="measurable"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
                         <Ruler className="text-secondary mr-2 h-4 w-4" />
                         Measurable
                       </FormLabel>
-                      <p className="text-sm text-gray-600 mb-3">How will you track progress and know when you've achieved your goal?</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">How will you track progress and know when you've achieved your goal?</p>
                       <FormControl>
                         <Textarea 
                           {...field}
@@ -233,7 +263,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                           data-testid="input-measurable"
                         />
                       </FormControl>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {getValidationIcon(field.value)} {validateField(field.value)}
                       </div>
                       <FormMessage />
@@ -247,11 +277,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                   name="achievable"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
                         <Mountain className="text-accent mr-2 h-4 w-4" />
                         Achievable
                       </FormLabel>
-                      <p className="text-sm text-gray-600 mb-3">Is this goal realistic given your resources, skills, and timeframe?</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Is this goal realistic given your resources, skills, and timeframe?</p>
                       <FormControl>
                         <Textarea 
                           {...field}
@@ -261,7 +291,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                           data-testid="input-achievable"
                         />
                       </FormControl>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {getValidationIcon(field.value)} {validateField(field.value)}
                       </div>
                       <FormMessage />
@@ -277,11 +307,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                   name="relevant"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
                         <Crosshair className="text-purple-500 mr-2 h-4 w-4" />
                         Relevant
                       </FormLabel>
-                      <p className="text-sm text-gray-600 mb-3">Why is this goal important to you? How does it align with your values?</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Why is this goal important to you? How does it align with your values?</p>
                       <FormControl>
                         <Textarea 
                           {...field}
@@ -291,7 +321,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                           data-testid="input-relevant"
                         />
                       </FormControl>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {getValidationIcon(field.value)} {validateField(field.value)}
                       </div>
                       <FormMessage />
@@ -305,11 +335,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                   name="timebound"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
                         <Calendar className="text-pink-500 mr-2 h-4 w-4" />
                         Time-bound
                       </FormLabel>
-                      <p className="text-sm text-gray-600 mb-3">When will you complete this goal? Set a specific deadline.</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">When will you complete this goal? Set a specific deadline.</p>
                       <div className="space-y-3">
                         <FormField
                           control={form.control}
@@ -334,7 +364,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                           />
                         </FormControl>
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {getValidationIcon(field.value)} {validateField(field.value)}
                       </div>
                       <FormMessage />
@@ -348,11 +378,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                   name="exciting"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700">
+                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
                         <Star className="text-yellow-500 mr-2 h-4 w-4" />
                         Exciting & Rewarding
                       </FormLabel>
-                      <p className="text-sm text-gray-600 mb-3">What makes this goal exciting? How will you celebrate success?</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">What makes this goal exciting? How will you celebrate success?</p>
                       <FormControl>
                         <Textarea 
                           {...field}
@@ -362,7 +392,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
                           data-testid="input-exciting"
                         />
                       </FormControl>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {getValidationIcon(field.value)} {validateField(field.value)}
                       </div>
                       <FormMessage />
@@ -373,9 +403,16 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
-              <Button type="button" variant="outline" className="w-full sm:w-auto" data-testid="button-save-draft">
-                Save as Draft
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200 dark:border-gray-800">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                data-testid="button-save-draft"
+                onClick={onSaveDraft}
+                disabled={saveDraftMutation.isPending || isGenerating}
+              >
+                {saveDraftMutation.isPending ? "Saving..." : "Save as Draft"}
               </Button>
               <Button 
                 type="submit" 

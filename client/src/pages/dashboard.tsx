@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Target, CheckSquare, TrendingUp, ArrowRight, Clock, User, Settings, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse, Activity } from "@shared/schema";
+import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse, Activity } from "@/lib/schema";
 
 type View = "dashboard" | "wizard" | "breakdown";
 
@@ -70,10 +71,10 @@ export default function Dashboard() {
 
   const getSmarterTags = () => [
     { label: "Specific", color: "bg-primary/10 text-primary" },
-    { label: "Measurable", color: "bg-secondary/10 text-secondary" },
-    { label: "Achievable", color: "bg-accent/10 text-accent" },
-    { label: "Relevant", color: "bg-purple-100 text-purple-700" },
-    { label: "Time-bound", color: "bg-pink-100 text-pink-700" },
+    { label: "Measurable", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { label: "Achievable", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    { label: "Relevant", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
+    { label: "Time-bound", color: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300" },
   ];
 
   if (currentView === "wizard") {
@@ -183,10 +184,12 @@ export default function Dashboard() {
             <div className="p-4 sm:p-6 border-b border-border">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
                 <h2 className="text-lg sm:text-xl font-bold">{t('dashboard.activeGoals')}</h2>
-                <Button variant="ghost" size="sm" className="self-start sm:self-auto" data-testid="button-view-all-goals">
-                  <span className="hidden sm:inline">{t('myGoals.title')}</span>
-                  <span className="sm:hidden">{t('common.view')}</span>
-                  <ArrowRight className="ml-1 h-4 w-4" />
+                <Button asChild variant="ghost" size="sm" className="self-start sm:self-auto" data-testid="button-view-all-goals">
+                  <Link href="/my-goals">
+                    <span className="hidden sm:inline">{t('myGoals.title')}</span>
+                    <span className="sm:hidden">{t('common.view')}</span>
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -260,8 +263,10 @@ export default function Dashboard() {
                         <span className="text-sm text-muted-foreground" data-testid={`text-goal-deadline-${goal.id}`}>
                           {t('myGoals.due')}: {formatDate(goal.deadline)}
                         </span>
-                        <Button variant="ghost" size="sm" data-testid={`button-view-goal-${goal.id}`}>
-                          {t('myGoals.viewDetails')} <ArrowRight className="ml-1 h-4 w-4" />
+                        <Button asChild variant="ghost" size="sm" data-testid={`button-view-goal-${goal.id}`}>
+                          <Link href={`/my-goals?goal=${goal.id}`}>
+                            {t('myGoals.viewDetails')} <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
                         </Button>
                       </div>
                     </div>
@@ -302,15 +307,17 @@ export default function Dashboard() {
                       }
                     };
 
-                    const formatTime = (date: string | Date) => {
+                    const formatTime = (date: string | Date | null | undefined) => {
+                      if (!date) return t('dashboard.justNow');
                       const now = new Date();
                       const activityDate = new Date(date);
+                      if (isNaN(activityDate.getTime())) return t('dashboard.justNow');
                       const diffMs = now.getTime() - activityDate.getTime();
                       const diffMins = Math.floor(diffMs / (1000 * 60));
                       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
                       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-                      if (diffMins < 1) return 'Just now';
+                      if (diffMins < 1) return t('dashboard.justNow');
                       if (diffMins < 60) return `${diffMins}m ago`;
                       if (diffHours < 24) return `${diffHours}h ago`;
                       return `${diffDays}d ago`;

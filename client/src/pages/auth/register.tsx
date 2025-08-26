@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { registerSchema, type RegisterData } from '@shared/schema';
+import { registerSchema, type RegisterData } from '@/lib/schema';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Register() {

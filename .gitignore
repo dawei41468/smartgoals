@@ -1,6 +1,71 @@
 node_modules
 dist
 .DS_Store
-server/public
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Env files
+.env
+*.env
+api/.env
+client/.env
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+pip-wheel-metadata/
+MANIFEST
+.python-version
+.venv/
+venv/
+ENV/
+env/
+.nox/
+.tox/
+
+# Coverage / test caches
+.coverage
+.coverage.*
+coverage/
+coverage.xml
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Frontend (Vite)
+client/dist/
+client/.vite/
+
+# Editors / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+Thumbs.db
+.AppleDouble
 vite.config.ts.*
 *.tar.gz

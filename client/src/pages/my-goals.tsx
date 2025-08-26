@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Filter, Plus, Target, Calendar, CheckCircle, Pause, Play, Edit, Trash2, MoreHorizontal, Clock, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import Navigation from "@/components/navigation";
 import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
 import { api } from "@/lib/api";
-import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@shared/schema";
+import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
 import { apiRequest } from "@/lib/queryClient";
 
 type View = "goals" | "wizard" | "breakdown";
@@ -42,6 +42,19 @@ export default function MyGoals() {
   const { toast } = useToast();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
+
+  // If navigated with /my-goals?goal=<id>, auto-expand that goal's details
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const goalId = params.get("goal");
+      if (goalId) {
+        setExpandedGoal(goalId);
+      }
+    } catch (_) {
+      // no-op
+    }
+  }, []);
 
   // Fetch goals with breakdown data
   const { data: goals = [], isLoading } = useQuery<GoalWithBreakdown[]>({
@@ -108,7 +121,7 @@ export default function MyGoals() {
       }
     });
 
-  const handleStatusChange = (goalId: string, status: string) => {
+  const handleStatusChange = (goalId: string, status: Goal["status"]) => {
     updateGoalMutation.mutate({
       goalId,
       updates: { status },
@@ -124,7 +137,7 @@ export default function MyGoals() {
     updateTaskMutation.mutate({ taskId, completed });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null | undefined) => {
     switch (status) {
       case "completed":
         return "bg-green-100 text-green-800 border-green-200";
@@ -137,7 +150,7 @@ export default function MyGoals() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string | null | undefined) => {
     switch (priority) {
       case "high":
         return "bg-red-100 text-red-800 border-red-200";
@@ -150,7 +163,8 @@ export default function MyGoals() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -202,14 +216,15 @@ export default function MyGoals() {
     );
   }
 
-  if (currentView === "breakdown" && wizardData) {
+  if (currentView === "breakdown" && wizardData?.breakdown) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <AIBreakdown
             goalData={wizardData.goalData}
-            breakdownData={wizardData.breakdown}
+            breakdownRequest={wizardData.breakdownRequest}
+            breakdown={wizardData.breakdown}
             onSaveComplete={handleSaveComplete}
           />
         </div>

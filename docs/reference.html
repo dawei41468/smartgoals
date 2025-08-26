@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART Goals - Goal Setting & Task Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#E3F2FD',
+                            100: '#BBDEFB',
+                            500: '#1976D2',
+                            600: '#1565C0',
+                            700: '#0D47A1'
+                        },
+                        secondary: {
+                            50: '#E8F5E8',
+                            100: '#C8E6C9',
+                            500: '#388E3C',
+                            600: '#2E7D32',
+                            700: '#1B5E20'
+                        },
+                        accent: {
+                            50: '#FFF3E0',
+                            100: '#FFE0B2',
+                            500: '#FF9800',
+                            600: '#F57C00',
+                            700: '#E65100'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-gray-50 font-inter text-gray-900">
+    <!-- @COMPONENT: NavigationHeader -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bullseye text-primary-500 text-2xl mr-3"></i>
+                        <span class="text-xl font-bold text-gray-900">SMART Goals</span>
+                    </div>
+                    <nav class="hidden md:ml-10 md:flex space-x-8">
+                        <a href="#" class="text-primary-600 border-b-2 border-primary-600 px-1 pb-4 text-sm font-medium">Dashboard</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">My Goals</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">Progress</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">Analytics</a>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-bell text-lg"></i>
+                    </button>
+                    <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-medium">JD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: NavigationHeader -->
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- @COMPONENT: MainDashboard -->
+        <div id="dashboard-view" class="space-y-8">
+            <!-- Hero Section -->
+            <div class="bg-gradient-to-r from-primary-500 to-primary-700 rounded-xl p-8 text-white">
+                <div class="max-w-2xl">
+                    <h1 class="text-3xl font-bold mb-4">Transform Your Goals into Actionable Plans</h1>
+                    <p class="text-primary-100 mb-6">Use the SMART(ER) framework to create meaningful goals and let AI break them down into daily tasks.</p>
+                    <button data-event="click:startGoalCreation" class="bg-white text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Create New Goal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-secondary-100 rounded-lg">
+                            <i class="fas fa-target text-secondary-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Active Goals</p>
+                            <p class="text-2xl font-bold text-gray-900" data-bind="activeGoalsCount">3</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-accent-100 rounded-lg">
+                            <i class="fas fa-tasks text-accent-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Tasks Completed</p>
+                            <p class="text-2xl font-bold text-gray-900" data-bind="completedTasksCount">24</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-primary-100 rounded-lg">
+                            <i class="fas fa-chart-line text-primary-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Success Rate</p>
+                            <p class="text-2xl font-bold text-gray-900" data-bind="successRate">87%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Goals -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-900">Your Active Goals</h2>
+                        <button class="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                            View All Goals <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- @MAP: goals.map(goal => ( -->
+                <div class="p-6 border-b border-gray-200 last:border-b-0">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2" data-bind="goal.title">Launch My Fitness App</h3>
+                            <p class="text-gray-600 mb-4" data-bind="goal.description">Create and launch a comprehensive fitness tracking mobile application with user authentication, workout tracking, and social features.</p>
+                            
+                            <!-- SMART(ER) Tags -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded">Specific</span>
+                                <span class="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs font-medium rounded">Measurable</span>
+                                <span class="px-2 py-1 bg-accent-100 text-accent-700 text-xs font-medium rounded">Achievable</span>
+                                <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">Relevant</span>
+                                <span class="px-2 py-1 bg-pink-100 text-pink-700 text-xs font-medium rounded">Time-bound</span>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                    <span>Progress</span>
+                                    <span data-bind="goal.progress">42%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-primary-500 h-2 rounded-full" style="width: 42%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Next Tasks -->
+                            <div class="text-sm">
+                                <span class="text-gray-500">Next: </span>
+                                <span class="text-gray-900 font-medium" data-bind="goal.nextTask">Complete user authentication system</span>
+                            </div>
+                        </div>
+                        
+                        <div class="ml-6 flex flex-col items-end space-y-2">
+                            <span class="text-sm text-gray-500" data-bind="goal.deadline">Due: Dec 31, 2024</span>
+                            <button data-event="click:viewGoalDetails" class="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                                View Details <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Read 24 Business Books This Year</h3>
+                            <p class="text-gray-600 mb-4">Enhance my business knowledge by reading 2 books per month, focusing on entrepreneurship, marketing, and leadership topics.</p>
+                            
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded">Specific</span>
+                                <span class="px-2 py-1 bg-secondary-100 text-secondary-700 text-xs font-medium rounded">Measurable</span>
+                                <span class="px-2 py-1 bg-accent-100 text-accent-700 text-xs font-medium rounded">Achievable</span>
+                                <span class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">Relevant</span>
+                                <span class="px-2 py-1 bg-pink-100 text-pink-700 text-xs font-medium rounded">Time-bound</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                    <span>Progress</span>
+                                    <span>67%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-secondary-500 h-2 rounded-full" style="width: 67%"></div>
+                                </div>
+                            </div>
+
+                            <div class="text-sm">
+                                <span class="text-gray-500">Next: </span>
+                                <span class="text-gray-900 font-medium">Start reading "The Lean Startup"</span>
+                            </div>
+                        </div>
+                        
+                        <div class="ml-6 flex flex-col items-end space-y-2">
+                            <span class="text-sm text-gray-500">Due: Dec 31, 2024</span>
+                            <button class="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                                View Details <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">Recent Activity</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-secondary-500 rounded-full"></div>
+                            <span class="text-sm text-gray-600">Completed task: "Set up development environment"</span>
+                            <span class="text-xs text-gray-400">2 hours ago</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-accent-500 rounded-full"></div>
+                            <span class="text-sm text-gray-600">Updated goal deadline for "Launch My Fitness App"</span>
+                            <span class="text-xs text-gray-400">1 day ago</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
+                            <span class="text-sm text-gray-600">Started new goal: "Read 24 Business Books This Year"</span>
+                            <span class="text-xs text-gray-400">3 days ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: MainDashboard -->
+
+        <!-- @COMPONENT: GoalCreationWizard [hidden by default] -->
+        <div id="goal-wizard" class="hidden space-y-6">
+            <!-- Progress Steps -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Create Your SMART(ER) Goal</h1>
+                    <button data-event="click:closeWizard" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Step Indicator -->
+                <div class="flex items-center space-x-4 mb-8">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">1</div>
+                        <span class="ml-2 text-sm font-medium text-primary-600">SMART(ER) Setup</span>
+                    </div>
+                    <div class="flex-1 h-px bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
+                        <span class="ml-2 text-sm font-medium text-gray-500">AI Breakdown</span>
+                    </div>
+                    <div class="flex-1 h-px bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
+                        <span class="ml-2 text-sm font-medium text-gray-500">Review & Save</span>
+                    </div>
+                </div>
+
+                <!-- Step 1: SMART(ER) Form -->
+                <div id="step-1" class="space-y-6">
+                    <!-- @STATE: formData:object = {} -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <!-- Specific -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-crosshairs text-primary-500 mr-2"></i>Specific
+                                </label>
+                                <p class="text-sm text-gray-600 mb-3">What exactly do you want to accomplish? Be clear and detailed.</p>
+                                <textarea 
+                                    data-bind="formData.specific"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+                                    rows="3" 
+                                    placeholder="e.g., Launch a mobile fitness app with user authentication, workout tracking, and social features..."
+                                    data-mock="true">Launch a mobile fitness app with user authentication, workout tracking, and social features</textarea>
+                                <div class="mt-2 text-xs text-secondary-600">
+                                    <i class="fas fa-check-circle mr-1"></i>Good specificity level
+                                </div>
+                            </div>
+
+                            <!-- Measurable -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-ruler text-secondary-500 mr-2"></i>Measurable
+                                </label>
+                                <p class="text-sm text-gray-600 mb-3">How will you track progress and know when you've achieved your goal?</p>
+                                <textarea 
+                                    data-bind="formData.measurable"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+                                    rows="3" 
+                                    placeholder="e.g., App published on both iOS and Android app stores with 1000+ downloads..."
+                                    data-mock="true">App published on both iOS and Android app stores with 1000+ downloads in first month</textarea>
+                                <div class="mt-2 text-xs text-secondary-600">
+                                    <i class="fas fa-check-circle mr-1"></i>Clear success metrics defined
+                                </div>
+                            </div>
+
+                            <!-- Achievable -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-mountain text-accent-500 mr-2"></i>Achievable
+                                </label>
+                                <p class="text-sm text-gray-600 mb-3">Is this goal realistic given your resources, skills, and timeframe?</p>
+                                <textarea 
+                                    data-bind="formData.achievable"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+                                    rows="3" 
+                                    placeholder="e.g., I have 3 years of React Native experience and $5000 budget for development tools..."
+                                    data-mock="true">I have 3 years of React Native experience, access to design tools, and allocated 4 hours daily for 6 months</textarea>
+                                <div class="mt-2 text-xs text-accent-600">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>Consider if timeline is realistic for scope
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Relevant -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-bullseye text-purple-500 mr-2"></i>Relevant
+                                </label>
+                                <p class="text-sm text-gray-600 mb-3">Why is this goal important to you? How does it align with your values?</p>
+                                <textarea 
+                                    data-bind="formData.relevant"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+                                    rows="3" 
+                                    placeholder="e.g., Aligns with my passion for health tech and career goal to become a mobile app entrepreneur..."
+                                    data-mock="true">Aligns with my passion for health tech and goal to transition into entrepreneurship while helping people achieve fitness goals</textarea>
+                                <div class="mt-2 text-xs text-secondary-600">
+                                    <i class="fas fa-check-circle mr-1"></i>Strong personal motivation identified
+                                </div>
+                            </div>
+
+                            <!-- Time-bound -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-calendar text-pink-500 mr-2"></i>Time-bound
+                                </label>
+                                <p class="text-sm text-gray-600 mb-3">When will you complete this goal? Set a specific deadline.</p>
+                                <div class="space-y-3">
+                                    <input 
+                                        type="date" 
+                                        data-bind="formData.deadline"
+                                        value="2024-12-31"
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                        data-mock="true">
+                                    <textarea 
+                                        data-bind="formData.timebound"
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+                                        rows="2" 
+                                        placeholder="e.g., Complete development by October, testing by November, launch by December 31st..."
+                                        data-mock="true">Complete MVP by October, beta testing in November, official launch by December 31st, 2024</textarea>
+                                </div>
+                                <div class="mt-2 text-xs text-secondary-600">
+                                    <i class="fas fa-check-circle mr-1"></i>Realistic timeline with milestones
+                                </div>
+                            </div>
+
+                            <!-- Exciting & Rewarding -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <i class="fas fa-star text-yellow-500 mr-2"></i>Exciting & Rewarding
+                                </label>
+                                <p class="text-sm text-gray-600 mb-3">What makes this goal exciting? How will you celebrate success?</p>
+                                <textarea 
+                                    data-bind="formData.exciting"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" 
+                                    rows="3" 
+                                    placeholder="e.g., Seeing users achieve their fitness goals using my app will be incredibly fulfilling..."
+                                    data-mock="true">Creating something that genuinely helps people improve their health excites me. I'll celebrate the launch with a weekend getaway</textarea>
+                                <div class="mt-2 text-xs text-secondary-600">
+                                    <i class="fas fa-check-circle mr-1"></i>Clear excitement and reward identified
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <button data-event="click:saveAsDraft" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Save as Draft
+                        </button>
+                        <button data-event="click:proceedToBreakdown" class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                            Generate AI Breakdown <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: GoalCreationWizard -->
+
+        <!-- @COMPONENT: AIBreakdownView [hidden by default] -->
+        <div id="ai-breakdown" class="hidden space-y-6">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">AI-Generated Goal Breakdown</h1>
+                        <p class="text-gray-600">Review and customize your weekly goals and daily tasks</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button data-event="click:regenerateBreakdown" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i>Regenerate
+                        </button>
+                        <button data-event="click:saveGoal" class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                            Save Goal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Goal Summary -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Goal: Launch My Fitness App</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Timeline:</span>
+                            <span class="text-sm text-gray-900 ml-2">6 months (26 weeks)</span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Estimated Effort:</span>
+                            <span class="text-sm text-gray-900 ml-2">4 hours/day</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Breakdown -->
+                <!-- @FUNCTIONALITY: This breakdown should be generated by AI based on SMART(ER) criteria -->
+                <div class="space-y-6">
+                    <h3 class="text-xl font-semibold text-gray-900">Weekly Breakdown</h3>
+                    
+                    <!-- Week 1-4: Planning & Setup -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-gray-900">Weeks 1-4: Planning & Foundation</h4>
+                                <button data-event="click:toggleWeekDetails" class="text-primary-600 text-sm font-medium">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <p class="text-gray-600 text-sm mt-1">Market research, technical planning, and project setup</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <!-- Week 1 -->
+                                <div class="border-l-4 border-primary-500 pl-4">
+                                    <h5 class="font-semibold text-gray-900 mb-2">Week 1: Market Research & Competitive Analysis</h5>
+                                    <div class="space-y-2">
+                                        <!-- Daily tasks -->
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Research top 10 fitness apps (features, pricing, user reviews)</span>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Day 1</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Survey 20 potential users about fitness app preferences</span>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Day 2-3</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Analyze survey results and identify market gaps</span>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Day 4</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Create competitive analysis document</span>
+                                            <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Day 5</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Week 2 -->
+                                <div class="border-l-4 border-secondary-500 pl-4">
+                                    <h5 class="font-semibold text-gray-900 mb-2">Week 2: Feature Planning & User Stories</h5>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Define core features based on research findings</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Day 1</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Write user stories for authentication system</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Day 2</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Create user stories for workout tracking</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Day 3</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Design social features user stories</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Day 4</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" class="rounded border-gray-300 text-primary-500" data-mock="true">
+                                            <span class="text-sm text-gray-700">Prioritize features using MoSCoW method</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Day 5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Week 5-12: Development Phase 1 -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-gray-900">Weeks 5-12: Core Development</h4>
+                                <button class="text-primary-600 text-sm font-medium">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <p class="text-gray-600 text-sm mt-1">Authentication, user profiles, and basic workout tracking</p>
+                        </div>
+                    </div>
+
+                    <!-- Week 13-20: Advanced Features -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-gray-900">Weeks 13-20: Advanced Features</h4>
+                                <button class="text-primary-600 text-sm font-medium">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <p class="text-gray-600 text-sm mt-1">Social features, analytics, and performance optimization</p>
+                        </div>
+                    </div>
+
+                    <!-- Week 21-26: Testing & Launch -->
+                    <div class="border border-gray-200 rounded-lg">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-lg font-semibold text-gray-900">Weeks 21-26: Testing & Launch</h4>
+                                <button class="text-primary-600 text-sm font-medium">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <p class="text-gray-600 text-sm mt-1">Beta testing, bug fixes, app store submission, and launch</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modification Tools -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-8">
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-yellow-800 mb-2">Customize Your Breakdown</h4>
+                            <p class="text-yellow-700 text-sm mb-4">You can modify any task, add new ones, or adjust timelines. Click on any task to edit it, or use the buttons below for bulk changes.</p>
+                            <div class="flex space-x-3">
+                                <button data-event="click:addCustomTask" class="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 transition-colors">
+                                    Add Custom Task
+                                </button>
+                                <button data-event="click:adjustTimeline" class="px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-100 transition-colors">
+                                    Adjust Timeline
+                                </button>
+                                <button data-event="click:reorderTasks" class="px-3 py-1 border border-yellow-500 text-yellow-700 text-sm rounded hover:bg-yellow-100 transition-colors">
+                                    Reorder Tasks
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: AIBreakdownView -->
+    </div>
+
+    <!-- Floating Action Button -->
+    <button data-event="click:quickAddGoal" class="fixed bottom-6 right-6 w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg transition-colors flex items-center justify-center">
+        <i class="fas fa-plus text-xl"></i>
+    </button>
+
+    <script>
+        // TODO: Implement SMART(ER) goal validation logic
+        // TODO: Integrate with OpenAI API for goal breakdown generation
+        // TODO: Add drag-and-drop functionality for task reordering
+        // TODO: Implement progress tracking and analytics
+        // TODO: Add notification system for task reminders
+        
+        (function() {
+            // View management
+            const views = {
+                dashboard: document.getElementById('dashboard-view'),
+                wizard: document.getElementById('goal-wizard'),
+                breakdown: document.getElementById('ai-breakdown')
+            };
+
+            function showView(viewName) {
+                Object.keys(views).forEach(key => {
+                    views[key].classList.add('hidden');
+                });
+                views[viewName].classList.remove('hidden');
+            }
+
+            // Mock event handlers for demonstration
+            document.addEventListener('click', function(e) {
+                const target = e.target.closest('[data-event]');
+                if (!target) return;
+
+                const eventType = target.getAttribute('data-event');
+                
+                switch(eventType) {
+                    case 'click:startGoalCreation':
+                    case 'click:quickAddGoal':
+                        showView('wizard');
+                        break;
+                    case 'click:closeWizard':
+                        showView('dashboard');
+                        break;
+                    case 'click:proceedToBreakdown':
+                        // Simulate AI processing
+                        target.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+                        setTimeout(() => {
+                            showView('breakdown');
+                            target.innerHTML = 'Generate AI Breakdown <i class="fas fa-arrow-right ml-2"></i>';
+                        }, 2000);
+                        break;
+                    case 'click:saveGoal':
+                        // TODO: Implement goal saving logic
+                        alert('Goal saved successfully!');
+                        showView('dashboard');
+                        break;
+                }
+            });
+
+            // Form validation simulation
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    // TODO: Implement real SMART(ER) validation
+                    const validation = this.parentElement.querySelector('.text-xs');
+                    if (this.value.length > 20) {
+                        validation.className = 'mt-2 text-xs text-secondary-600';
+                        validation.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Good detail level';
+                    } else {
+                        validation.className = 'mt-2 text-xs text-accent-600';
+                        validation.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Could use more detail';
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

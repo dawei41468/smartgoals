@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { loginSchema, type LoginData } from '@shared/schema';
+import { loginSchema, type LoginData } from '@/lib/schema';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
