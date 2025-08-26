@@ -1,0 +1,9 @@
+{
+  // Disable proxy usage in VS Code for this workspace
+  "http.proxy": "",
+  "http.proxySupport": "off",
+  "http.proxyStrictSSL": false,
+
+  // Avoid fetching JSON schemas over network (prevents proxy warnings)
+  "json.schemaDownload.enable": false
+}
