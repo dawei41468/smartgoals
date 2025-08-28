@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { insertGoalSchema } from "@/lib/schema";
-import type { InsertGoal, AIBreakdownRequest, Goal, AIBreakdownResponse } from "@/lib/schema";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import type { InsertGoal, AIBreakdownRequest, Goal, AIBreakdownResponse, UserSettings } from "@/lib/schema";
 import { GoalService } from "@/services/goalService";
 
 interface GoalWizardProps {
@@ -25,6 +27,40 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
   const { toast } = useToast();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Fetch user settings to get default goal duration
+  const { data: userSettings } = useQuery<UserSettings>({
+    queryKey: ["/api/user/settings"],
+    enabled: !!user,
+  });
+  
+  // Calculate default deadline based on user preference
+  const getDefaultDeadline = () => {
+    if (editGoal?.deadline) return editGoal.deadline;
+    
+    const defaultDuration = (userSettings as UserSettings)?.defaultGoalDuration || "3-months";
+    const today = new Date();
+    
+    switch (defaultDuration) {
+      case "1-month":
+        today.setMonth(today.getMonth() + 1);
+        break;
+      case "3-months":
+        today.setMonth(today.getMonth() + 3);
+        break;
+      case "6-months":
+        today.setMonth(today.getMonth() + 6);
+        break;
+      case "1-year":
+        today.setFullYear(today.getFullYear() + 1);
+        break;
+      default:
+        today.setMonth(today.getMonth() + 3);
+    }
+    
+    return today.toISOString().split('T')[0];
+  };
   
   const form = useForm<InsertGoal>({
     resolver: zodResolver(insertGoalSchema),
@@ -49,7 +85,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
       relevant: "",
       timebound: "",
       exciting: "",
-      deadline: "",
+      deadline: getDefaultDeadline(),
     },
   });
 

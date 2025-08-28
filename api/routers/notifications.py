@@ -76,7 +76,7 @@ async def test_push(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     payload = {
-        "title": "GoalForge",
+        "title": "SmartGoals",
         "body": "Push notifications are working.",
     }
     delivered = await broadcast_web_push(db, current_user["id"], payload)
@@ -90,9 +90,9 @@ async def test_email(current_user=Depends(get_current_user)):
 
     ok = await send_email(
         to_email=current_user["email"],
-        subject="GoalForge test email",
-        body_text="This is a test email from GoalForge.",
-        body_html="<strong>This is a test email from GoalForge.</strong>",
+        subject="SmartGoals test email",
+        body_text="This is a test email from SmartGoals.",
+        body_html="<strong>This is a test email from SmartGoals.</strong>",
     )
     if not ok:
         raise HTTPException(status_code=503, detail="Email service not configured or unreachable")

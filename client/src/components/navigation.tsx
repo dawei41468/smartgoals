@@ -21,7 +21,7 @@ import { languages } from "@/lib/i18n";
 export default function Navigation() {
   const [location] = useLocation();
   const { t, language, setLanguage } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
   
   const isActive = (path: string) => location === path;
@@ -70,7 +70,7 @@ export default function Navigation() {
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
             <button 
-              onClick={toggleTheme}
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               className="hidden sm:block text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300 transition-colors" 
               data-testid="button-theme-toggle"
               title={theme === 'light' ? t('nav.switchToDark') : t('nav.switchToLight')}
@@ -120,7 +120,7 @@ export default function Navigation() {
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
                 <DropdownMenuItem 
-                  onClick={toggleTheme}
+                  onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                   className="cursor-pointer" 
                   data-testid="menu-theme"
                 >

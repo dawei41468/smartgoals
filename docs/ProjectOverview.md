@@ -1,8 +1,8 @@
-# GoalForge Project Overview
+# SmartGoals Project Overview
 
 ## 📋 Project Summary
 
-GoalForge is a comprehensive SMART goals management application that helps users create, track, and achieve their goals through AI-powered breakdown, progress tracking, and detailed analytics.
+SmartGoals is a comprehensive SMART goals management application that helps users create, track, and achieve their goals through AI-powered breakdown, progress tracking, and detailed analytics.
 
 **Tech Stack:**
 - **Frontend**: React 18 + TypeScript + Tailwind CSS v4 + Vite
@@ -161,8 +161,8 @@ Create `.env` file in project root:
 ```env
 # Core
 ENV=development
-MONGODB_URI=mongodb://127.0.0.1:27017/goalforge
-MONGODB_DB=goalforge
+MONGODB_URI=mongodb://127.0.0.1:27017/smartgoals
+MONGODB_DB=smartgoals
 JWT_SECRET=your-secret-key
 JWT_EXPIRES_MIN=10080
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173

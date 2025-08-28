@@ -53,8 +53,8 @@ The backend loads environment variables from the process env. Prefer a root `.en
 ```
 # --- Core ---
 ENV=development
-MONGODB_URI=mongodb://127.0.0.1:27017/goalforge
-MONGODB_DB=goalforge
+MONGODB_URI=mongodb://127.0.0.1:27017/smartgoals
+MONGODB_DB=smartgoals
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_MIN=10080
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173

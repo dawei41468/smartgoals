@@ -11,7 +11,7 @@ from .routers import auth, user, goals, tasks, activities, analytics, ai, notifi
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="GoalForge API", version="1.0.0")
+    app = FastAPI(title="SmartGoals API", version="1.0.0")
 
     # CORS
     app.add_middleware(

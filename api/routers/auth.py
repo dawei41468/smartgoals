@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from ..db import get_db
 from ..models import RegisterData, LoginData, User, UserPublic, UserSettings
-from ..auth_utils import hash_password, verify_password, create_access_token, get_current_user
+from ..auth_utils import (
+    hash_password, verify_password, create_access_token, get_current_user,
+    create_token_pair, set_auth_cookies, clear_auth_cookies, verify_refresh_token
+)
 from ..models import new_id
 
 router = APIRouter()
@@ -16,6 +19,13 @@ router = APIRouter()
 class AuthResponse(BaseModel):
     user: UserPublic
     token: str
+    message: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
     message: str
 
 
@@ -54,7 +64,7 @@ async def register(user_data: RegisterData, db: AsyncIOMotorDatabase = Depends(g
 
 
 @router.post("/auth/login", response_model=AuthResponse)
-async def login(payload: LoginData, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def login(payload: LoginData, response: Response, db: AsyncIOMotorDatabase = Depends(get_db)):
     user_doc = await db["users"].find_one({"email": payload.email})
     if not user_doc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
@@ -62,15 +72,48 @@ async def login(payload: LoginData, db: AsyncIOMotorDatabase = Depends(get_db)):
     if not verify_password(payload.password, user_doc.get("password", "")):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
-    token = create_access_token(user_doc["id"], user_doc.get("email") or user_doc.get("username"))
+    # Create token pair for enhanced security
+    tokens = create_token_pair(user_doc["id"], user_doc.get("email") or user_doc.get("username"))
+    
+    # Set httpOnly cookies in production
+    set_auth_cookies(response, tokens)
+    
     user_doc.pop("password", None)
     user_doc.pop("_id", None)
-    return AuthResponse(user=UserPublic(**user_doc), token=token, message="Login successful")
+    return AuthResponse(user=UserPublic(**user_doc), token=tokens["access_token"], message="Login successful")
 
 
 @router.post("/auth/logout")
-async def logout():
+async def logout(response: Response):
+    clear_auth_cookies(response)
     return {"message": "Logout successful"}
+
+
+@router.post("/auth/refresh", response_model=TokenResponse)
+async def refresh_token(request: Request, response: Response, db: AsyncIOMotorDatabase = Depends(get_db)):
+    # Get refresh token from cookie or header
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        # Fallback to Authorization header for development
+        auth_header = request.headers.get("authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            refresh_token = auth_header.split(" ")[1]
+    
+    if not refresh_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token required")
+    
+    # Verify refresh token
+    user = await verify_refresh_token(refresh_token, db)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
+    
+    # Create new token pair
+    tokens = create_token_pair(user["id"], user["email"])
+    
+    # Set new httpOnly cookies
+    set_auth_cookies(response, tokens)
+    
+    return TokenResponse(**tokens, message="Tokens refreshed successfully")
 
 
 @router.get("/auth/me", response_model=UserPublic)

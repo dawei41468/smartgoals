@@ -10,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAppStore, useGoals, useStats, useActivities, useIsLoading } from "@/stores/appStore";
 import { GoalService } from "@/services/goalService";
 import { ActivityService } from "@/services/activityService";
+import { StatsService } from "@/services/statsService";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse, Activity } from "@/lib/schema";
@@ -38,7 +39,7 @@ export default function Dashboard() {
         await Promise.all([
           GoalService.fetchGoals(),
           ActivityService.fetchActivities(),
-          // TODO: Add stats service when available
+          StatsService.fetchStats(),
         ]);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);

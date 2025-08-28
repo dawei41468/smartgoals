@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -35,7 +36,6 @@ const preferencesSchema = z.object({
   goalReminders: z.boolean(),
   defaultGoalDuration: z.string(),
   aiBreakdownDetail: z.string(),
-  theme: z.string(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -44,8 +44,9 @@ type PreferencesFormData = z.infer<typeof preferencesSchema>;
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { user, updateUser } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   // Fetch user profile data only when authenticated
   const { data: userProfile, isLoading: profileLoading } = useQuery({
@@ -92,7 +93,6 @@ export default function Settings() {
       goalReminders: true,
       defaultGoalDuration: "3-months",
       aiBreakdownDetail: "detailed",
-      theme: "light",
     },
   });
 
@@ -107,7 +107,6 @@ export default function Settings() {
         goalReminders: us.goalReminders ?? true,
         defaultGoalDuration: us.defaultGoalDuration || "3-months",
         aiBreakdownDetail: us.aiBreakdownDetail || "detailed",
-        theme: us.theme || "light",
       });
     }
   }, [userSettings, preferencesForm]);
@@ -129,8 +128,8 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       
       toast({
-        title: "Profile Updated",
-        description: "Your profile information has been saved successfully.",
+        title: t("settings.messages.profileUpdated"),
+        description: t("settings.messages.profileSuccess"),
       });
     },
     onError: async (error: any) => {
@@ -145,7 +144,7 @@ export default function Settings() {
       }
       
       toast({
-        title: "Update Failed",
+        title: t("settings.messages.updateFailed"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -179,35 +178,35 @@ export default function Settings() {
 
       queryClient.invalidateQueries({ queryKey: ["/api/user/settings"] });
       toast({
-        title: "Settings Updated",
-        description: "Your preferences have been saved successfully.",
+        title: t("settings.messages.settingsUpdated"),
+        description: t("settings.messages.settingsSuccess"),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update settings.",
+        title: t("settings.messages.updateFailed"),
+        description: error.message || t("settings.messages.updateFailed"),
         variant: "destructive",
       });
     },
   });
 
-  const onPreferencesSubmit = (data: PreferencesFormData) => {
+  const onPreferencesSubmit = async (data: PreferencesFormData) => {
     settingsMutation.mutate(data);
   };
 
   const handleLogout = () => {
     toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
+      title: t("settings.messages.loggedOut"),
+      description: t("settings.messages.logoutSuccess"),
     });
   };
 
   const tabs = [
-    { id: "profile", label: "Profile", icon: User },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "preferences", label: "Preferences", icon: Palette },
-    { id: "security", label: "Security", icon: Shield },
+    { id: "profile", label: t("settings.tabs.profile"), icon: User },
+    { id: "notifications", label: t("settings.tabs.notifications"), icon: Bell },
+    { id: "preferences", label: t("settings.tabs.preferences"), icon: Palette },
+    { id: "security", label: t("settings.tabs.security"), icon: Shield },
   ];
 
   return (
@@ -221,12 +220,12 @@ export default function Settings() {
             <Link href="/">
               <Button variant="ghost" size="sm" data-testid="button-back">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                {t("settings.backToDashboard")}
               </Button>
             </Link>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">Manage your account settings and preferences</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{t("settings.title")}</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">{t("settings.subtitle")}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -263,9 +262,9 @@ export default function Settings() {
             {activeTab === "profile" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Information</CardTitle>
+                  <CardTitle>{t("settings.profile.title")}</CardTitle>
                   <CardDescription>
-                    Update your personal information and profile details
+                    {t("settings.profile.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -277,7 +276,7 @@ export default function Settings() {
                           name="firstName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>First Name</FormLabel>
+                              <FormLabel>{t("settings.profile.firstName")}</FormLabel>
                               <FormControl>
                                 <Input {...field} data-testid="input-first-name" />
                               </FormControl>
@@ -290,7 +289,7 @@ export default function Settings() {
                           name="lastName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Last Name</FormLabel>
+                              <FormLabel>{t("settings.profile.lastName")}</FormLabel>
                               <FormControl>
                                 <Input {...field} data-testid="input-last-name" />
                               </FormControl>
@@ -304,7 +303,7 @@ export default function Settings() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email Address</FormLabel>
+                            <FormLabel>{t("settings.profile.email")}</FormLabel>
                             <FormControl>
                               <Input type="email" {...field} data-testid="input-email" />
                             </FormControl>
@@ -317,17 +316,17 @@ export default function Settings() {
                         name="bio"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Bio</FormLabel>
+                            <FormLabel>{t("settings.profile.bio")}</FormLabel>
                             <FormControl>
                               <Textarea
                                 {...field}
                                 rows={4}
-                                placeholder="Tell us a bit about yourself and your goals..."
+                                placeholder={t("settings.profile.bioPlaceholder")}
                                 data-testid="input-bio"
                               />
                             </FormControl>
                             <FormDescription>
-                              Optional: Share a brief description about yourself
+                              {t("settings.profile.bioDescription")}
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -339,7 +338,7 @@ export default function Settings() {
                         data-testid="button-save-profile"
                       >
                         <Save className="h-4 w-4 mr-2" />
-                        {profileMutation.isPending ? "Saving..." : "Save Profile"}
+                        {profileMutation.isPending ? t("settings.profile.saving") : t("settings.profile.saveProfile")}
                       </Button>
                     </form>
                   </Form>
@@ -350,9 +349,9 @@ export default function Settings() {
             {activeTab === "notifications" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardTitle>{t("settings.notifications.title")}</CardTitle>
                   <CardDescription>
-                    Choose how you want to be notified about your goals and progress
+                    {t("settings.notifications.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -365,9 +364,9 @@ export default function Settings() {
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">Email Notifications</FormLabel>
+                                <FormLabel className="text-base">{t("settings.notifications.emailNotifications")}</FormLabel>
                                 <FormDescription>
-                                  Receive email updates about your goals and tasks
+                                  {t("settings.notifications.emailDescription")}
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -386,9 +385,9 @@ export default function Settings() {
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">Push Notifications</FormLabel>
+                                <FormLabel className="text-base">{t("settings.notifications.pushNotifications")}</FormLabel>
                                 <FormDescription>
-                                  Receive push notifications on your devices
+                                  {t("settings.notifications.pushDescription")}
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -407,9 +406,9 @@ export default function Settings() {
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">Weekly Progress Digest</FormLabel>
+                                <FormLabel className="text-base">{t("settings.notifications.weeklyDigest")}</FormLabel>
                                 <FormDescription>
-                                  Get a weekly summary of your goal progress
+                                  {t("settings.notifications.weeklyDescription")}
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -428,9 +427,9 @@ export default function Settings() {
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
-                                <FormLabel className="text-base">Goal Reminders</FormLabel>
+                                <FormLabel className="text-base">{t("settings.notifications.goalReminders")}</FormLabel>
                                 <FormDescription>
-                                  Daily reminders about your active goals and tasks
+                                  {t("settings.notifications.remindersDescription")}
                                 </FormDescription>
                               </div>
                               <FormControl>
@@ -446,7 +445,7 @@ export default function Settings() {
                       </div>
                       <Button type="submit" data-testid="button-save-notifications">
                         <Save className="h-4 w-4 mr-2" />
-                        Save Notification Preferences
+                        {t("settings.notifications.saveNotifications")}
                       </Button>
                     </form>
                   </Form>
@@ -457,9 +456,9 @@ export default function Settings() {
             {activeTab === "preferences" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Application Preferences</CardTitle>
+                  <CardTitle>{t("settings.preferences.title")}</CardTitle>
                   <CardDescription>
-                    Customize your goal-setting experience and AI assistance
+                    {t("settings.preferences.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -470,7 +469,7 @@ export default function Settings() {
                         name="defaultGoalDuration"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Default Goal Duration</FormLabel>
+                            <FormLabel>{t("settings.preferences.defaultGoalDuration")}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger data-testid="select-goal-duration">
@@ -478,15 +477,15 @@ export default function Settings() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="1-month">1 Month</SelectItem>
-                                <SelectItem value="3-months">3 Months</SelectItem>
-                                <SelectItem value="6-months">6 Months</SelectItem>
-                                <SelectItem value="1-year">1 Year</SelectItem>
-                                <SelectItem value="custom">Custom</SelectItem>
+                                <SelectItem value="1-month">{t("settings.preferences.durations.oneMonth")}</SelectItem>
+                                <SelectItem value="3-months">{t("settings.preferences.durations.threeMonths")}</SelectItem>
+                                <SelectItem value="6-months">{t("settings.preferences.durations.sixMonths")}</SelectItem>
+                                <SelectItem value="1-year">{t("settings.preferences.durations.oneYear")}</SelectItem>
+                                <SelectItem value="custom">{t("settings.preferences.durations.custom")}</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormDescription>
-                              Default timeframe for new goals
+                              {t("settings.preferences.durationDescription")}
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -497,7 +496,7 @@ export default function Settings() {
                         name="aiBreakdownDetail"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>AI Breakdown Detail Level</FormLabel>
+                            <FormLabel>{t("settings.preferences.aiBreakdownDetail")}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger data-testid="select-ai-detail">
@@ -505,38 +504,13 @@ export default function Settings() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="basic">Basic - High-level milestones</SelectItem>
-                                <SelectItem value="detailed">Detailed - Comprehensive breakdown</SelectItem>
-                                <SelectItem value="granular">Granular - Daily task specifics</SelectItem>
+                                <SelectItem value="basic">{t("settings.preferences.aiLevels.basic")}</SelectItem>
+                                <SelectItem value="detailed">{t("settings.preferences.aiLevels.detailed")}</SelectItem>
+                                <SelectItem value="granular">{t("settings.preferences.aiLevels.granular")}</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormDescription>
-                              How detailed should AI goal breakdowns be
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={preferencesForm.control}
-                        name="theme"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Theme</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-theme">
-                                  <SelectValue placeholder="Select theme" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="light">Light</SelectItem>
-                                <SelectItem value="dark">Dark</SelectItem>
-                                <SelectItem value="system">System</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormDescription>
-                              Choose your preferred color theme
+                              {t("settings.preferences.aiDescription")}
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -548,7 +522,7 @@ export default function Settings() {
                         data-testid="button-save-preferences"
                       >
                         <Save className="h-4 w-4 mr-2" />
-                        {settingsMutation.isPending ? "Saving..." : "Save Preferences"}
+                        {settingsMutation.isPending ? t("settings.profile.saving") : t("settings.preferences.savePreferences")}
                       </Button>
                     </form>
                   </Form>
@@ -559,56 +533,56 @@ export default function Settings() {
             {activeTab === "security" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Security & Account</CardTitle>
+                  <CardTitle>{t("settings.security.title")}</CardTitle>
                   <CardDescription>
-                    Manage your account security and data
+                    {t("settings.security.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div className="rounded-lg border p-4">
-                      <h3 className="text-lg font-medium mb-2">Change Password</h3>
+                      <h3 className="text-lg font-medium mb-2">{t("settings.security.changePassword")}</h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        Update your password to keep your account secure
+                        {t("settings.security.passwordDescription")}
                       </p>
                       <Button variant="outline" data-testid="button-change-password">
-                        Change Password
+                        {t("settings.security.changePassword")}
                       </Button>
                     </div>
                     
                     <Separator />
                     
                     <div className="rounded-lg border p-4">
-                      <h3 className="text-lg font-medium mb-2">Two-Factor Authentication</h3>
+                      <h3 className="text-lg font-medium mb-2">{t("settings.security.twoFactor")}</h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        Add an extra layer of security to your account
+                        {t("settings.security.twoFactorDescription")}
                       </p>
                       <Button variant="outline" data-testid="button-setup-2fa">
-                        Setup 2FA
+                        {t("settings.security.setup2FA")}
                       </Button>
                     </div>
                     
                     <Separator />
                     
                     <div className="rounded-lg border p-4">
-                      <h3 className="text-lg font-medium mb-2">Export Data</h3>
+                      <h3 className="text-lg font-medium mb-2">{t("settings.security.exportData")}</h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        Download a copy of your goals and progress data
+                        {t("settings.security.exportDescription")}
                       </p>
                       <Button variant="outline" data-testid="button-export-data">
-                        Export My Data
+                        {t("settings.security.exportMyData")}
                       </Button>
                     </div>
                     
                     <Separator />
                     
                     <div className="rounded-lg border border-red-200 p-4">
-                      <h3 className="text-lg font-medium text-red-900 mb-2">Danger Zone</h3>
+                      <h3 className="text-lg font-medium text-red-900 mb-2">{t("settings.security.dangerZone")}</h3>
                       <p className="text-sm text-red-700 mb-4">
-                        Permanently delete your account and all associated data
+                        {t("settings.security.deleteDescription")}
                       </p>
                       <Button variant="destructive" data-testid="button-delete-account">
-                        Delete Account
+                        {t("settings.security.deleteAccount")}
                       </Button>
                     </div>
                   </div>
@@ -627,7 +601,7 @@ export default function Settings() {
             data-testid="button-logout"
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Log Out
+            {t("settings.logout")}
           </Button>
         </div>
       </div>

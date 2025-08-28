@@ -122,7 +122,7 @@ export const useAppStore = create<AppStore>()(
         reset: () => set(initialState, false, 'reset'),
       }),
       {
-        name: 'goalforge-app-store',
+        name: 'smartgoals-app-store',
         partialize: (state) => ({
           // Only persist UI preferences, not data
           sidebarOpen: state.sidebarOpen,
@@ -131,7 +131,7 @@ export const useAppStore = create<AppStore>()(
       }
     ),
     {
-      name: 'GoalForge App Store',
+      name: 'SmartGoals App Store',
     }
   )
 );

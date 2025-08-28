@@ -29,7 +29,7 @@ async def _job_weekly_digest() -> None:
             user = await db["users"].find_one({"id": us["userId"]})
             if not user or not user.get("email"):
                 continue
-            subject = "Your GoalForge weekly digest"
+            subject = "Your SMART Goals weekly digest"
             body_text = "Here is your weekly digest. Keep pushing your goals!"
             body_html = "<p>Here is your <strong>weekly digest</strong>. Keep pushing your goals!</p>"
             ok = await send_email(to_email=user["email"], subject=subject, body_text=body_text, body_html=body_html)
@@ -49,7 +49,7 @@ async def _job_daily_goal_reminders() -> None:
         async for us in cursor:
             user_id = us["userId"]
             payload = {
-                "title": "GoalForge",
+                "title": "SmartGoals",
                 "body": "Daily reminder: review today\'s tasks and goals.",
             }
             # Push if enabled
@@ -64,9 +64,9 @@ async def _job_daily_goal_reminders() -> None:
                 if user and user.get("email"):
                     await send_email(
                         to_email=user["email"],
-                        subject="GoalForge daily reminder",
-                        body_text="Review today\'s tasks and goals in GoalForge.",
-                        body_html="<p>Review today\'s tasks and goals in <strong>GoalForge</strong>.</p>",
+                        subject="SmartGoals daily reminder",
+                        body_text="Review today's tasks and goals in SmartGoals.",
+                        body_html="<p>Review today's tasks and goals in <strong>SmartGoals</strong>.</p>",
                     )
     except Exception as e:
         logger.exception("Daily reminders job failed: %s", e)

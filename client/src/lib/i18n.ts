@@ -255,27 +255,6 @@ export const translations = {
       aiPoweredInsights: "AI-Powered Insights",
       personalizedRecommendations: "Personalized recommendations to improve your goal achievement"
     },
-    // Settings
-    settings: {
-      title: "Settings",
-      description: "Customize your SMART Goals experience.",
-      appearance: "Appearance",
-      notifications: "Notifications",
-      data: "Data Management",
-      about: "About",
-      darkMode: "Dark Mode",
-      language: "Language",
-      emailNotifications: "Email Notifications",
-      pushNotifications: "Push Notifications",
-      weeklyReports: "Weekly Progress Reports",
-      exportData: "Export Data", 
-      importData: "Import Data",
-      clearData: "Clear All Data",
-      version: "Version",
-      support: "Support",
-      privacy: "Privacy Policy",
-      terms: "Terms of Service"
-    },
     // AI Breakdown
     aiBreakdown: {
       title: "AI Goal Breakdown",
@@ -315,6 +294,98 @@ export const translations = {
       thisMonth: "This Month",
       lastMonth: "Last Month",
       title: "Title"
+    },
+    // Settings
+    settings: {
+      title: "Settings",
+      subtitle: "Manage your account settings and preferences",
+      backToDashboard: "Back to Dashboard",
+      tabs: {
+        profile: "Profile",
+        notifications: "Notifications",
+        preferences: "Preferences",
+        security: "Security"
+      },
+      profile: {
+        title: "Profile Information",
+        description: "Update your personal information and profile details",
+        firstName: "First Name",
+        lastName: "Last Name",
+        email: "Email Address",
+        bio: "Bio",
+        bioPlaceholder: "Tell us a bit about yourself and your goals...",
+        bioDescription: "Optional: Share a brief description about yourself",
+        saveProfile: "Save Profile",
+        saving: "Saving..."
+      },
+      notifications: {
+        title: "Notification Preferences",
+        description: "Choose how you want to be notified about your goals and progress",
+        emailNotifications: "Email Notifications",
+        emailDescription: "Receive email updates about your goals and tasks",
+        pushNotifications: "Push Notifications",
+        pushDescription: "Receive push notifications on your devices",
+        weeklyDigest: "Weekly Progress Digest",
+        weeklyDescription: "Get a weekly summary of your goal progress",
+        goalReminders: "Goal Reminders",
+        remindersDescription: "Daily reminders about your active goals and tasks",
+        saveNotifications: "Save Notification Preferences"
+      },
+      preferences: {
+        title: "Application Preferences",
+        description: "Customize your goal-setting experience and AI assistance",
+        defaultGoalDuration: "Default Goal Duration",
+        durationDescription: "Default timeframe for new goals",
+        durations: {
+          oneMonth: "1 Month",
+          threeMonths: "3 Months",
+          sixMonths: "6 Months",
+          oneYear: "1 Year",
+          custom: "Custom"
+        },
+        aiBreakdownDetail: "AI Breakdown Detail Level",
+        aiDescription: "How detailed should AI goal breakdowns be",
+        aiLevels: {
+          basic: "Basic - High-level milestones",
+          detailed: "Detailed - Step-by-step breakdown", 
+          granular: "Granular - Daily task specifics"
+        },
+        theme: "Theme",
+        themeDescription: "Choose your preferred color theme",
+        themes: {
+          light: "Light",
+          dark: "Dark",
+          system: "System"
+        },
+        language: "Language",
+        languageDescription: "Choose your preferred language",
+        savePreferences: "Save Preferences"
+      },
+      security: {
+        title: "Security & Account",
+        description: "Manage your account security and data",
+        changePassword: "Change Password",
+        passwordDescription: "Update your password to keep your account secure",
+        twoFactor: "Two-Factor Authentication",
+        twoFactorDescription: "Add an extra layer of security to your account",
+        setup2FA: "Setup 2FA",
+        exportData: "Export Data",
+        exportDescription: "Download a copy of your goals and progress data",
+        exportMyData: "Export My Data",
+        dangerZone: "Danger Zone",
+        deleteAccount: "Delete Account",
+        deleteDescription: "Permanently delete your account and all associated data"
+      },
+      logout: "Log Out",
+      messages: {
+        profileUpdated: "Profile Updated",
+        profileSuccess: "Your profile information has been saved successfully.",
+        settingsUpdated: "Settings Updated",
+        settingsSuccess: "Your preferences have been saved successfully.",
+        updateFailed: "Update Failed",
+        loggedOut: "Logged Out",
+        logoutSuccess: "You have been successfully logged out."
+      }
     }
   },
   zh: {
@@ -352,24 +423,24 @@ export const translations = {
       title: "创建您的SMART(ER)目标",
       setupStep: "SMART(ER)设置",
       aiStep: "AI分解",
-      saveStep: "审查和保存", 
+      saveStep: "审查和保存",
       setupStepMobile: "设置",
       aiStepMobile: "AI",
       saveStepMobile: "保存",
       category: "目标类别",
-      categoryDescription: "选择这个目标关注的生活领域。",
+      categoryDescription: "选择此目标关注的生活领域。",
       categories: {
         health: "健康",
         work: "工作",
-        family: "家庭", 
+        family: "家庭",
         personal: "个人"
       },
-      specific: "具体的",
-      measurable: "可衡量的",
-      achievable: "可实现的",
-      relevant: "相关的", 
-      timebound: "有时限的",
-      exciting: "令人兴奋的",
+      specific: "具体",
+      measurable: "可衡量",
+      achievable: "可实现",
+      relevant: "相关",
+      timebound: "有时限",
+      exciting: "令人兴奋",
       deadline: "截止日期",
       saveDraft: "保存草稿",
       generateBreakdown: "生成AI分解",
@@ -573,37 +644,16 @@ export const translations = {
       aiPoweredInsights: "AI驱动的洞察",
       personalizedRecommendations: "个性化建议以提高您的目标实现能力"
     },
-    // Settings
-    settings: {
-      title: "设置",
-      description: "自定义您的SMART目标体验。",
-      appearance: "外观",
-      notifications: "通知",
-      data: "数据管理",
-      about: "关于",
-      darkMode: "深色模式",
-      language: "语言",
-      emailNotifications: "邮件通知",
-      pushNotifications: "推送通知",
-      weeklyReports: "每周进度报告",
-      exportData: "导出数据", 
-      importData: "导入数据",
-      clearData: "清除所有数据",
-      version: "版本",
-      support: "支持",
-      privacy: "隐私政策",
-      terms: "服务条款"
-    },
     // AI Breakdown
     aiBreakdown: {
       title: "AI目标分解",
-      description: "您的目标已被分解为每周里程碑和日常任务。",
+      description: "您的目标已被分解为每周里程碑和每日任务。",
       weeklyMilestones: "每周里程碑",
-      dailyTasks: "日常任务",
+      dailyTasks: "每日任务",
       saveGoal: "保存目标",
       regenerate: "重新生成",
-      week: "第",
-      day: "第",
+      week: "周",
+      day: "日",
       milestone: "里程碑",
       task: "任务"
     },
@@ -611,7 +661,7 @@ export const translations = {
     common: {
       loading: "加载中...",
       error: "错误",
-      retry: "重试", 
+      retry: "重试",
       cancel: "取消",
       save: "保存",
       delete: "删除",
@@ -633,6 +683,98 @@ export const translations = {
       thisMonth: "本月",
       lastMonth: "上月",
       title: "标题"
+    },
+    // Settings
+    settings: {
+      title: "设置",
+      subtitle: "管理您的账户设置和偏好",
+      backToDashboard: "返回仪表板",
+      tabs: {
+        profile: "个人资料",
+        notifications: "通知",
+        preferences: "偏好",
+        security: "安全"
+      },
+      profile: {
+        title: "个人资料信息",
+        description: "更新您的个人信息和个人资料详情",
+        firstName: "名字",
+        lastName: "姓氏",
+        email: "电子邮件地址",
+        bio: "个人简介",
+        bioPlaceholder: "告诉我们一些关于您自己和您的目标...",
+        bioDescription: "可选：分享关于您自己的简短描述",
+        saveProfile: "保存个人资料",
+        saving: "保存中..."
+      },
+      notifications: {
+        title: "通知偏好",
+        description: "选择您希望如何收到关于目标和进度的通知",
+        emailNotifications: "电子邮件通知",
+        emailDescription: "接收关于您的目标和任务的电子邮件更新",
+        pushNotifications: "推送通知",
+        pushDescription: "在您的设备上接收推送通知",
+        weeklyDigest: "每周进度摘要",
+        weeklyDescription: "获取您目标进度的每周摘要",
+        goalReminders: "目标提醒",
+        remindersDescription: "关于您活跃目标和任务的每日提醒",
+        saveNotifications: "保存通知偏好"
+      },
+      preferences: {
+        title: "应用偏好",
+        description: "自定义您的目标设定体验和AI助手",
+        defaultGoalDuration: "默认目标持续时间",
+        durationDescription: "新目标的默认时间框架",
+        durations: {
+          oneMonth: "1个月",
+          threeMonths: "3个月",
+          sixMonths: "6个月",
+          oneYear: "1年",
+          custom: "自定义"
+        },
+        aiBreakdownDetail: "AI分解详细级别",
+        aiDescription: "AI目标分解应该多详细",
+        aiLevels: {
+          basic: "基础 - 高级里程碑",
+          detailed: "详细 - 全面分解",
+          granular: "细粒度 - 每日任务具体内容"
+        },
+        theme: "主题",
+        themeDescription: "选择您偏好的颜色主题",
+        themes: {
+          light: "浅色",
+          dark: "深色",
+          system: "系统"
+        },
+        language: "语言",
+        languageDescription: "选择您偏好的语言",
+        savePreferences: "保存偏好"
+      },
+      security: {
+        title: "安全和账户",
+        description: "管理您的账户安全和数据",
+        changePassword: "更改密码",
+        passwordDescription: "更新您的密码以保持账户安全",
+        twoFactor: "双因素认证",
+        twoFactorDescription: "为您的账户添加额外的安全层",
+        setup2FA: "设置2FA",
+        exportData: "导出数据",
+        exportDescription: "下载您的目标和进度数据副本",
+        exportMyData: "导出我的数据",
+        dangerZone: "危险区域",
+        deleteAccount: "删除账户",
+        deleteDescription: "永久删除您的账户和所有相关数据"
+      },
+      logout: "登出",
+      messages: {
+        profileUpdated: "个人资料已更新",
+        profileSuccess: "您的个人资料信息已成功保存。",
+        settingsUpdated: "设置已更新",
+        settingsSuccess: "您的偏好已成功保存。",
+        updateFailed: "更新失败",
+        loggedOut: "已登出",
+        logoutSuccess: "您已成功登出。"
+      }
     }
   }
 } as const;

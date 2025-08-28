@@ -56,16 +56,16 @@ function AuthenticatedApp() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <LanguageProvider>
-          <AuthProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <LanguageProvider>
             <TooltipProvider>
               <Toaster />
               <AuthenticatedApp />
             </TooltipProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider>
+          </LanguageProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

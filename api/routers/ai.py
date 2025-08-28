@@ -24,6 +24,29 @@ except Exception:  # pragma: no cover
 router = APIRouter()
 
 
+def _get_detail_instructions(detail_level: str) -> str:
+    """Get task detail instructions based on user preference"""
+    if detail_level == "basic":
+        return """For each week, provide:
+1. A high-level weekly milestone/goal
+2. 1-2 key actionable tasks (keep it simple)
+3. Priority levels (medium, high only)
+4. Time estimates (2-4 hours per task)"""
+    elif detail_level == "granular":
+        return """For each week, provide:
+1. A detailed weekly milestone/goal with specific outcomes
+2. 4-5 specific actionable tasks with clear deliverables
+3. Priority levels (low, medium, high)
+4. Time estimates (30 minutes to 6 hours per task)
+5. Dependencies between tasks where relevant"""
+    else:  # detailed (default)
+        return """For each week, provide:
+1. A clear weekly milestone/goal
+2. 2-3 key actionable tasks (keep it simple)
+3. Priority levels (medium, high only)
+4. Time estimates (1-4 hours per task)"""
+
+
 def _weeks_until(deadline_iso: str) -> int:
     try:
         deadline = datetime.fromisoformat(deadline_iso.replace("Z", "+00:00"))
@@ -68,7 +91,7 @@ async def test_deepseek(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=502, detail=f"DeepSeek API test failed: {str(e)}")
 
 
-async def _generate_chunk(client, payload: AIBreakdownRequest, start_week: int, end_week: int, total_weeks: int):
+async def _generate_chunk(client, payload: AIBreakdownRequest, start_week: int, end_week: int, total_weeks: int, detail_level: str = "detailed"):
     """Generate a chunk of weeks for the breakdown"""
     chunk_weeks = end_week - start_week + 1
     
@@ -85,11 +108,7 @@ Create a weekly breakdown for weeks {start_week} to {end_week} of this {total_we
 
 Context: This is part {start_week//2 + 1} of a {total_weeks}-week plan. Focus on weeks {start_week}-{end_week}.
 
-For each week, provide:
-1. A clear weekly milestone/goal
-2. 2-3 key actionable tasks (keep it simple)
-3. Priority levels (medium, high only)
-4. Time estimates (1-4 hours per task)
+{_get_detail_instructions(detail_level)}
 
 Return in this exact JSON format:
 {{
@@ -128,12 +147,20 @@ Return in this exact JSON format:
 
 
 @router.post("/goals/breakdown/stream")
-async def generate_breakdown_stream(payload: AIBreakdownRequest, current_user=Depends(get_current_user)):
+async def generate_breakdown_stream(payload: AIBreakdownRequest, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     settings = get_settings()
     if not settings.DEEPSEEK_API_KEY or AsyncOpenAI is None:
         raise HTTPException(status_code=500, detail="DeepSeek API not configured")
 
     print(f"Streaming breakdown request received for user {current_user['id']}")
+    
+    # Get user settings for AI breakdown detail level
+    user_settings = await db.user_settings.find_one({"userId": current_user["id"]})
+    detail_level = "detailed"  # default
+    if user_settings:
+        detail_level = user_settings.get("aiBreakdownDetail", "detailed")
+    print(f"Using AI detail level: {detail_level}")
+    
     total_weeks = _weeks_until(payload.deadline)
     print(f"Calculated weeks until deadline: {total_weeks}")
 
@@ -155,7 +182,7 @@ async def generate_breakdown_stream(payload: AIBreakdownRequest, current_user=De
                 # Send progress update
                 yield f"data: {json.dumps({'type': 'progress', 'message': f'Generating weeks {start_week}-{end_week}...', 'currentChunk': chunk_number})}\n\n"
                 
-                chunk_data = await _generate_chunk(client, payload, start_week, end_week, total_weeks)
+                chunk_data = await _generate_chunk(client, payload, start_week, end_week, total_weeks, detail_level)
                 
                 if "weeklyGoals" in chunk_data and isinstance(chunk_data["weeklyGoals"], list):
                     all_weekly_goals.extend(chunk_data["weeklyGoals"])

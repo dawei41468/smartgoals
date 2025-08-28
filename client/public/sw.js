@@ -8,10 +8,10 @@ self.addEventListener("push", function (event) {
     // ignore
   }
 
-  const title = data.title || "GoalForge";
+  const title = data.title || "SmartGoals";
   const body = data.body || "You have a new notification.";
   const icon = "/icon-192.png";
-  const tag = data.tag || "goalforge-push";
+  const tag = data.tag || "smartgoals-push";
 
   event.waitUntil(
     self.registration.showNotification(title, {

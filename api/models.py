@@ -62,6 +62,7 @@ class UserSettings(BaseModel):
     defaultGoalDuration: str = "3-months"
     aiBreakdownDetail: str = "detailed"
     theme: str = "light"
+    language: str = "en"
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
 
@@ -81,6 +82,7 @@ class UpdateUserSettings(BaseModel):
     defaultGoalDuration: Optional[str] = None
     aiBreakdownDetail: Optional[str] = None
     theme: Optional[str] = None
+    language: Optional[str] = None
 
 
 # Goal models

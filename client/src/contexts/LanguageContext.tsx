@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations, Language } from '@/lib/i18n';
+import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LanguageContextType {
   language: Language;
@@ -11,6 +13,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
+  const { user } = useAuth();
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem('language') as Language;
@@ -19,9 +22,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = async (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
+    
+    // Update user settings if authenticated
+    if (user) {
+      try {
+        await apiRequest('PATCH', '/api/user/settings', { language: lang });
+      } catch (error) {
+        console.warn('Failed to save language preference:', error);
+      }
+    }
   };
 
   const t = (key: string): string => {
