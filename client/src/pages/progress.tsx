@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Calendar, 
   TrendingUp, 
@@ -18,13 +18,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translations } from '@/lib/i18n';
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
-import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@/lib/schema";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { useAppStore, useGoals, useStats, useIsLoading } from "@/stores/appStore";
+import { GoalService } from "@/services/goalService";
+import { TaskService } from "@/services/taskService";
 import { apiRequest } from "@/lib/queryClient";
+import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@/lib/schema";
 
 interface ProgressStats {
   totalGoals: number;
@@ -48,24 +52,66 @@ interface Achievement {
   target?: number;
 }
 
-export default function Progress() {
+function Progress() {
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const { toast } = useToast();
   const { t, language } = useLanguage();
-  const queryClient = useQueryClient();
+  const goals = useGoals() as GoalWithBreakdown[];
+  const stats = useStats();
+  const isLoading = useIsLoading();
+  const [progressStats, setProgressStats] = useState<ProgressStats | null>(null);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
 
-  // Fetch goals with detailed breakdown
-  const { data: goals = [], isLoading: goalsLoading } = useQuery<GoalWithBreakdown[]>({
-    queryKey: ["/api/goals/detailed"],
-  });
+  // Fetch all progress data on component mount
+  useEffect(() => {
+    const fetchProgressData = async () => {
+      try {
+        useAppStore.getState().setLoading(true);
+        
+        // Fetch goals with breakdown
+        const goalsResponse = await apiRequest("GET", "/api/goals/detailed");
+        const goalsData = await goalsResponse.json();
+        useAppStore.getState().setGoals(goalsData);
+        
+        // Fetch progress statistics
+        const statsResponse = await apiRequest("GET", "/api/progress/stats");
+        const statsData = await statsResponse.json();
+        setProgressStats(statsData);
+        
+        // Fetch achievements
+        const achievementsResponse = await apiRequest("GET", "/api/progress/achievements");
+        const achievementsData = await achievementsResponse.json();
+        setAchievements(achievementsData);
+        
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load progress data",
+          variant: "destructive",
+        });
+      } finally {
+        useAppStore.getState().setLoading(false);
+      }
+    };
+    
+    fetchProgressData();
+  }, [toast]);
 
-  // Fetch progress statistics
-  const { data: stats, isLoading: statsLoading } = useQuery<ProgressStats>({
-    queryKey: ["/api/progress/stats"],
-  });
+  // Use progress stats from API or calculate from goals data as fallback
+  const safeStats = progressStats || {
+    totalGoals: goals.length,
+    completedGoals: goals.filter(g => g.status === 'completed').length,
+    activeGoals: goals.filter(g => g.status === 'active').length,
+    totalTasks: goals.flatMap(g => g.weeklyGoals?.flatMap(wg => wg.tasks || []) || []).length,
+    completedTasks: goals.flatMap(g => g.weeklyGoals?.flatMap(wg => wg.tasks || []) || []).filter(t => t.completed).length,
+    currentStreak: 0,
+    longestStreak: 0,
+    thisWeekProgress: 0,
+    avgCompletionTime: 0
+  };
 
-  // Mock achievements data
-  const achievements: Achievement[] = [
+  // Mock achievements data (will be replaced by API data)
+  const mockAchievements: Achievement[] = [
     {
       id: "first-goal",
       title: "Goal Setter",
@@ -78,7 +124,7 @@ export default function Progress() {
       title: "Week Warrior",
       description: "Complete all tasks for a full week",
       icon: "⚡",
-      progress: stats?.currentStreak || 0,
+      progress: safeStats?.currentStreak || 0,
       target: 7,
     },
     {
@@ -86,23 +132,23 @@ export default function Progress() {
       title: "Goal Achiever",
       description: "Complete your first goal",
       icon: "🏆",
-      unlockedAt: stats?.completedGoals && stats.completedGoals > 0 ? new Date().toISOString() : undefined,
+      unlockedAt: safeStats?.completedGoals && safeStats.completedGoals > 0 ? new Date().toISOString() : undefined,
     },
     {
       id: "consistency-king",
       title: "Consistency King",
       description: "Maintain a 14-day streak",
       icon: "🔥",
-      progress: stats?.currentStreak || 0,
+      progress: safeStats?.currentStreak || 0,
       target: 14,
-      unlockedAt: stats?.longestStreak && stats.longestStreak >= 14 ? new Date().toISOString() : undefined,
+      unlockedAt: safeStats?.currentStreak && safeStats.currentStreak >= 7 ? new Date().toISOString() : undefined,
     },
     {
       id: "productive-month",
       title: "Productive Month",
       description: "Complete 50 tasks in a month",
       icon: "💫",
-      progress: stats?.completedTasks || 0,
+      progress: safeStats?.completedTasks || 0,
       target: 50,
     },
   ];
@@ -124,28 +170,25 @@ export default function Progress() {
   };
 
   const currentWeekTasks = getCurrentWeekTasks();
-  const completedThisWeek = currentWeekTasks.filter(t => t.completed).length;
-  const totalThisWeek = currentWeekTasks.length;
-  const weekProgress = totalThisWeek > 0 ? Math.round((completedThisWeek / totalThisWeek) * 100) : 0;
+  const weeklyCompletedTasks = currentWeekTasks.filter(t => t.completed).length;
+  const weeklyTotalTasks = currentWeekTasks.length;
+  const currentWeekProgress = weeklyTotalTasks > 0 ? Math.round((weeklyCompletedTasks / weeklyTotalTasks) * 100) : 0;
 
-  // Update task completion
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, completed }: { taskId: string; completed: boolean }) => {
-      const response = await apiRequest("PATCH", `/api/tasks/${taskId}`, { completed });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/progress/stats"] });
+  // Update task completion using service layer
+  const handleTaskToggle = async (taskId: string, completed: boolean) => {
+    try {
+      await TaskService.updateTask(taskId, { completed });
       toast({
-        title: t('progressPage.taskUpdatedTitle'),
-        description: t('progressPage.taskUpdatedDescription'),
+        title: "Task Updated",
+        description: "Task completion status updated successfully",
       });
-    },
-  });
-
-  const handleTaskToggle = (taskId: string, completed: boolean) => {
-    updateTaskMutation.mutate({ taskId, completed });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update task",
+        variant: "destructive",
+      });
+    }
   };
 
   const getMotivationalMessage = (currentLanguage: string) => {
@@ -205,15 +248,16 @@ export default function Progress() {
     });
   };
 
-  if (goalsLoading || statsLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <LoadingSpinner size="lg" className="mx-auto mb-4" />
+              <p className="text-muted-foreground">{t('common.loading')}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -253,7 +297,7 @@ export default function Progress() {
             <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
                 <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 mr-1 sm:mr-2" />
-                <span className="text-xl sm:text-2xl font-bold">{stats?.currentStreak || 0}</span>
+                <div className="text-2xl font-bold">{safeStats?.avgCompletionTime || 0}</div>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">{t('analytics.streakDays')}</p>
               <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.daysInRow')}</p>
@@ -264,7 +308,7 @@ export default function Progress() {
             <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
                 <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500 mr-1 sm:mr-2" />
-                <span className="text-xl sm:text-2xl font-bold">{completedThisWeek}</span>
+                <div className="text-2xl font-bold">{weeklyCompletedTasks}</div>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">{t('common.thisWeek')}</p>
               <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.tasksCompleted')}</p>
@@ -275,7 +319,7 @@ export default function Progress() {
             <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
                 <Target className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-1 sm:mr-2" />
-                <span className="text-xl sm:text-2xl font-bold">{stats?.completedGoals || 0}</span>
+                <span className="text-xl sm:text-2xl font-bold">{safeStats?.completedGoals || 0}</span>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">{t('progressPage.goalsAchieved')}</p>
               <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.totalCompleted')}</p>
@@ -286,7 +330,7 @@ export default function Progress() {
             <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
                 <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500 mr-1 sm:mr-2" />
-                <span className="text-xl sm:text-2xl font-bold">{stats?.avgCompletionTime || 0}</span>
+                <span className="text-xl sm:text-2xl font-bold">{safeStats?.avgCompletionTime || 0}</span>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">{t('analytics.avgCompletionTime')}</p>
               <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.daysPerGoal')}</p>
@@ -314,18 +358,11 @@ export default function Progress() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>{t('progressPage.weeklyProgress')}</span>
-                    <span>{weekProgress}%</span>
-                  </div>
-                  <ProgressBar value={weekProgress} className="h-3" />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {completedThisWeek} of {totalThisWeek} tasks completed
-                  </p>
+                <ProgressBar value={currentWeekProgress} className="w-full" />
+                <div className="text-sm text-gray-600 mt-2">
+                  {weeklyCompletedTasks} of {weeklyTotalTasks} tasks completed
                 </div>
-                
-                <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 mt-4">
                   {getDaysOfWeek().map((day, index) => (
                     <div
                       key={index}
@@ -382,7 +419,7 @@ export default function Progress() {
                           <input
                             type="checkbox"
                             checked={task.completed || false}
-                            onChange={(e) => handleTaskToggle(task.id, e.target.checked)}
+                            onClick={() => handleTaskToggle(task.id, !task.completed)}
                             className="rounded"
                             data-testid={`today-task-${task.id}`}
                           />
@@ -536,3 +573,5 @@ export default function Progress() {
     </div>
   );
 }
+
+export default withErrorBoundary(Progress);

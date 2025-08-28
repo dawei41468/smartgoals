@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Filter, Plus, Target, Calendar, CheckCircle, Pause, Play, Edit, Trash2, MoreHorizontal, Clock, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +21,19 @@ import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
-import { api } from "@/lib/api";
-import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { formatDate, getDaysUntilDeadline, isOverdue } from "@/lib/dateUtils";
+import { getStatusColor, getPriorityColor, getStatusDisplayText, getPriorityDisplayText } from "@/lib/goalUtils";
+import { useAppStore, useGoals, useIsLoading } from "@/stores/appStore";
+import { GoalService } from "@/services/goalService";
+import { TaskService } from "@/services/taskService";
 import { apiRequest } from "@/lib/queryClient";
+import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
 
 type View = "goals" | "wizard" | "breakdown";
 
-export default function MyGoals() {
+function MyGoals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("created");
@@ -42,7 +47,8 @@ export default function MyGoals() {
   } | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const queryClient = useQueryClient();
+  const goals = useGoals() as GoalWithBreakdown[];
+  const isLoading = useIsLoading();
 
   // If navigated with /my-goals?goal=<id>, auto-expand that goal's details
   useEffect(() => {
@@ -57,51 +63,73 @@ export default function MyGoals() {
     }
   }, []);
 
-  // Fetch goals with breakdown data
-  const { data: goals = [], isLoading } = useQuery<GoalWithBreakdown[]>({
-    queryKey: ["/api/goals/detailed"],
-  });
+  // Fetch goals with detailed breakdown on component mount
+  useEffect(() => {
+    const fetchGoalsWithBreakdown = async () => {
+      try {
+        useAppStore.getState().setLoading(true);
+        // Use apiRequest helper with proper auth headers
+        const response = await apiRequest("GET", "/api/goals/detailed");
+        const detailedGoals = await response.json();
+        // Store in Zustand as detailed goals
+        useAppStore.getState().setGoals(detailedGoals);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load goals",
+          variant: "destructive",
+        });
+      } finally {
+        useAppStore.getState().setLoading(false);
+      }
+    };
+    fetchGoalsWithBreakdown();
+  }, [toast]);
 
-  // Mutations for goal actions
-  const updateGoalMutation = useMutation({
-    mutationFn: async ({ goalId, updates }: { goalId: string; updates: Partial<Goal> }) => {
-      const response = await apiRequest("PATCH", `/api/goals/${goalId}`, updates);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
-    },
-  });
+  // Goal actions using services
+  const handleStatusChange = async (goalId: string, status: Goal["status"]) => {
+    try {
+      await GoalService.updateGoal(goalId, { status });
+      toast({
+        title: "Goal Updated",
+        description: `Goal status changed to ${status}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update goal status",
+        variant: "destructive",
+      });
+    }
+  };
 
-  const deleteGoalMutation = useMutation({
-    mutationFn: async (goalId: string) => {
-      await apiRequest("DELETE", `/api/goals/${goalId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+  const handleDeleteGoal = async (goalId: string) => {
+    try {
+      await GoalService.deleteGoal(goalId);
       toast({
         title: "Goal Deleted",
         description: "The goal has been permanently deleted.",
       });
-    },
-  });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete goal",
+        variant: "destructive",
+      });
+    }
+  };
 
-  const updateTaskMutation = useMutation({
-    mutationFn: async ({ taskId, completed }: { taskId: string; completed: boolean }) => {
-      const response = await apiRequest("PATCH", `/api/tasks/${taskId}`, { completed });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
-    },
-  });
+  const handleTaskToggle = async (taskId: string, completed: boolean) => {
+    try {
+      await TaskService.updateTask(taskId, { completed });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update task",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Filter and sort goals
   const filteredGoals = goals
@@ -124,21 +152,6 @@ export default function MyGoals() {
       }
     });
 
-  const handleStatusChange = (goalId: string, status: Goal["status"]) => {
-    updateGoalMutation.mutate({
-      goalId,
-      updates: { status },
-    });
-    
-    toast({
-      title: "Goal Status Updated",
-      description: `Goal has been ${status === "completed" ? "completed" : status === "paused" ? "paused" : "reactivated"}.`,
-    });
-  };
-
-  const handleTaskToggle = (taskId: string, completed: boolean) => {
-    updateTaskMutation.mutate({ taskId, completed });
-  };
 
   const getStatusColor = (status: string | null | undefined) => {
     switch (status) {
@@ -202,13 +215,19 @@ export default function MyGoals() {
     setCurrentView("breakdown");
   };
 
-  const handleSaveComplete = () => {
+  const handleSaveComplete = async () => {
     setCurrentView("goals");
     setWizardData(null);
     // Refetch goals to show the newly created goal
-    queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+    try {
+      await GoalService.fetchGoals();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh goals",
+        variant: "destructive",
+      });
+    }
   };
 
   if (currentView === "wizard") {
@@ -246,11 +265,12 @@ export default function MyGoals() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <LoadingSpinner size="lg" className="mx-auto mb-4" />
+              <p className="text-muted-foreground">{t('common.loading')}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -428,7 +448,7 @@ export default function MyGoals() {
                           )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={() => deleteGoalMutation.mutate(goal.id)}
+                            onClick={() => handleDeleteGoal(goal.id)}
                             className="text-red-600"
                             data-testid={`menu-delete-${goal.id}`}
                           >
@@ -568,3 +588,5 @@ export default function MyGoals() {
     </div>
   );
 }
+
+export default withErrorBoundary(MyGoals);

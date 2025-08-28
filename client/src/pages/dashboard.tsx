@@ -7,17 +7,17 @@ import Navigation from "@/components/navigation";
 import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAppStore, useGoals, useStats, useActivities, useIsLoading } from "@/stores/appStore";
+import { useGoals, useStats, useActivities, useIsLoading } from "@/stores/appStore";
 import { GoalService } from "@/services/goalService";
 import { ActivityService } from "@/services/activityService";
 import { StatsService } from "@/services/statsService";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse, Activity } from "@/lib/schema";
 
 type View = "dashboard" | "wizard" | "breakdown";
 
-export default function Dashboard() {
+function Dashboard() {
   const { t } = useLanguage();
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [wizardData, setWizardData] = useState<{
@@ -207,7 +207,7 @@ export default function Dashboard() {
             {isLoading ? (
               <div className="p-6">
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <LoadingSpinner size="lg" />
                 </div>
               </div>
             ) : goals.filter(g => g.status === 'active').length === 0 ? (
@@ -295,7 +295,7 @@ export default function Dashboard() {
               {isLoading ? (
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-secondary rounded-full flex-shrink-0 animate-pulse"></div>
+                    <LoadingSpinner size="sm" />
                     <span className="text-xs sm:text-sm text-muted-foreground">Loading activities...</span>
                   </div>
                 </div>
@@ -377,3 +377,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+export default withErrorBoundary(Dashboard);

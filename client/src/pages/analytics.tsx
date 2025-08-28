@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -25,6 +25,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Navigation from "@/components/navigation";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { useAppStore, useGoals, useStats, useIsLoading } from "@/stores/appStore";
+import { StatsService } from "@/services/statsService";
+import { GoalService } from "@/services/goalService";
+import { apiRequest } from "@/lib/queryClient";
 import type { Goal, GoalWithBreakdown } from "@/lib/schema";
 
 interface AnalyticsData {
@@ -67,15 +73,57 @@ interface Insight {
   actionable: boolean;
 }
 
-export default function Analytics() {
+function Analytics() {
   const [timePeriod, setTimePeriod] = useState("month");
   const [selectedMetric, setSelectedMetric] = useState("completion_rate");
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const goals = useGoals() as GoalWithBreakdown[];
+  const stats = useStats();
+  const isLoading = useIsLoading();
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [goalCategories, setGoalCategories] = useState<GoalCategory[]>([]);
+  const [productivityPatterns, setProductivityPatterns] = useState<ProductivityPattern[]>([]);
 
-  // Fetch goals with detailed breakdown
-  const { data: goals = [], isLoading: goalsLoading } = useQuery<GoalWithBreakdown[]>({
-    queryKey: ["/api/goals/detailed"],
-  });
+  // Fetch all analytics data on component mount
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        useAppStore.getState().setLoading(true);
+        
+        // Fetch goals with breakdown
+        const goalsResponse = await apiRequest("GET", "/api/goals/detailed");
+        const goalsData = await goalsResponse.json();
+        useAppStore.getState().setGoals(goalsData);
+        
+        // Fetch analytics summary
+        const analyticsResponse = await apiRequest("GET", "/api/analytics/summary");
+        const analytics = await analyticsResponse.json();
+        setAnalyticsData(analytics);
+        
+        // Fetch category performance
+        const categoriesResponse = await apiRequest("GET", "/api/analytics/categories");
+        const categories = await categoriesResponse.json();
+        setGoalCategories(categories);
+        
+        // Fetch productivity patterns
+        const patternsResponse = await apiRequest("GET", "/api/analytics/patterns");
+        const patterns = await patternsResponse.json();
+        setProductivityPatterns(patterns);
+        
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load analytics data",
+          variant: "destructive",
+        });
+      } finally {
+        useAppStore.getState().setLoading(false);
+      }
+    };
+    
+    fetchAnalyticsData();
+  }, [toast]);
 
   // Provide fallback data for analytics when API fails
   const fallbackAnalyticsData: AnalyticsData = {
@@ -94,26 +142,6 @@ export default function Analytics() {
     monthlyComparison: { thisMonth: 0, lastMonth: 0, change: 0 }
   };
 
-  // Fetch analytics data from API with error handling
-  const { data: analyticsData = fallbackAnalyticsData, isLoading: analyticsLoading } = useQuery<AnalyticsData>({
-    queryKey: ["/api/analytics/summary"],
-    retry: 1,
-    staleTime: 5 * 60 * 1000 // 5 minutes
-  });
-
-  // Fetch category performance from API with error handling
-  const { data: goalCategories = [], isLoading: categoriesLoading } = useQuery<GoalCategory[]>({
-    queryKey: ["/api/analytics/categories"],
-    retry: 1,
-    staleTime: 5 * 60 * 1000
-  });
-
-  // Fetch productivity patterns from API with error handling
-  const { data: productivityPatterns = [], isLoading: patternsLoading } = useQuery<ProductivityPattern[]>({
-    queryKey: ["/api/analytics/patterns"],
-    retry: 1,
-    staleTime: 5 * 60 * 1000
-  });
 
   // Mock insights data (keep for now)
   const insights: Insight[] = [
@@ -165,15 +193,16 @@ export default function Analytics() {
     }
   };
 
-  if (goalsLoading || analyticsLoading || categoriesLoading || patternsLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <LoadingSpinner size="lg" className="mx-auto mb-4" />
+              <p className="text-muted-foreground">{t('common.loading')}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -181,21 +210,7 @@ export default function Analytics() {
   }
 
   // Provide fallback values if data is still undefined
-  const safeAnalyticsData = analyticsData || {
-    goalSuccessRate: 0,
-    avgCompletionTime: 0,
-    totalGoalsCreated: 0,
-    completedGoals: 0,
-    activeGoals: 0,
-    pausedGoals: 0,
-    totalTasksCompleted: 0,
-    currentStreak: 0,
-    longestStreak: 0,
-    bestPerformingDay: "Monday",
-    mostProductiveHour: 10,
-    weeklyProgressTrend: [0, 0, 0, 0, 0, 0, 0],
-    monthlyComparison: { thisMonth: 0, lastMonth: 0, change: 0 },
-  };
+  const safeAnalyticsData = analyticsData || fallbackAnalyticsData;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -420,7 +435,7 @@ export default function Analytics() {
                       <div key={pattern.dayOfWeek} className="flex items-center gap-4">
                         <span className="text-sm font-medium w-20">{pattern.dayOfWeek}</span>
                         <ProgressBar value={pattern.completionRate} className="flex-1" />
-                        <span className="text-sm text-gray-600 w-16">{pattern.completionRate}%</span>
+                        <span className="text-sm text-gray-600 w-16">{pattern.completionRate.toFixed(1)}%</span>
                         <span className="text-xs text-gray-500 w-16">{pattern.tasksCompleted} {t('progressPage.tasks')}</span>
                       </div>
                     ))}
@@ -459,7 +474,7 @@ export default function Analytics() {
                             <p className="text-sm text-gray-600 mb-1">{t('dashboard.successRate')}</p>
                             <div className="flex items-center gap-2">
                               <ProgressBar value={category.successRate} className="flex-1" />
-                              <span className="text-sm font-medium">{category.successRate}%</span>
+                              <span className="text-sm font-medium">{category.successRate.toFixed(1)}%</span>
                             </div>
                           </div>
                           <div>
@@ -522,3 +537,5 @@ export default function Analytics() {
     </div>
   );
 }
+
+export default withErrorBoundary(Analytics);
