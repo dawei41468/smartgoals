@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -67,6 +67,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
   
   const form = useForm<InsertGoal>({
     resolver: zodResolver(insertGoalSchema),
+    mode: "onChange",
     defaultValues: editGoal ? {
       title: editGoal.title || "",
       description: editGoal.description || "",
@@ -91,6 +92,37 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
       deadline: getDefaultDeadline(),
     },
   });
+
+  // Enable Generate Breakdown when essential fields are filled (title not required here)
+  const specific = form.watch("specific");
+  const measurable = form.watch("measurable");
+  const achievable = form.watch("achievable");
+  const relevant = form.watch("relevant");
+  const timebound = form.watch("timebound");
+  const exciting = form.watch("exciting");
+  const deadline = form.watch("deadline");
+  const category = form.watch("category");
+
+  const isGenerateEnabled = [
+    specific,
+    measurable,
+    achievable,
+    relevant,
+    timebound,
+    exciting,
+    deadline,
+    category,
+  ].every((v) => typeof v === "string" ? v.trim().length > 0 : !!v);
+
+  // Ensure title is auto-filled from 'specific' so schema validation passes on submit
+  useEffect(() => {
+    const spec = form.getValues("specific") || "";
+    const currentTitle = form.getValues("title") || "";
+    if (!currentTitle && spec.trim().length > 0) {
+      const autoTitle = spec.substring(0, 50) + (spec.length > 50 ? "..." : "");
+      form.setValue("title", autoTitle, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [specific]);
 
   const onSaveDraft = async () => {
     const values = form.getValues();
@@ -319,7 +351,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
               onSaveDraft={onSaveDraft}
               saveDraftPending={saveDraftMutation.isPending}
               isGenerating={isGenerating}
-              isFormValid={form.formState.isValid}
+              isFormValid={isGenerateEnabled}
             />
           </form>
         </Form>

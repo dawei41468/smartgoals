@@ -43,17 +43,20 @@ async def get_progress_stats(current_user=Depends(get_current_user), db: AsyncIO
     if stats["totalTasks"] > 0:
         this_week_progress = int((stats["completedTasks"] / stats["totalTasks"]) * 100)
     
-    return {
-        "totalGoals": stats["totalGoals"],
-        "completedGoals": stats["completedGoals"],
-        "activeGoals": stats["activeGoals"],
-        "totalTasks": stats["totalTasks"],
-        "completedTasks": stats["completedTasks"],
-        "currentStreak": streaks["currentStreak"],
-        "longestStreak": streaks["longestStreak"],
-        "thisWeekProgress": this_week_progress,
-        "avgCompletionTime": stats["avgCompletionTime"],
-    }
+    return success_response(
+        data={
+            "totalGoals": stats["totalGoals"],
+            "completedGoals": stats["completedGoals"],
+            "activeGoals": stats["activeGoals"],
+            "totalTasks": stats["totalTasks"],
+            "completedTasks": stats["completedTasks"],
+            "currentStreak": streaks["currentStreak"],
+            "longestStreak": streaks["longestStreak"],
+            "thisWeekProgress": this_week_progress,
+            "avgCompletionTime": stats["avgCompletionTime"],
+        },
+        message="Progress stats retrieved successfully"
+    )
 
 
 @router.get("/progress/achievements")
@@ -169,11 +172,14 @@ async def get_achievements(current_user=Depends(get_current_user), db: AsyncIOMo
             "category": "tasks"
         })
     
-    return {
-        "achievements": achievements,
-        "totalUnlocked": len(achievements),
-        "categories": ["goals", "streaks", "tasks"]
-    }
+    return success_response(
+        data={
+            "achievements": achievements,
+            "totalUnlocked": len(achievements),
+            "categories": ["goals", "streaks", "tasks"]
+        },
+        message="Achievements retrieved successfully"
+    )
 
 
 @router.get("/analytics/summary")
@@ -186,21 +192,24 @@ async def get_analytics_summary(current_user=Depends(get_current_user), db: Asyn
     patterns = await get_productivity_patterns(db, user_id)
     
     if stats["totalGoals"] == 0:
-        return {
-            "goalSuccessRate": 0,
-            "avgCompletionTime": 0,
-            "totalGoalsCreated": 0,
-            "completedGoals": 0,
-            "activeGoals": 0,
-            "pausedGoals": 0,
-            "totalTasksCompleted": 0,
-            "currentStreak": 0,
-            "longestStreak": 0,
-            "bestPerformingDay": "Monday",
-            "mostProductiveHour": 10,
-            "weeklyProgressTrend": [0, 0, 0, 0, 0, 0, 0],
-            "monthlyComparison": {"thisMonth": 0, "lastMonth": 0, "change": 0},
-        }
+        return success_response(
+            data={
+                "goalSuccessRate": 0,
+                "avgCompletionTime": 0,
+                "totalGoalsCreated": 0,
+                "completedGoals": 0,
+                "activeGoals": 0,
+                "pausedGoals": 0,
+                "totalTasksCompleted": 0,
+                "currentStreak": 0,
+                "longestStreak": 0,
+                "bestPerformingDay": "Monday",
+                "mostProductiveHour": 10,
+                "weeklyProgressTrend": [0, 0, 0, 0, 0, 0, 0],
+                "monthlyComparison": {"thisMonth": 0, "lastMonth": 0, "change": 0},
+            },
+            message="Analytics summary retrieved successfully"
+        )
     
     # Find best performing day
     best_day = "Monday"
@@ -210,33 +219,44 @@ async def get_analytics_summary(current_user=Depends(get_current_user), db: Asyn
     
     goal_success_rate = int((stats["completedGoals"] / stats["totalGoals"]) * 100) if stats["totalGoals"] > 0 else 0
     
-    return {
-        "goalSuccessRate": goal_success_rate,
-        "avgCompletionTime": stats["avgCompletionTime"],
-        "totalGoalsCreated": stats["totalGoals"],
-        "completedGoals": stats["completedGoals"],
-        "activeGoals": stats["activeGoals"],
-        "pausedGoals": stats["pausedGoals"],
-        "totalTasksCompleted": stats["completedTasks"],
-        "currentStreak": streaks["currentStreak"],
-        "longestStreak": streaks["longestStreak"],
-        "bestPerformingDay": best_day,
-        "mostProductiveHour": 10,  # Placeholder - could be calculated from task completion times
-        "weeklyProgressTrend": [0, 0, 0, 0, 0, 0, 0],  # Placeholder - could be calculated
-        "monthlyComparison": {"thisMonth": 0, "lastMonth": 0, "change": 0},  # Placeholder
-    }
+    return success_response(
+        data={
+            "goalSuccessRate": goal_success_rate,
+            "avgCompletionTime": stats["avgCompletionTime"],
+            "totalGoalsCreated": stats["totalGoals"],
+            "completedGoals": stats["completedGoals"],
+            "activeGoals": stats["activeGoals"],
+            "pausedGoals": stats["pausedGoals"],
+            "totalTasksCompleted": stats["completedTasks"],
+            "currentStreak": streaks["currentStreak"],
+            "longestStreak": streaks["longestStreak"],
+            "bestPerformingDay": best_day,
+            "mostProductiveHour": 10,  # Placeholder - could be calculated from task completion times
+            "weeklyProgressTrend": [0, 0, 0, 0, 0, 0, 0],  # Placeholder - could be calculated
+            "monthlyComparison": {"thisMonth": 0, "lastMonth": 0, "change": 0},  # Placeholder
+        },
+        message="Analytics summary retrieved successfully"
+    )
 
 
 @router.get("/analytics/categories")
 async def get_category_analytics(current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
-    return await get_category_performance(db, user_id)
+    data = await get_category_performance(db, user_id)
+    return success_response(
+        data=data,
+        message="Category performance retrieved successfully"
+    )
 
 
 @router.get("/analytics/patterns")
 async def get_productivity_patterns_route(current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
-    return await get_productivity_patterns(db, user_id)
+    data = await get_productivity_patterns(db, user_id)
+    return success_response(
+        data=data,
+        message="Productivity patterns retrieved successfully"
+    )
 
 
 # Helper functions

@@ -348,6 +348,16 @@ async def save_complete_goal(body: dict, current_user=Depends(get_current_user),
     }
     await db["goals"].insert_one(goal_doc)
 
+    # Log activity for goal creation (AI complete save path)
+    await db["activities"].insert_one({
+        "id": new_id(),
+        "userId": current_user["id"],
+        "type": "goal_created",
+        "description": f"Created new goal: {goal_doc.get('title', '')}",
+        "metadata": {"goalId": goal_id, "goalTitle": goal_doc.get("title"), "status": goal_doc.get("status")},
+        "createdAt": now,
+    })
+
     # create weekly goals & tasks
     for wg in breakdown.get("weeklyGoals", []):
         weekly_id = new_id()

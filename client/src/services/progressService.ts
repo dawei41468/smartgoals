@@ -9,7 +9,10 @@ export class ProgressService {
   static async fetchProgressStats(): Promise<ProgressStats> {
     try {
       const response = await apiRequest('GET', '/api/progress/stats');
-      const data = await response.json() as ProgressStats;
+      const result = await response.json();
+      
+      // Handle new standardized response format
+      const data = result.success ? result.data : result;
       
       // Update store with progress stats
       useAppStore.getState().setProgressStats(data);
@@ -43,8 +46,11 @@ export class ProgressService {
   static async fetchAchievements(): Promise<Achievement[]> {
     try {
       const response = await apiRequest('GET', '/api/progress/achievements');
-      const data = await response.json();
-      const achievements = data.achievements || [];
+      const result = await response.json();
+      
+      // Handle new standardized response format
+      const data = result.success ? result.data : result;
+      const achievements = data.achievements || data || [];
       
       // Update store with achievements
       useAppStore.getState().setAchievements(achievements);

@@ -106,7 +106,7 @@ class Goal(BaseModel):
 
 
 class InsertGoal(BaseModel):
-    title: str
+    title: Optional[str] = None
     description: Optional[str] = None
     category: str
     specific: str

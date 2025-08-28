@@ -49,7 +49,10 @@ export class StatsService {
       useAppStore.getState().setLoading(true);
       
       const response = await apiRequest('GET', '/api/analytics/stats');
-      const data = await response.json() as StatsResponse;
+      const result = await response.json();
+      
+      // Handle new standardized response format
+      const data = result.success ? result.data : result;
       
       // Update store with fetched stats
       useAppStore.getState().setStats(data);
@@ -106,7 +109,10 @@ export class StatsService {
   static async fetchAnalyticsSummary(): Promise<AnalyticsSummaryResponse> {
     try {
       const response = await apiRequest('GET', '/api/analytics/summary');
-      const data = await response.json() as AnalyticsSummaryResponse;
+      const result = await response.json();
+      
+      // Handle new standardized response format
+      const data = result.success ? result.data : result;
       
       // Update store with analytics data
       useAppStore.getState().setAnalyticsSummary(data);
@@ -143,7 +149,10 @@ export class StatsService {
   static async fetchCategoryPerformance(): Promise<CategoryPerformanceResponse[]> {
     try {
       const response = await apiRequest('GET', '/api/analytics/categories');
-      const data = await response.json() as CategoryPerformanceResponse[];
+      const result = await response.json();
+      
+      // Handle new standardized response format
+      const data = result.success ? result.data : result;
       
       // Update store with category data
       useAppStore.getState().setCategoryPerformance(data);
@@ -165,7 +174,10 @@ export class StatsService {
   static async fetchProductivityPatterns(): Promise<ProductivityPatternResponse[]> {
     try {
       const response = await apiRequest('GET', '/api/analytics/patterns');
-      const data = await response.json() as ProductivityPatternResponse[];
+      const result = await response.json();
+      
+      // Handle new standardized response format
+      const data = result.success ? result.data : result;
       
       // Update store with productivity data
       useAppStore.getState().setProductivityPatterns(data);

@@ -32,20 +32,22 @@ def _clean(doc: Dict[str, Any] | None) -> Dict[str, Any] | None:
 async def create_goal(payload: InsertGoal, draft: bool = False, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
     now = datetime.now(timezone.utc)
-    goal_data = payload.model_dump()
+    # Fallback: if no title provided, derive from 'specific'
+    derived_title = (payload.title or (payload.specific[:50] + ("..." if len(payload.specific) > 50 else "")))
+
     doc = {
         "id": new_id(),
         "userId": user_id,
-        "title": goal_data.title,
-        "description": goal_data.description,
-        "category": goal_data.category,
-        "specific": goal_data.specific,
-        "measurable": goal_data.measurable,
-        "achievable": goal_data.achievable,
-        "relevant": goal_data.relevant,
-        "timebound": goal_data.timebound,
-        "exciting": goal_data.exciting,
-        "deadline": goal_data.deadline,
+        "title": derived_title,
+        "description": payload.description,
+        "category": payload.category,
+        "specific": payload.specific,
+        "measurable": payload.measurable,
+        "achievable": payload.achievable,
+        "relevant": payload.relevant,
+        "timebound": payload.timebound,
+        "exciting": payload.exciting,
+        "deadline": payload.deadline,
         "progress": 0,  # Always ensure progress is set
         "status": "paused" if draft else "active",  # Always ensure status is set
         "createdAt": now,
