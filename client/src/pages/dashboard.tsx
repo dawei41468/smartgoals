@@ -195,10 +195,9 @@ export default function Dashboard() {
             <div className="p-4 sm:p-6 border-b border-border">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
                 <h2 className="text-lg sm:text-xl font-bold">{t('dashboard.activeGoals')}</h2>
-                <Button asChild variant="ghost" size="sm" className="self-start sm:self-auto" data-testid="button-view-all-goals">
+                <Button asChild variant="ghost" size="sm" className="self-start sm:self-auto text-primary hover:text-primary/80" data-testid="button-view-all-goals">
                   <Link href="/my-goals">
-                    <span className="hidden sm:inline">{t('myGoals.title')}</span>
-                    <span className="sm:hidden">{t('common.view')}</span>
+                    {t('dashboard.viewAllGoals')}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Link>
                 </Button>
@@ -274,7 +273,7 @@ export default function Dashboard() {
                         <span className="text-sm text-muted-foreground" data-testid={`text-goal-deadline-${goal.id}`}>
                           {t('myGoals.due')}: {formatDate(goal.deadline)}
                         </span>
-                        <Button asChild variant="ghost" size="sm" data-testid={`button-view-goal-${goal.id}`}>
+                        <Button asChild variant="ghost" size="sm" className="text-primary hover:text-primary/80" data-testid={`button-view-goal-${goal.id}`}>
                           <Link href={`/my-goals?goal=${goal.id}`}>
                             {t('myGoals.viewDetails')} <ArrowRight className="ml-1 h-4 w-4" />
                           </Link>

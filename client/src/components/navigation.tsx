@@ -77,9 +77,6 @@ export default function Navigation() {
             >
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </button>
-            <button className="hidden sm:block text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300" data-testid="button-notifications">
-              <Bell className="h-5 w-5" />
-            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-8 h-8 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors" data-testid="avatar-user">

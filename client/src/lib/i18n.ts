@@ -15,19 +15,18 @@ export const translations = {
     },
     // Dashboard
     dashboard: {
-      title: "Transform Your Goals into Actionable Plans",
-      subtitle: "Use the SMART(ER) framework to create meaningful goals and let AI break them down into daily tasks.",
+      title: "Welcome to Your Goal Dashboard",
+      subtitle: "Track your progress and achieve your SMART(ER) goals with AI-powered insights.",
       createGoal: "Create New Goal",
       activeGoals: "Active Goals",
       tasksCompleted: "Tasks Completed",
       successRate: "Success Rate",
-      quickActions: "Quick Actions",
-      recentGoals: "Recent Goals",
       recentActivity: "Recent Activity",
-      welcomeMessage: "Welcome to SMART Goals! Create your first goal to see activity here.",
+      welcomeMessage: "Welcome! Start by creating your first goal.",
       justNow: "Just now",
-      noGoals: "No goals yet",
-      noGoalsDescription: "Create your first goal to get started!"
+      noGoals: "No active goals yet",
+      noGoalsDescription: "Start your journey by creating your first SMART(ER) goal.",
+      viewAllGoals: "View All Goals"
     },
     // Goal Creation
     goalWizard: {
@@ -35,9 +34,6 @@ export const translations = {
       setupStep: "SMART(ER) Setup",
       aiStep: "AI Breakdown", 
       saveStep: "Review & Save",
-      setupStepMobile: "Setup",
-      aiStepMobile: "AI",
-      saveStepMobile: "Save",
       category: "Goal Category",
       categoryDescription: "Choose the area of your life this goal focuses on.",
       categories: {
@@ -350,15 +346,6 @@ export const translations = {
           detailed: "Detailed - Step-by-step breakdown", 
           granular: "Granular - Daily task specifics"
         },
-        theme: "Theme",
-        themeDescription: "Choose your preferred color theme",
-        themes: {
-          light: "Light",
-          dark: "Dark",
-          system: "System"
-        },
-        language: "Language",
-        languageDescription: "Choose your preferred language",
         savePreferences: "Save Preferences"
       },
       security: {
@@ -404,19 +391,18 @@ export const translations = {
     },
     // Dashboard
     dashboard: {
-      title: "将您的目标转化为可执行的计划",
-      subtitle: "使用SMART(ER)框架创建有意义的目标，让AI将其分解为日常任务。",
+      title: "欢迎来到您的目标仪表板",
+      subtitle: "使用AI驱动的洞察跟踪您的进度并实现您的SMART(ER)目标。",
       createGoal: "创建新目标",
       activeGoals: "活跃目标",
       tasksCompleted: "已完成任务",
       successRate: "成功率",
-      quickActions: "快速操作",
-      recentGoals: "最近目标",
       recentActivity: "最近活动",
-      welcomeMessage: "欢迎使用SMART目标！创建您的第一个目标来查看活动。",
+      noGoals: "还没有活跃目标",
+      noGoalsDescription: "通过创建您的第一个SMART(ER)目标开始您的旅程。",
+      welcomeMessage: "欢迎！从创建您的第一个目标开始。",
       justNow: "刚刚",
-      noGoals: "还没有目标",
-      noGoalsDescription: "创建您的第一个目标开始使用！"
+      viewAllGoals: "查看所有目标"
     },
     // Goal Creation
     goalWizard: {
@@ -739,15 +725,6 @@ export const translations = {
           detailed: "详细 - 全面分解",
           granular: "细粒度 - 每日任务具体内容"
         },
-        theme: "主题",
-        themeDescription: "选择您偏好的颜色主题",
-        themes: {
-          light: "浅色",
-          dark: "深色",
-          system: "系统"
-        },
-        language: "语言",
-        languageDescription: "选择您偏好的语言",
         savePreferences: "保存偏好"
       },
       security: {
