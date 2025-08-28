@@ -51,8 +51,7 @@ export const api = {
 
   // AI Breakdown
   generateBreakdown: async (request: AIBreakdownRequest): Promise<AIBreakdownResponse> => {
-    const response = await apiRequest("POST", "/api/goals/breakdown", request);
-    return response.json();
+    return validatedApiRequest("POST", "/api/goals/breakdown", request);
   },
 
   generateBreakdownStream: async (
@@ -71,8 +70,7 @@ export const api = {
   },
 
   regenerateBreakdown: async (goalData: AIBreakdownRequest, feedback?: string): Promise<AIBreakdownResponse> => {
-    const response = await apiRequest("POST", "/api/goals/breakdown/regenerate", { goalData, feedback });
-    return response.json();
+    return validatedApiRequest("POST", "/api/goals/breakdown/regenerate", { goalData, feedback });
   },
 
   saveCompleteGoal: async (goalData: CreateGoalRequest, breakdown: AIBreakdownResponse): Promise<GoalWithBreakdownResponse> => {
@@ -86,8 +84,7 @@ export const api = {
 
   // Analytics
   getStats: async (): Promise<{ activeGoalsCount: number; completedTasksCount: number; successRate: number }> => {
-    const response = await apiRequest("GET", "/api/analytics/stats");
-    return response.json();
+    return validatedApiRequest("GET", "/api/analytics/stats");
   },
 
   // Activities

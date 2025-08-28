@@ -19,7 +19,6 @@ export type ViewType = 'dashboard' | 'wizard' | 'breakdown';
 export interface UIState {
   currentView: ViewType;
   isLoading: boolean;
-  sidebarOpen: boolean;
   activeGoalId: string | null;
 }
 
@@ -69,7 +68,6 @@ export interface AppActions {
   // UI Actions
   setCurrentView: (view: ViewType) => void;
   setLoading: (loading: boolean) => void;
-  setSidebarOpen: (open: boolean) => void;
   setActiveGoalId: (id: string | null) => void;
   
   // Goal Actions
@@ -106,7 +104,6 @@ const initialState: UIState & DataState = {
   // UI State
   currentView: 'dashboard',
   isLoading: false,
-  sidebarOpen: false,
   activeGoalId: null,
   
   // Data State
@@ -132,7 +129,6 @@ export const useAppStore = create<AppStore>()(
         // UI Actions
         setCurrentView: (view) => set({ currentView: view }, false, 'setCurrentView'),
         setLoading: (loading) => set({ isLoading: loading }, false, 'setLoading'),
-        setSidebarOpen: (open) => set({ sidebarOpen: open }, false, 'setSidebarOpen'),
         setActiveGoalId: (id) => set({ activeGoalId: id }, false, 'setActiveGoalId'),
         
         // Goal Actions
@@ -185,7 +181,6 @@ export const useAppStore = create<AppStore>()(
         name: 'smartgoals-app-store',
         partialize: (state) => ({
           // Only persist UI preferences, not data
-          sidebarOpen: state.sidebarOpen,
           currentView: state.currentView,
         }),
       }

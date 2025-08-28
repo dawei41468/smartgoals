@@ -1,8 +1,8 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress as ProgressBar } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { ProgressWithLabel } from '@/components/shared/ProgressWithLabel';
 
 interface ProductivityPattern {
   dayOfWeek: string;
@@ -53,9 +53,13 @@ export function AnalyticsPatternsTab({ analyticsData, productivityPatterns }: An
             {productivityPatterns.length > 0 ? (
               productivityPatterns.map((pattern) => (
                 <div key={pattern.dayOfWeek} className="flex items-center gap-4">
-                  <span className="text-sm font-medium w-20">{pattern.dayOfWeek}</span>
-                  <ProgressBar value={pattern.completionRate} className="flex-1" />
-                  <span className="text-sm text-gray-600 w-16">{pattern.completionRate.toFixed(1)}%</span>
+                  <ProgressWithLabel
+                    label={pattern.dayOfWeek}
+                    value={pattern.completionRate}
+                    labelWidth="w-20"
+                    valueWidth="w-16"
+                    className="flex-1"
+                  />
                   <span className="text-xs text-gray-500 w-16">{pattern.tasksCompleted} {t('progressPage.tasks')}</span>
                 </div>
               ))

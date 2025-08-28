@@ -12,6 +12,9 @@ from ..auth_utils import (
     create_token_pair, set_auth_cookies, clear_auth_cookies, verify_refresh_token
 )
 from ..models import new_id
+from ..response_utils import (
+    success_response, created_response, conflict_response, unauthorized_response
+)
 
 router = APIRouter()
 
@@ -60,7 +63,10 @@ async def register(user_data: RegisterData, db: AsyncIOMotorDatabase = Depends(g
 
     token = create_access_token(user_id, user.email)  # type: ignore[arg-type]
     public = UserPublic(**user.model_dump(exclude={"password"}))
-    return AuthResponse(user=public, token=token, message="User registered successfully")
+    return created_response(
+        data={"user": public.model_dump(), "token": token},
+        message="User registered successfully"
+    )
 
 
 @router.post("/auth/login", response_model=AuthResponse)
@@ -80,13 +86,16 @@ async def login(payload: LoginData, response: Response, db: AsyncIOMotorDatabase
     
     user_doc.pop("password", None)
     user_doc.pop("_id", None)
-    return AuthResponse(user=UserPublic(**user_doc), token=tokens["access_token"], message="Login successful")
+    return success_response(
+        data={"user": UserPublic(**user_doc).model_dump(), "token": tokens["access_token"]},
+        message="Login successful"
+    )
 
 
 @router.post("/auth/logout")
 async def logout(response: Response):
     clear_auth_cookies(response)
-    return {"message": "Logout successful"}
+    return success_response(message="Logout successful")
 
 
 @router.post("/auth/refresh", response_model=TokenResponse)
@@ -113,9 +122,15 @@ async def refresh_token(request: Request, response: Response, db: AsyncIOMotorDa
     # Set new httpOnly cookies
     set_auth_cookies(response, tokens)
     
-    return TokenResponse(**tokens, message="Tokens refreshed successfully")
+    return success_response(
+        data=tokens,
+        message="Tokens refreshed successfully"
+    )
 
 
 @router.get("/auth/me", response_model=UserPublic)
 async def me(current_user=Depends(get_current_user)):
-    return current_user
+    return success_response(
+        data=current_user,
+        message="User profile retrieved successfully"
+    )

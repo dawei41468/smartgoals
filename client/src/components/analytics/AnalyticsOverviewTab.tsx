@@ -1,8 +1,9 @@
 import React from 'react';
 import { TrendingUp, PieChart } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress as ProgressBar } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { ProgressWithLabel } from '@/components/shared/ProgressWithLabel';
+import { StatusLegendItem } from '@/components/shared/StatusLegendItem';
 
 interface AnalyticsData {
   weeklyProgressTrend: number[];
@@ -34,11 +35,13 @@ export function AnalyticsOverviewTab({ analyticsData }: AnalyticsOverviewTabProp
             {analyticsData.weeklyProgressTrend.map((progress, index) => {
               const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
               return (
-                <div key={index} className="flex items-center gap-3">
-                  <span className="text-sm font-medium w-10">{days[index]}</span>
-                  <ProgressBar value={progress} className="flex-1" />
-                  <span className="text-sm text-gray-600 w-12">{progress}%</span>
-                </div>
+                <ProgressWithLabel
+                  key={index}
+                  label={days[index]}
+                  value={progress}
+                  labelWidth="w-10"
+                  valueWidth="w-12"
+                />
               );
             })}
           </div>
@@ -55,42 +58,24 @@ export function AnalyticsOverviewTab({ analyticsData }: AnalyticsOverviewTabProp
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm">{t('myGoals.completed')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{analyticsData.completedGoals}</span>
-                <span className="text-xs text-gray-500">
-                  ({analyticsData.totalGoalsCreated > 0 ? Math.round((analyticsData.completedGoals / analyticsData.totalGoalsCreated) * 100) : 0}%)
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-sm">{t('myGoals.active')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{analyticsData.activeGoals}</span>
-                <span className="text-xs text-gray-500">
-                  ({analyticsData.totalGoalsCreated > 0 ? Math.round((analyticsData.activeGoals / analyticsData.totalGoalsCreated) * 100) : 0}%)
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <span className="text-sm">{t('myGoals.paused')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{analyticsData.pausedGoals}</span>
-                <span className="text-xs text-gray-500">
-                  ({analyticsData.totalGoalsCreated > 0 ? Math.round((analyticsData.pausedGoals / analyticsData.totalGoalsCreated) * 100) : 0}%)
-                </span>
-              </div>
-            </div>
+            <StatusLegendItem
+              color="bg-green-500"
+              label={t('myGoals.completed')}
+              count={analyticsData.completedGoals}
+              total={analyticsData.totalGoalsCreated}
+            />
+            <StatusLegendItem
+              color="bg-blue-500"
+              label={t('myGoals.active')}
+              count={analyticsData.activeGoals}
+              total={analyticsData.totalGoalsCreated}
+            />
+            <StatusLegendItem
+              color="bg-yellow-500"
+              label={t('myGoals.paused')}
+              count={analyticsData.pausedGoals}
+              total={analyticsData.totalGoalsCreated}
+            />
           </div>
         </CardContent>
       </Card>

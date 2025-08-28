@@ -8,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from ..db import get_db
 from ..auth_utils import get_current_user
 from ..db_queries import get_user_analytics_aggregated, get_category_performance, get_productivity_patterns, calculate_streaks
+from ..response_utils import success_response
 
 router = APIRouter()
 
@@ -19,11 +20,14 @@ async def get_stats(current_user=Depends(get_current_user), db: AsyncIOMotorData
     # Use optimized aggregation query
     stats = await get_user_analytics_aggregated(db, user_id)
     
-    return {
-        "activeGoalsCount": stats["activeGoals"],
-        "completedTasksCount": stats["completedTasks"],
-        "successRate": stats["successRate"],
-    }
+    return success_response(
+        data={
+            "activeGoalsCount": stats["activeGoals"],
+            "completedTasksCount": stats["completedTasks"],
+            "successRate": stats["successRate"],
+        },
+        message="Analytics stats retrieved successfully"
+    )
 
 
 @router.get("/progress/stats")

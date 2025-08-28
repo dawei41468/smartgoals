@@ -13,6 +13,9 @@ from ..models import InsertGoal, Goal
 from ..models import new_id
 from ..exceptions import NotFoundError, ValidationError, AuthorizationError
 from ..validation import UpdateGoalRequest, validate_object_id, validate_user_ownership
+from ..response_utils import (
+    success_response, created_response, updated_response, deleted_response
+)
 
 router = APIRouter()
 
@@ -60,14 +63,21 @@ async def create_goal(payload: InsertGoal, draft: bool = False, current_user=Dep
         "createdAt": now,
     })
 
-    return _clean(doc)
+    return created_response(
+        data=_clean(doc),
+        message="Goal draft created successfully" if draft else "Goal created successfully"
+    )
 
 
 @router.get("/goals")
 async def list_goals(current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
     cursor = db["goals"].find({"userId": user_id})
-    return [_clean(doc) for doc in [doc async for doc in cursor]]
+    goals = [_clean(doc) for doc in [doc async for doc in cursor]]
+    return success_response(
+        data=goals,
+        message=f"Retrieved {len(goals)} goals successfully"
+    )
 
 
 @router.get("/goals/detailed")
@@ -93,7 +103,10 @@ async def list_goals_detailed(current_user=Depends(get_current_user), db: AsyncI
         goal_with_weekly = {**(_clean(goal) or {}), "weeklyGoals": result_weekly}
         results.append(goal_with_weekly)
 
-    return results
+    return success_response(
+        data=results,
+        message=f"Retrieved {len(results)} detailed goals successfully"
+    )
 
 
 @router.get("/goals/{goal_id}")
@@ -116,7 +129,10 @@ async def get_goal(goal_id: str, current_user=Depends(get_current_user), db: Asy
 
     goal = _clean(goal) or {}
     goal["weeklyGoals"] = result_weekly
-    return goal
+    return success_response(
+        data=goal,
+        message="Goal retrieved successfully"
+    )
 
 
 @router.patch("/goals/{goal_id}")
@@ -144,7 +160,10 @@ async def update_goal(goal_id: str, updates: UpdateGoalRequest, current_user=Dep
     )
     if not res:
         raise NotFoundError("Goal", goal_id)
-    return _clean(res)
+    return updated_response(
+        data=_clean(res),
+        message="Goal updated successfully"
+    )
 
 
 @router.delete("/goals/{goal_id}")
@@ -171,4 +190,4 @@ async def delete_goal(goal_id: str, current_user=Depends(get_current_user), db: 
         "createdAt": now,
     })
 
-    return {"message": "Goal deleted successfully"}
+    return deleted_response("Goal deleted successfully")

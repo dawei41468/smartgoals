@@ -14,6 +14,7 @@ from ..models import AIBreakdownRequest
 from ..config import get_settings
 from ..models import new_id
 from ..auth_utils import get_current_user
+from ..response_utils import success_response
 
 try:
     from openai import OpenAI, AsyncOpenAI  # type: ignore
@@ -230,7 +231,10 @@ async def generate_breakdown(payload: AIBreakdownRequest, current_user=Depends(g
                 all_weekly_goals.extend(chunk_data["weeklyGoals"])
             
         print(f"Generated {len(all_weekly_goals)} weeks successfully")
-        return {"weeklyGoals": all_weekly_goals}
+        return success_response(
+            data={"weeklyGoals": all_weekly_goals},
+            message="AI breakdown generated successfully"
+        )
         
     except Exception as e:
         print(f"DeepSeek API error: {e}")
@@ -317,7 +321,10 @@ Make sure the breakdown is realistic, actionable, and directly aligned with achi
     if not isinstance(data, dict) or "weeklyGoals" not in data or not isinstance(data["weeklyGoals"], list):
         raise HTTPException(status_code=502, detail="Invalid response format from DeepSeek")
 
-    return data
+    return success_response(
+        data=data,
+        message="AI breakdown regenerated successfully"
+    )
 
 
 @router.post("/goals/complete")

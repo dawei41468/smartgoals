@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress as ProgressBar } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getPriorityColor, getPriorityDisplayText } from '@/lib/goalUtils';
+import { TaskItem } from '@/components/shared/TaskItem';
 
 interface Task {
   id: string;
@@ -43,10 +42,15 @@ export function WeeklyProgressTab({
 }: WeeklyProgressTabProps) {
   const { t } = useLanguage();
 
-  const todaysTasks = currentWeekTasks.filter(task => {
-    const taskDate = new Date(task.date || '');
-    return taskDate.toDateString() === new Date().toDateString();
-  });
+  const todaysTasks = useMemo(() => {
+    const today = new Date().toDateString();
+    return currentWeekTasks.filter(task => {
+      const taskDate = new Date(task.date || '');
+      return taskDate.toDateString() === today;
+    });
+  }, [currentWeekTasks]);
+
+  const daysOfWeek = useMemo(() => getDaysOfWeek(), [getDaysOfWeek]);
 
   return (
     <div className="space-y-6">
@@ -66,7 +70,7 @@ export function WeeklyProgressTab({
             {weeklyCompletedTasks} of {weeklyTotalTasks} tasks completed
           </div>
           <div className="grid grid-cols-7 gap-1 sm:gap-2 mt-4">
-            {getDaysOfWeek().map((day, index) => (
+            {daysOfWeek.map((day, index) => (
               <div
                 key={index}
                 className={`p-1.5 sm:p-3 rounded-lg border text-center ${
@@ -110,33 +114,12 @@ export function WeeklyProgressTab({
           <CardContent>
             <div className="space-y-3">
               {todaysTasks.map((task) => (
-                <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <input
-                    type="checkbox"
-                    checked={task.completed || false}
-                    onClick={() => handleTaskToggle(task.id, !task.completed)}
-                    className="rounded"
-                    data-testid={`today-task-${task.id}`}
-                  />
-                  <div className="flex-1">
-                    <div className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                      {task.title}
-                    </div>
-                    {task.description && (
-                      <div className={`text-sm ${task.completed ? 'line-through text-gray-400' : 'text-gray-600'}`}>
-                        {task.description}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getPriorityColor(task.priority)}>
-                      {getPriorityDisplayText(task.priority)}
-                    </Badge>
-                    <div className="text-xs text-gray-500">
-                      {task.estimatedHours || 1}h
-                    </div>
-                  </div>
-                </div>
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggle={handleTaskToggle}
+                  testIdPrefix="today-task"
+                />
               ))}
             </div>
           </CardContent>

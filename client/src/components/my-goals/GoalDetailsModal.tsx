@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { formatDate } from '@/lib/dateUtils';
-import { getStatusColor, getPriorityColor, getStatusDisplayText, getPriorityDisplayText } from '@/lib/goalUtils';
+import { getStatusColor, getStatusDisplayText } from '@/lib/goalUtils';
+import { TaskItem } from '@/components/shared/TaskItem';
 import type { GoalWithBreakdown } from '@/lib/schema';
 
 interface GoalDetailsModalProps {
@@ -13,6 +15,23 @@ interface GoalDetailsModalProps {
 }
 
 export function GoalDetailsModal({ goal, onTaskToggle }: GoalDetailsModalProps) {
+  const { t } = useLanguage();
+
+  const weeklyGoalsWithTasks = useMemo(() => 
+    goal.weeklyGoals?.filter(wg => wg.tasks?.length) || [],
+    [goal.weeklyGoals]
+  );
+
+  const hasWeeklyGoals = useMemo(() => 
+    goal.weeklyGoals?.length > 0,
+    [goal.weeklyGoals]
+  );
+
+  const hasAnyTasks = useMemo(() => 
+    goal.weeklyGoals?.some(wg => wg.tasks?.length) || false,
+    [goal.weeklyGoals]
+  );
+
   return (
     <CardContent className="border-t pt-6">
       <Tabs defaultValue="smart" className="w-full">
@@ -52,7 +71,7 @@ export function GoalDetailsModal({ goal, onTaskToggle }: GoalDetailsModalProps) 
         </TabsContent>
         
         <TabsContent value="milestones" className="space-y-4">
-          {goal.weeklyGoals?.length ? (
+          {hasWeeklyGoals ? (
             <div className="space-y-3">
               {goal.weeklyGoals.map((weeklyGoal) => (
                 <div key={weeklyGoal.id} className="border rounded-lg p-4">
@@ -83,41 +102,19 @@ export function GoalDetailsModal({ goal, onTaskToggle }: GoalDetailsModalProps) 
         </TabsContent>
         
         <TabsContent value="tasks" className="space-y-4">
-          {goal.weeklyGoals?.some(wg => wg.tasks?.length) ? (
+          {hasAnyTasks ? (
             <div className="space-y-4">
-              {goal.weeklyGoals.map((weeklyGoal) => (
+              {weeklyGoalsWithTasks.map((weeklyGoal) => (
                 weeklyGoal.tasks?.length ? (
                   <div key={weeklyGoal.id}>
                     <h4 className="font-semibold mb-3">{weeklyGoal.title}</h4>
                     <div className="space-y-2">
                       {weeklyGoal.tasks.map((task) => (
-                        <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                          <input
-                            type="checkbox"
-                            checked={task.completed || false}
-                            onChange={(e) => onTaskToggle(task.id, e.target.checked)}
-                            className="rounded"
-                            data-testid={`task-checkbox-${task.id}`}
-                          />
-                          <div className="flex-1">
-                            <div className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                              {task.title}
-                            </div>
-                            {task.description && (
-                              <div className={`text-sm ${task.completed ? 'line-through text-gray-400' : 'text-gray-600'}`}>
-                                {task.description}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={getPriorityColor(task.priority)}>
-                              {getPriorityDisplayText(task.priority)}
-                            </Badge>
-                            <div className="text-xs text-gray-500">
-                              {task.estimatedHours || 1}h
-                            </div>
-                          </div>
-                        </div>
+                        <TaskItem
+                          key={task.id}
+                          task={task}
+                          onToggle={onTaskToggle}
+                        />
                       ))}
                     </div>
                   </div>

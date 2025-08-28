@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Calendar, Clock, TrendingUp, MoreHorizontal, Edit, Pause, Play, CheckCircle, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import {
 import { formatDate, getDaysUntilDeadline, isOverdue } from '@/lib/dateUtils';
 import { getStatusColor, getStatusDisplayText } from '@/lib/goalUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import type { Goal, GoalWithBreakdown } from '@/lib/schema';
 
 interface GoalCardProps {
@@ -25,7 +26,7 @@ interface GoalCardProps {
   onDeleteGoal: (goalId: string) => void;
 }
 
-export function GoalCard({ 
+export const GoalCard = memo(function GoalCard({ 
   goal, 
   isExpanded, 
   onToggleExpand, 
@@ -34,19 +35,33 @@ export function GoalCard({
   onDeleteGoal 
 }: GoalCardProps) {
   const { t } = useLanguage();
+  const { showConfirmDialog, ConfirmDialog } = useConfirmDialog();
+
+  const handleDeleteClick = () => {
+    showConfirmDialog(
+      {
+        title: 'Delete Goal',
+        description: `Are you sure you want to delete "${goal.title}"? This action cannot be undone and will permanently remove the goal and all its associated tasks.`,
+        confirmText: 'Delete Goal',
+        cancelText: 'Cancel',
+        variant: 'destructive',
+      },
+      () => onDeleteGoal(goal.id)
+    );
+  };
 
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:gap-4">
-          <div className="order-1 flex-1">
+        <div className="grid grid-cols-1 gap-3">
+          <div className="flex-1">
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <CardTitle className="text-lg sm:text-xl mb-2">{goal.title}</CardTitle>
                 {goal.description && (
                   <CardDescription className="text-sm sm:text-base">{goal.description}</CardDescription>
                 )}
-                <div className="flex flex-wrap items-center gap-2 mt-3">
+                <div className="flex flex-wrap items-center gap-1.5 mt-3">
                   <Badge className={getStatusColor(goal.status)}>
                     {getStatusDisplayText(goal.status)}
                   </Badge>
@@ -76,29 +91,30 @@ export function GoalCard({
             </div>
           </div>
           
-          <div className="order-2 flex items-start gap-2">
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <TrendingUp className="h-4 w-4" />
-                <span>{goal.progress || 0}%</span>
+          <div className="flex items-center justify-between mt-2 gap-2">
+            <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-1 text-sm text-gray-600">
+                <TrendingUp className="h-3 w-3" />
+                <span className="text-xs">{goal.progress || 0}%</span>
               </div>
-              <Progress value={goal.progress || 0} className="w-24" />
+              <Progress value={goal.progress || 0} className="flex-1" />
             </div>
             
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onToggleExpand(goal.id)}
                 data-testid={`button-expand-${goal.id}`}
+                className="h-8 px-2 text-xs"
               >
                 {isExpanded ? 'Less' : 'More'}
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" data-testid={`button-menu-${goal.id}`}>
-                    <MoreHorizontal className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" data-testid={`button-menu-${goal.id}`} className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -138,7 +154,7 @@ export function GoalCard({
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
-                    onClick={() => onDeleteGoal(goal.id)}
+                    onClick={handleDeleteClick}
                     className="text-red-600"
                     data-testid={`menu-delete-${goal.id}`}
                   >
@@ -151,6 +167,7 @@ export function GoalCard({
           </div>
         </div>
       </CardHeader>
+      <ConfirmDialog />
     </Card>
   );
-}
+});

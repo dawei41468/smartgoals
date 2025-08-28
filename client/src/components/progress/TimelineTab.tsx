@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Target, CheckCircle, Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,11 @@ interface TimelineTabProps {
 
 export function TimelineTab({ goals }: TimelineTabProps) {
   const { t } = useLanguage();
+
+  const sortedGoals = useMemo(() => 
+    goals.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()),
+    [goals]
+  );
 
   return (
     <Card>
@@ -37,9 +42,7 @@ export function TimelineTab({ goals }: TimelineTabProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {goals
-              .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
-              .map((goal, index) => (
+            {sortedGoals.map((goal, index) => (
                 <div key={goal.id} className="flex items-start gap-4">
                   <div className="flex flex-col items-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -55,7 +58,7 @@ export function TimelineTab({ goals }: TimelineTabProps) {
                         <Target className="h-4 w-4" />
                       )}
                     </div>
-                    {index < goals.length - 1 && (
+                    {index < sortedGoals.length - 1 && (
                       <div className="w-px h-16 bg-gray-200 mt-2"></div>
                     )}
                   </div>

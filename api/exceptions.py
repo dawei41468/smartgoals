@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import HTTPException, status
 from typing import Optional, Dict, Any
+from .response_utils import error_response
 
 
 class APIException(HTTPException):
@@ -14,11 +15,13 @@ class APIException(HTTPException):
         details: Optional[Dict[str, Any]] = None,
         error_code: Optional[str] = None
     ):
-        detail = {
-            "message": message,
-            "error_code": error_code or self._get_default_error_code(status_code),
-            "details": details or {}
-        }
+        # Use centralized error response format
+        detail = error_response(
+            message=message,
+            error_code=error_code or self._get_default_error_code(status_code),
+            details=details,
+            status_code=status_code
+        )
         super().__init__(status_code=status_code, detail=detail)
     
     @staticmethod
