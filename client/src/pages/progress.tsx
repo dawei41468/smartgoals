@@ -19,7 +19,8 @@ import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translations } from '@/lib/i18n';
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@/lib/schema";
@@ -50,7 +51,7 @@ interface Achievement {
 export default function Progress() {
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const queryClient = useQueryClient();
 
   // Fetch goals with detailed breakdown
@@ -147,15 +148,19 @@ export default function Progress() {
     updateTaskMutation.mutate({ taskId, completed });
   };
 
-  const getMotivationalMessage = () => {
-    const messages = [
-      t('progressPage.motivationalMessages.everyStep'),
-      t('progressPage.motivationalMessages.progressNotPerfection'),
-      t('progressPage.motivationalMessages.futureself'),
-      t('progressPage.motivationalMessages.consistency'),
-      t('progressPage.motivationalMessages.smallImprovements'),
-    ];
-    return messages[Math.floor(Math.random() * messages.length)];
+  const getMotivationalMessage = (currentLanguage: string) => {
+    // Get quotes array from i18n translations by accessing the translations object directly
+    const quotes = translations[currentLanguage as keyof typeof translations].progressPage.quotes;
+
+    // Get day of year (1-365) to use as seed for consistent daily quote
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now.getTime() - start.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+
+    // Use day of year to select consistent daily quote
+    return quotes[dayOfYear % quotes.length];
   };
 
   const formatDate = (dateString: string) => {
@@ -235,7 +240,7 @@ export default function Progress() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold mb-2">{t('progressPage.dailyMotivation')}</h3>
-                <p className="text-primary-foreground/90">{getMotivationalMessage()}</p>
+                <p className="text-primary-foreground/90">{getMotivationalMessage(language)}</p>
               </div>
               <Zap className="h-8 w-8 text-white/80" />
             </div>
