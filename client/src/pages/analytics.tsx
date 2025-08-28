@@ -3,7 +3,6 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
   TrendingUp, 
-  Calendar, 
   Clock, 
   Target, 
   CheckCircle, 
@@ -27,44 +26,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import Navigation from "@/components/navigation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
-import { useAppStore, useGoals, useStats, useIsLoading } from "@/stores/appStore";
+import { getStatusColor, getPriorityColor } from "@/lib/goalUtils";
+import { useIsLoading, useAnalyticsSummary, useCategoryPerformance, useProductivityPatterns } from "@/stores/appStore";
 import { StatsService } from "@/services/statsService";
 import { GoalService } from "@/services/goalService";
-import { apiRequest } from "@/lib/queryClient";
-import type { Goal, GoalWithBreakdown } from "@/lib/schema";
 
-interface AnalyticsData {
-  goalSuccessRate: number;
-  avgCompletionTime: number;
-  totalGoalsCreated: number;
-  completedGoals: number;
-  activeGoals: number;
-  pausedGoals: number;
-  totalTasksCompleted: number;
-  currentStreak: number;
-  longestStreak: number;
-  bestPerformingDay: string;
-  mostProductiveHour: number;
-  weeklyProgressTrend: number[];
-  monthlyComparison: {
-    thisMonth: number;
-    lastMonth: number;
-    change: number;
-  };
-}
-
-interface GoalCategory {
-  name: string;
-  count: number;
-  successRate: number;
-  avgTimeToComplete: number;
-}
-
-interface ProductivityPattern {
-  dayOfWeek: string;
-  completionRate: number;
-  tasksCompleted: number;
-}
 
 interface Insight {
   type: 'success' | 'warning' | 'info';
@@ -75,41 +41,22 @@ interface Insight {
 
 function Analytics() {
   const [timePeriod, setTimePeriod] = useState("month");
-  const [selectedMetric, setSelectedMetric] = useState("completion_rate");
   const { t } = useLanguage();
   const { toast } = useToast();
-  const goals = useGoals() as GoalWithBreakdown[];
-  const stats = useStats();
   const isLoading = useIsLoading();
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [goalCategories, setGoalCategories] = useState<GoalCategory[]>([]);
-  const [productivityPatterns, setProductivityPatterns] = useState<ProductivityPattern[]>([]);
+  const analyticsData = useAnalyticsSummary();
+  const goalCategories = useCategoryPerformance();
+  const productivityPatterns = useProductivityPatterns();
 
   // Fetch all analytics data on component mount
   useEffect(() => {
     const fetchAnalyticsData = async () => {
       try {
-        useAppStore.getState().setLoading(true);
+        // Fetch goals with breakdown using service
+        await GoalService.fetchDetailedGoals();
         
-        // Fetch goals with breakdown
-        const goalsResponse = await apiRequest("GET", "/api/goals/detailed");
-        const goalsData = await goalsResponse.json();
-        useAppStore.getState().setGoals(goalsData);
-        
-        // Fetch analytics summary
-        const analyticsResponse = await apiRequest("GET", "/api/analytics/summary");
-        const analytics = await analyticsResponse.json();
-        setAnalyticsData(analytics);
-        
-        // Fetch category performance
-        const categoriesResponse = await apiRequest("GET", "/api/analytics/categories");
-        const categories = await categoriesResponse.json();
-        setGoalCategories(categories);
-        
-        // Fetch productivity patterns
-        const patternsResponse = await apiRequest("GET", "/api/analytics/patterns");
-        const patterns = await patternsResponse.json();
-        setProductivityPatterns(patterns);
+        // Fetch all analytics data using enhanced service
+        await StatsService.fetchAllAnalyticsData();
         
       } catch (error) {
         toast({
@@ -117,16 +64,14 @@ function Analytics() {
           description: "Failed to load analytics data",
           variant: "destructive",
         });
-      } finally {
-        useAppStore.getState().setLoading(false);
       }
     };
     
     fetchAnalyticsData();
   }, [toast]);
 
-  // Provide fallback data for analytics when API fails
-  const fallbackAnalyticsData: AnalyticsData = {
+  // Provide fallback data for analytics when data is null
+  const fallbackAnalyticsData = {
     goalSuccessRate: 0,
     avgCompletionTime: 0,
     totalGoalsCreated: 0,
@@ -185,11 +130,11 @@ function Analytics() {
   const getInsightBadgeColor = (type: string) => {
     switch (type) {
       case 'success':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return getStatusColor('completed');
       case 'warning':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return getPriorityColor('medium');
       default:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return getStatusColor('active');
     }
   };
 
@@ -430,15 +375,18 @@ function Analytics() {
                   </div>
                   
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900">{t('analytics.weeklyPerformance')}</h3>
-                    {productivityPatterns.map((pattern) => (
-                      <div key={pattern.dayOfWeek} className="flex items-center gap-4">
-                        <span className="text-sm font-medium w-20">{pattern.dayOfWeek}</span>
-                        <ProgressBar value={pattern.completionRate} className="flex-1" />
-                        <span className="text-sm text-gray-600 w-16">{pattern.completionRate.toFixed(1)}%</span>
-                        <span className="text-xs text-gray-500 w-16">{pattern.tasksCompleted} {t('progressPage.tasks')}</span>
-                      </div>
-                    ))}
+                    {productivityPatterns.length > 0 ? (
+                      productivityPatterns.map((pattern) => (
+                        <div key={pattern.dayOfWeek} className="flex items-center gap-4">
+                          <span className="text-sm font-medium w-20">{pattern.dayOfWeek}</span>
+                          <ProgressBar value={pattern.completionRate} className="flex-1" />
+                          <span className="text-sm text-gray-600 w-16">{pattern.completionRate.toFixed(1)}%</span>
+                          <span className="text-xs text-gray-500 w-16">{pattern.tasksCompleted} {t('progressPage.tasks')}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">{t('analytics.noDataAvailable')}</p>
+                    )}
                   </div>
                 </div>
               </CardContent>

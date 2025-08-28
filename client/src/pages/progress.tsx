@@ -24,64 +24,33 @@ import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
-import { useAppStore, useGoals, useStats, useIsLoading } from "@/stores/appStore";
+import { getStatusDisplayText, getPriorityDisplayText, getStatusColor, getPriorityColor } from "@/lib/goalUtils";
+import { formatDate } from "@/lib/dateUtils";
+import { useGoals, useIsLoading, useProgressStats, useAchievements } from "@/stores/appStore";
 import { GoalService } from "@/services/goalService";
 import { TaskService } from "@/services/taskService";
-import { apiRequest } from "@/lib/queryClient";
-import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask } from "@/lib/schema";
+import { ProgressService } from "@/services/progressService";
+import type { GoalWithBreakdown } from "@/lib/schema";
 
-interface ProgressStats {
-  totalGoals: number;
-  completedGoals: number;
-  activeGoals: number;
-  totalTasks: number;
-  completedTasks: number;
-  currentStreak: number;
-  longestStreak: number;
-  thisWeekProgress: number;
-  avgCompletionTime: number;
-}
-
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  unlockedAt?: string;
-  progress?: number;
-  target?: number;
-}
 
 function Progress() {
   const [selectedPeriod, setSelectedPeriod] = useState("week");
   const { toast } = useToast();
   const { t, language } = useLanguage();
   const goals = useGoals() as GoalWithBreakdown[];
-  const stats = useStats();
   const isLoading = useIsLoading();
-  const [progressStats, setProgressStats] = useState<ProgressStats | null>(null);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const progressStats = useProgressStats();
+  const achievements = useAchievements();
 
   // Fetch all progress data on component mount
   useEffect(() => {
     const fetchProgressData = async () => {
       try {
-        useAppStore.getState().setLoading(true);
+        // Fetch goals with breakdown using service
+        await GoalService.fetchDetailedGoals();
         
-        // Fetch goals with breakdown
-        const goalsResponse = await apiRequest("GET", "/api/goals/detailed");
-        const goalsData = await goalsResponse.json();
-        useAppStore.getState().setGoals(goalsData);
-        
-        // Fetch progress statistics
-        const statsResponse = await apiRequest("GET", "/api/progress/stats");
-        const statsData = await statsResponse.json();
-        setProgressStats(statsData);
-        
-        // Fetch achievements
-        const achievementsResponse = await apiRequest("GET", "/api/progress/achievements");
-        const achievementsData = await achievementsResponse.json();
-        setAchievements(achievementsData);
+        // Fetch all progress data using service
+        await ProgressService.fetchAllProgressData();
         
       } catch (error) {
         toast({
@@ -89,8 +58,6 @@ function Progress() {
           description: "Failed to load progress data",
           variant: "destructive",
         });
-      } finally {
-        useAppStore.getState().setLoading(false);
       }
     };
     
@@ -110,48 +77,8 @@ function Progress() {
     avgCompletionTime: 0
   };
 
-  // Mock achievements data (will be replaced by API data)
-  const mockAchievements: Achievement[] = [
-    {
-      id: "first-goal",
-      title: "Goal Setter",
-      description: "Created your first SMART goal",
-      icon: "🎯",
-      unlockedAt: goals.length > 0 ? new Date().toISOString() : undefined,
-    },
-    {
-      id: "week-warrior",
-      title: "Week Warrior",
-      description: "Complete all tasks for a full week",
-      icon: "⚡",
-      progress: safeStats?.currentStreak || 0,
-      target: 7,
-    },
-    {
-      id: "goal-achiever",
-      title: "Goal Achiever",
-      description: "Complete your first goal",
-      icon: "🏆",
-      unlockedAt: safeStats?.completedGoals && safeStats.completedGoals > 0 ? new Date().toISOString() : undefined,
-    },
-    {
-      id: "consistency-king",
-      title: "Consistency King",
-      description: "Maintain a 14-day streak",
-      icon: "🔥",
-      progress: safeStats?.currentStreak || 0,
-      target: 14,
-      unlockedAt: safeStats?.currentStreak && safeStats.currentStreak >= 7 ? new Date().toISOString() : undefined,
-    },
-    {
-      id: "productive-month",
-      title: "Productive Month",
-      description: "Complete 50 tasks in a month",
-      icon: "💫",
-      progress: safeStats?.completedTasks || 0,
-      target: 50,
-    },
-  ];
+  // Use achievements from store or generate mock ones as fallback
+  const displayAchievements = achievements.length > 0 ? achievements : ProgressService.generateMockAchievements(safeStats);
 
   // Get current week's tasks
   const getCurrentWeekTasks = () => {
@@ -204,14 +131,6 @@ function Progress() {
 
     // Use day of year to select consistent daily quote
     return quotes[dayOfYear % quotes.length];
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
   };
 
   const getDaysOfWeek = () => {
@@ -434,7 +353,7 @@ function Progress() {
                             )}
                           </div>
                           <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'}>
-                            {task.priority}
+                            {getPriorityDisplayText(task.priority)}
                           </Badge>
                         </div>
                       ))}
@@ -458,7 +377,7 @@ function Progress() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {achievements.map((achievement) => (
+                  {displayAchievements.map((achievement) => (
                     <div
                       key={achievement.id}
                       className={`p-4 rounded-lg border ${
@@ -475,7 +394,7 @@ function Progress() {
                         <p className="text-xs text-gray-600 mt-1">{achievement.description}</p>
                         
                         {achievement.unlockedAt ? (
-                          <Badge className="mt-2 bg-yellow-100 text-yellow-800">
+                          <Badge className={`mt-2 ${getPriorityColor('medium')}`}>
                             <Star className="w-3 h-3 mr-1" />
                             {t('progressPage.unlocked')}
                           </Badge>
@@ -556,7 +475,7 @@ function Progress() {
                             )}
                             <div className="flex items-center gap-2 mt-2">
                               <Badge variant={goal.status === 'completed' ? 'default' : 'secondary'}>
-                                {goal.status}
+                                {getStatusDisplayText(goal.status)}
                               </Badge>
                               <span className="text-sm text-gray-500">{goal.progress || 0}% complete</span>
                             </div>

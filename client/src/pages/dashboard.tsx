@@ -12,8 +12,10 @@ import { GoalService } from "@/services/goalService";
 import { ActivityService } from "@/services/activityService";
 import { StatsService } from "@/services/statsService";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { getStatusDisplayText } from "@/lib/goalUtils";
+import { formatDate } from "@/lib/dateUtils";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse, Activity } from "@/lib/schema";
+import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
 
 type View = "dashboard" | "wizard" | "breakdown";
 
@@ -70,14 +72,6 @@ function Dashboard() {
   const handleSaveComplete = () => {
     setCurrentView("dashboard");
     setWizardData(null);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    });
   };
 
   const getSmarterTags = () => [
@@ -263,8 +257,8 @@ function Dashboard() {
                         {/* Next Task Placeholder */}
                         <div className="text-sm">
                           <span className="text-muted-foreground">{t('myGoals.status')}: </span>
-                          <span className="font-medium capitalize" data-testid={`text-goal-status-${goal.id}`}>
-                            {goal.status}
+                          <span className="font-medium" data-testid={`text-goal-status-${goal.id}`}>
+                            {getStatusDisplayText(goal.status)}
                           </span>
                         </div>
                       </div>

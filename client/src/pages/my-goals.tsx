@@ -14,10 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
@@ -28,8 +26,7 @@ import { getStatusColor, getPriorityColor, getStatusDisplayText, getPriorityDisp
 import { useAppStore, useGoals, useIsLoading } from "@/stores/appStore";
 import { GoalService } from "@/services/goalService";
 import { TaskService } from "@/services/taskService";
-import { apiRequest } from "@/lib/queryClient";
-import type { Goal, GoalWithBreakdown, WeeklyGoal, DailyTask, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
+import type { Goal, GoalWithBreakdown, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
 
 type View = "goals" | "wizard" | "breakdown";
 
@@ -67,20 +64,14 @@ function MyGoals() {
   useEffect(() => {
     const fetchGoalsWithBreakdown = async () => {
       try {
-        useAppStore.getState().setLoading(true);
-        // Use apiRequest helper with proper auth headers
-        const response = await apiRequest("GET", "/api/goals/detailed");
-        const detailedGoals = await response.json();
-        // Store in Zustand as detailed goals
-        useAppStore.getState().setGoals(detailedGoals);
+        // Use GoalService for detailed goals
+        await GoalService.fetchDetailedGoals();
       } catch (error) {
         toast({
           title: "Error",
           description: "Failed to load goals",
           variant: "destructive",
         });
-      } finally {
-        useAppStore.getState().setLoading(false);
       }
     };
     fetchGoalsWithBreakdown();
@@ -151,48 +142,6 @@ function MyGoals() {
           return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
       }
     });
-
-
-  const getStatusColor = (status: string | null | undefined) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "paused":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "active":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getPriorityColor = (priority: string | null | undefined) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const getDaysUntilDeadline = (deadline: string | null) => {
-    if (!deadline) return 0;
-    const days = Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    return days;
-  };
 
   const handleStartGoalCreation = () => {
     setEditingGoal(null);
@@ -376,16 +325,27 @@ function MyGoals() {
                           )}
                           <div className="flex flex-wrap items-center gap-2 mt-3">
                             <Badge className={getStatusColor(goal.status)}>
-                              {goal.status}
+                              {getStatusDisplayText(goal.status)}
                             </Badge>
-                            <div className="flex items-center text-sm text-gray-600">
+                            <div className={`flex items-center text-sm ${isOverdue(goal.deadline) ? 'text-red-600' : 'text-gray-600'}`}>
                               <Calendar className="h-4 w-4 mr-1" />
                               {formatDate(goal.deadline)}
+                              {isOverdue(goal.deadline) && (
+                                <Badge className="ml-2 bg-red-100 text-red-800 border-red-200">
+                                  Overdue
+                                </Badge>
+                              )}
                             </div>
                             {goal.deadline && getDaysUntilDeadline(goal.deadline) >= 0 && (
                               <div className="flex items-center text-sm text-gray-600">
                                 <Clock className="h-4 w-4 mr-1" />
                                 {getDaysUntilDeadline(goal.deadline)} {t('myGoals.daysLeft')}
+                              </div>
+                            )}
+                            {goal.deadline && isOverdue(goal.deadline) && (
+                              <div className="flex items-center text-sm text-red-600">
+                                <Clock className="h-4 w-4 mr-1" />
+                                {Math.abs(getDaysUntilDeadline(goal.deadline))} days overdue
                               </div>
                             )}
                           </div>
@@ -509,7 +469,7 @@ function MyGoals() {
                                   <h4 className="font-semibold">{weeklyGoal.title}</h4>
                                   <div className="flex items-center gap-2">
                                     <Badge className={getStatusColor(weeklyGoal.status)}>
-                                      {weeklyGoal.status}
+                                      {getStatusDisplayText(weeklyGoal.status)}
                                     </Badge>
                                     <div className="text-sm text-gray-600 dark:text-gray-300">
                                       {weeklyGoal.progress || 0}%
@@ -560,7 +520,7 @@ function MyGoals() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <Badge className={getPriorityColor(task.priority)}>
-                                            {task.priority}
+                                            {getPriorityDisplayText(task.priority)}
                                           </Badge>
                                           <div className="text-xs text-gray-500">
                                             {task.estimatedHours || 1}h

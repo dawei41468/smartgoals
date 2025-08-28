@@ -15,7 +15,6 @@ import type { AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
 import {
   validateGoalResponse,
   validateDailyTaskResponse,
-  validateUserResponse,
   validateActivityResponse,
   validateGoalWithBreakdownResponse,
 } from "./types";
@@ -32,6 +31,10 @@ export const api = {
 
   getGoals: async (): Promise<GoalResponse[]> => {
     return validatedArrayApiRequest("GET", "/api/goals", undefined, validateGoalResponse);
+  },
+
+  getDetailedGoals: async (): Promise<GoalWithBreakdownResponse[]> => {
+    return validatedArrayApiRequest("GET", "/api/goals/detailed", undefined, validateGoalWithBreakdownResponse);
   },
 
   getGoal: async (id: string): Promise<GoalWithBreakdownResponse> => {

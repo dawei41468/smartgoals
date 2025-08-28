@@ -52,6 +52,126 @@ async def get_progress_stats(current_user=Depends(get_current_user), db: AsyncIO
     }
 
 
+@router.get("/progress/achievements")
+async def get_achievements(current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    user_id = current_user["id"]
+    
+    # Use existing analytics data to generate achievements
+    stats = await get_user_analytics_aggregated(db, user_id)
+    streaks = await calculate_streaks(db, user_id)
+    
+    achievements = []
+    
+    # Goal-based achievements
+    if stats["totalGoals"] >= 1:
+        achievements.append({
+            "id": "goal_setter",
+            "title": "Goal Setter",
+            "description": "Created your first goal",
+            "icon": "🎯",
+            "unlockedAt": None,  # Would need to track actual completion dates
+            "category": "goals"
+        })
+    
+    if stats["completedGoals"] >= 1:
+        achievements.append({
+            "id": "first_goal",
+            "title": "First Goal Completed",
+            "description": "Completed your first goal",
+            "icon": "🏆",
+            "unlockedAt": None,
+            "category": "goals"
+        })
+    
+    if stats["completedGoals"] >= 3:
+        achievements.append({
+            "id": "goal_achiever",
+            "title": "Goal Achiever",
+            "description": "Completed 3 goals",
+            "icon": "🌟",
+            "unlockedAt": None,
+            "category": "goals"
+        })
+    
+    if stats["completedGoals"] >= 10:
+        achievements.append({
+            "id": "goal_master",
+            "title": "Goal Master",
+            "description": "Completed 10 goals",
+            "icon": "👑",
+            "unlockedAt": None,
+            "category": "goals"
+        })
+    
+    # Streak-based achievements
+    if streaks["currentStreak"] >= 3:
+        achievements.append({
+            "id": "streak_starter",
+            "title": "Streak Starter",
+            "description": "Maintained a 3-day streak",
+            "icon": "🔥",
+            "unlockedAt": None,
+            "category": "streaks"
+        })
+    
+    if streaks["longestStreak"] >= 7:
+        achievements.append({
+            "id": "week_warrior",
+            "title": "Week Warrior",
+            "description": "Maintained a 7-day streak",
+            "icon": "⚡",
+            "unlockedAt": None,
+            "category": "streaks"
+        })
+    
+    if streaks["longestStreak"] >= 30:
+        achievements.append({
+            "id": "consistency_champion",
+            "title": "Consistency Champion",
+            "description": "Maintained a 30-day streak",
+            "icon": "💎",
+            "unlockedAt": None,
+            "category": "streaks"
+        })
+    
+    # Task-based achievements
+    if stats["completedTasks"] >= 1:
+        achievements.append({
+            "id": "first_task",
+            "title": "First Task Done",
+            "description": "Completed your first task",
+            "icon": "✅",
+            "unlockedAt": None,
+            "category": "tasks"
+        })
+    
+    if stats["completedTasks"] >= 5:
+        achievements.append({
+            "id": "task_crusher",
+            "title": "Task Crusher",
+            "description": "Completed 5 tasks",
+            "icon": "💪",
+            "unlockedAt": None,
+            "category": "tasks"
+        })
+    
+    if stats["completedTasks"] >= 25:
+        achievements.append({
+            "id": "productivity_pro",
+            "title": "Productivity Pro",
+            "description": "Completed 25 tasks",
+            "icon": "🚀",
+            "unlockedAt": None,
+            "category": "tasks"
+        })
+    
+    return {
+        "achievements": achievements,
+        "totalUnlocked": len(achievements),
+        "categories": ["goals", "streaks", "tasks"]
+    }
+
+
 @router.get("/analytics/summary")
 async def get_analytics_summary(current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]

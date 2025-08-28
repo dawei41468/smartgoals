@@ -7,6 +7,11 @@ import type {
   WeeklyGoalResponse,
   GoalWithBreakdownResponse 
 } from '@/lib/types';
+import type {
+  AnalyticsSummaryResponse,
+  CategoryPerformanceResponse,
+  ProductivityPatternResponse
+} from '@/services/statsService';
 
 // UI State Types
 export type ViewType = 'dashboard' | 'wizard' | 'breakdown';
@@ -18,6 +23,29 @@ export interface UIState {
   activeGoalId: string | null;
 }
 
+// Progress Data Types
+export interface ProgressStats {
+  totalGoals: number;
+  completedGoals: number;
+  activeGoals: number;
+  totalTasks: number;
+  completedTasks: number;
+  currentStreak: number;
+  longestStreak: number;
+  thisWeekProgress: number;
+  avgCompletionTime: number;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  unlockedAt?: string;
+  progress?: number;
+  target?: number;
+}
+
 // Data State Types
 export interface DataState {
   goals: GoalResponse[];
@@ -27,6 +55,13 @@ export interface DataState {
     completedTasksCount: number;
     successRate: number;
   } | null;
+  // Analytics data
+  analyticsSummary: AnalyticsSummaryResponse | null;
+  categoryPerformance: CategoryPerformanceResponse[];
+  productivityPatterns: ProductivityPatternResponse[];
+  // Progress data
+  progressStats: ProgressStats | null;
+  achievements: Achievement[];
 }
 
 // Actions Interface
@@ -50,6 +85,15 @@ export interface AppActions {
   // Stats Actions
   setStats: (stats: DataState['stats']) => void;
   
+  // Analytics Actions
+  setAnalyticsSummary: (summary: AnalyticsSummaryResponse | null) => void;
+  setCategoryPerformance: (categories: CategoryPerformanceResponse[]) => void;
+  setProductivityPatterns: (patterns: ProductivityPatternResponse[]) => void;
+  
+  // Progress Actions
+  setProgressStats: (stats: ProgressStats | null) => void;
+  setAchievements: (achievements: Achievement[]) => void;
+  
   // Reset Actions
   reset: () => void;
 }
@@ -69,6 +113,13 @@ const initialState: UIState & DataState = {
   goals: [],
   activities: [],
   stats: null,
+  // Analytics State
+  analyticsSummary: null,
+  categoryPerformance: [],
+  productivityPatterns: [],
+  // Progress State
+  progressStats: null,
+  achievements: [],
 };
 
 // Create Store
@@ -118,6 +169,15 @@ export const useAppStore = create<AppStore>()(
         // Stats Actions
         setStats: (stats) => set({ stats }, false, 'setStats'),
         
+        // Analytics Actions
+        setAnalyticsSummary: (summary) => set({ analyticsSummary: summary }, false, 'setAnalyticsSummary'),
+        setCategoryPerformance: (categories) => set({ categoryPerformance: categories }, false, 'setCategoryPerformance'),
+        setProductivityPatterns: (patterns) => set({ productivityPatterns: patterns }, false, 'setProductivityPatterns'),
+        
+        // Progress Actions
+        setProgressStats: (stats) => set({ progressStats: stats }, false, 'setProgressStats'),
+        setAchievements: (achievements) => set({ achievements }, false, 'setAchievements'),
+        
         // Reset Actions
         reset: () => set(initialState, false, 'reset'),
       }),
@@ -143,6 +203,15 @@ export const useStats = () => useAppStore((state) => state.stats);
 export const useCurrentView = () => useAppStore((state) => state.currentView);
 export const useIsLoading = () => useAppStore((state) => state.isLoading);
 export const useActiveGoalId = () => useAppStore((state) => state.activeGoalId);
+
+// Analytics selectors
+export const useAnalyticsSummary = () => useAppStore((state) => state.analyticsSummary);
+export const useCategoryPerformance = () => useAppStore((state) => state.categoryPerformance);
+export const useProductivityPatterns = () => useAppStore((state) => state.productivityPatterns);
+
+// Progress selectors
+export const useProgressStats = () => useAppStore((state) => state.progressStats);
+export const useAchievements = () => useAppStore((state) => state.achievements);
 
 // Computed selectors
 export const useActiveGoal = () => useAppStore((state) => {

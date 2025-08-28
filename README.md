@@ -5,19 +5,26 @@
 ![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
 ![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)
 
-SMART goals, task breakdown, and progress tracking. Frontend: React + TypeScript + Tailwind CSS v4 (Vite). Backend: FastAPI + MongoDB + JWT. Optional AI assistance via DeepSeek.
+SMART goals, task breakdown, and progress tracking with unified store + services architecture. Frontend: React + TypeScript + Tailwind CSS v4 (Vite) + Zustand. Backend: FastAPI + MongoDB + JWT. Optional AI assistance via DeepSeek.
 
 ## Tech stack
-- Frontend: React 18, TypeScript, Vite, Tailwind CSS v4
+- Frontend: React 18, TypeScript, Vite, Tailwind CSS v4, Zustand
 - Backend: FastAPI, Pydantic, Uvicorn
 - Database: MongoDB (Motor)
 - Auth: JWT (python-jose)
-- Extras: APScheduler, Web Push, Email (SMTP), React Query, Radix UI
+- State Management: Zustand store + services pattern
+- Extras: APScheduler, Web Push, Email (SMTP), React Query (auth only), Radix UI
 
 ## Monorepo layout
 ```
 /                    # repo root
 ├─ client/           # React app (Vite root)
+│  ├─ src/
+│  │  ├─ stores/     # Zustand store and selectors
+│  │  ├─ services/   # Data services (Goal, Stats, Progress)
+│  │  ├─ pages/      # Route components
+│  │  ├─ components/ # Reusable UI components
+│  │  └─ lib/        # Utilities, API client, schemas
 ├─ api/              # FastAPI app
 │  ├─ main.py        # FastAPI entrypoint
 │  ├─ routers/       # API routes: auth, goals, tasks, ai, ...
@@ -110,7 +117,9 @@ uvicorn api.main:app --reload --port 8000
 - Goal creation and management (with draft saving)
 - AI-assisted goal breakdown and regeneration (optional, via DeepSeek)
 - Tasks, notifications (Web Push), and activity log
-- Basic analytics and user settings
+- Comprehensive analytics and progress tracking
+- User settings and internationalization (English/Chinese)
+- Unified store + services architecture for consistent data flow
 
 ## Contributing
 - Use TypeScript and follow existing patterns

@@ -24,6 +24,8 @@ SmartGoals is a comprehensive SMART goals management application that helps user
 │   │   ├── pages/       # Route components
 │   │   ├── contexts/    # React contexts (Auth, Language)
 │   │   ├── hooks/       # Custom React hooks
+│   │   ├── stores/      # Zustand store and selectors
+│   │   ├── services/    # Data services (Goal, Stats, Progress)
 │   │   └── lib/         # Utilities, API client, schemas
 │   └── public/
 ├── api/                 # FastAPI backend
@@ -214,10 +216,19 @@ npm run api:start
 - **Analytics Dashboard** - Comprehensive analytics visualization
 - **Progress Tracking** - Progress visualization and task management
 
+### Data Flow Architecture
+- **Store + Services Pattern** - Uniform data fetching across all pages
+- **Zustand Store** - Central state management with TypeScript support
+- **Service Layer** - Business logic abstraction with automatic store updates
+- **Selectors** - Optimized data access with selective subscriptions
+- **Error Handling** - Consistent error handling with fallback data
+
 ### State Management
-- **React Query** - Server state management and caching
+- **Zustand Store** - Centralized state management with devtools and persistence
+- **Service Layer** - GoalService, StatsService, ProgressService for data operations
+- **React Query** - Limited to auth operations and settings (one-off operations)
 - **React Context** - Authentication and language state
-- **Local Storage** - JWT token persistence
+- **Local Storage** - JWT token persistence and UI preferences
 
 ### UI Framework
 - **Tailwind CSS v4** - Utility-first styling
@@ -270,7 +281,8 @@ npm run build  # Builds client to dist/public
 
 ### Frontend
 - Code splitting with Vite
-- React Query caching for API responses
+- Zustand store with selective subscriptions for optimal re-renders
+- Service layer caching and batch data fetching
 - Lazy loading for route components
 - Optimized bundle size
 
@@ -335,5 +347,5 @@ npm run build  # Builds client to dist/public
 ---
 
 **Last Updated**: August 28, 2025
-**Version**: 1.0.0
+**Version**: 1.1.0 - Store + Services Architecture
 **Maintainer**: Development Team

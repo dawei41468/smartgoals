@@ -112,6 +112,26 @@ export class GoalService {
   }
 
   /**
+   * Fetch detailed goals with breakdown data for analytics
+   */
+  static async fetchDetailedGoals(): Promise<GoalWithBreakdownResponse[]> {
+    try {
+      useAppStore.getState().setLoading(true);
+      const goals = await api.getDetailedGoals();
+      useAppStore.getState().setGoals(goals);
+      return goals;
+    } catch (error) {
+      const message = ErrorHandler.handleAndLog(error, {
+        operation: 'fetch detailed goals',
+        entityType: 'Goal'
+      });
+      throw new Error(message);
+    } finally {
+      useAppStore.getState().setLoading(false);
+    }
+  }
+
+  /**
    * Fetch a single goal with breakdown
    */
   static async fetchGoal(id: string): Promise<GoalWithBreakdownResponse> {

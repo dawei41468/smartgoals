@@ -19,7 +19,7 @@ import { Link } from "wouter";
 import Navigation from "@/components/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { User as UserType, UserSettings, UpdateUserProfile, UpdateUserSettings } from "@/lib/schema";
+import type { UserSettings, UpdateUserProfile, UpdateUserSettings } from "@/lib/schema";
 import { enablePush, disablePush } from "@/lib/push";
 
 const profileSchema = z.object({
