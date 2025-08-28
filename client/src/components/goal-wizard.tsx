@@ -497,34 +497,31 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
             )}
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 pt-6 border-t">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onSaveDraft}
-                disabled={generateBreakdownMutation.isPending}
-                className="w-full sm:w-auto"
-                data-testid="button-save-draft"
+                disabled={saveDraftMutation.isPending}
+                className="flex-1 text-sm"
               >
-                <Folder className="mr-2 h-4 w-4" />
-                Save as Draft
-              </Button> 
-              <Button 
-                type="submit" 
-                disabled={generateBreakdownMutation.isPending}
-                className="w-full sm:w-auto"
-                data-testid="button-generate-breakdown"
+                {saveDraftMutation.isPending ? t('common.loading') : t('goalWizard.saveDraft')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={isGenerating || !form.formState.isValid}
+                className="flex-1 text-sm"
               >
-                {generateBreakdownMutation.isPending ? (
+                {isGenerating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Generating...
+                    {t('goalWizard.generating')}
                   </>
                 ) : (
                   <>
-                    <span className="hidden sm:inline">Generate AI Breakdown</span>
-                    <span className="sm:hidden">Generate Breakdown</span>
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">{t('goalWizard.generateBreakdown')}</span>
+                    <span className="sm:hidden">{t('goalWizard.generateBreakdownMobile')}</span>
                   </>
                 )}
               </Button>

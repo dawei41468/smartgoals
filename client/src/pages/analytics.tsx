@@ -191,7 +191,7 @@ export default function Analytics() {
             </div>
             <div className="flex gap-2">
               <Select value={timePeriod} onValueChange={setTimePeriod}>
-                <SelectTrigger className="w-32" data-testid="select-time-period">
+                <SelectTrigger className="w-28 sm:w-32" data-testid="select-time-period">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -206,16 +206,16 @@ export default function Analytics() {
         </div>
 
         {/* Key Metrics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('dashboard.successRate')}</p>
-                  <p className="text-2xl font-bold text-green-600">{safeAnalyticsData.goalSuccessRate}%</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">{t('dashboard.successRate')}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600">{safeAnalyticsData.goalSuccessRate}%</p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <Target className="h-6 w-6 text-green-600" />
+                <div className="p-2 sm:p-3 bg-green-100 rounded-full">
+                  <Target className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-2 flex items-center">

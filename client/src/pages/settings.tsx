@@ -229,7 +229,7 @@ export default function Settings() {
           <p className="text-gray-600 dark:text-gray-300 mt-2">Manage your account settings and preferences</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
             <Card>

@@ -295,7 +295,7 @@ export default function MyGoals() {
           </div>
           <div className="flex gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32" data-testid="select-status-filter">
+              <SelectTrigger className="flex-1" data-testid="select-status-filter">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -307,7 +307,7 @@ export default function MyGoals() {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32" data-testid="select-sort-by">
+              <SelectTrigger className="flex-1" data-testid="select-sort-by">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

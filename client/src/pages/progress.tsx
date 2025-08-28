@@ -248,48 +248,48 @@ export default function Progress() {
         </Card>
 
         {/* Progress Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <Flame className="h-6 w-6 text-orange-500 mr-2" />
-                <span className="text-2xl font-bold">{stats?.currentStreak || 0}</span>
+                <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 mr-1 sm:mr-2" />
+                <span className="text-xl sm:text-2xl font-bold">{stats?.currentStreak || 0}</span>
               </div>
-              <p className="text-sm text-gray-600">{t('analytics.streakDays')}</p>
-              <p className="text-xs text-gray-500 mt-1">{t('progressPage.daysInRow')}</p>
+              <p className="text-xs sm:text-sm text-gray-600">{t('analytics.streakDays')}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.daysInRow')}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <CheckCircle className="h-6 w-6 text-green-500 mr-2" />
-                <span className="text-2xl font-bold">{completedThisWeek}</span>
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500 mr-1 sm:mr-2" />
+                <span className="text-xl sm:text-2xl font-bold">{completedThisWeek}</span>
               </div>
-              <p className="text-sm text-gray-600">{t('common.thisWeek')}</p>
-              <p className="text-xs text-gray-500 mt-1">{t('progressPage.tasksCompleted')}</p>
+              <p className="text-xs sm:text-sm text-gray-600">{t('common.thisWeek')}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.tasksCompleted')}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <Target className="h-6 w-6 text-blue-500 mr-2" />
-                <span className="text-2xl font-bold">{stats?.completedGoals || 0}</span>
+                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-1 sm:mr-2" />
+                <span className="text-xl sm:text-2xl font-bold">{stats?.completedGoals || 0}</span>
               </div>
-              <p className="text-sm text-gray-600">{t('progressPage.goalsAchieved')}</p>
-              <p className="text-xs text-gray-500 mt-1">{t('progressPage.totalCompleted')}</p>
+              <p className="text-xs sm:text-sm text-gray-600">{t('progressPage.goalsAchieved')}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.totalCompleted')}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4 text-center">
+            <CardContent className="p-3 sm:p-4 text-center">
               <div className="flex items-center justify-center mb-2">
-                <Clock className="h-6 w-6 text-purple-500 mr-2" />
-                <span className="text-2xl font-bold">{stats?.avgCompletionTime || 0}</span>
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500 mr-1 sm:mr-2" />
+                <span className="text-xl sm:text-2xl font-bold">{stats?.avgCompletionTime || 0}</span>
               </div>
-              <p className="text-sm text-gray-600">{t('analytics.avgCompletionTime')}</p>
-              <p className="text-xs text-gray-500 mt-1">{t('progressPage.daysPerGoal')}</p>
+              <p className="text-xs sm:text-sm text-gray-600">{t('analytics.avgCompletionTime')}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.daysPerGoal')}</p>
             </CardContent>
           </Card>
         </div>
@@ -325,11 +325,11 @@ export default function Progress() {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-7 gap-2">
+                <div className="grid grid-cols-7 gap-1 sm:gap-2">
                   {getDaysOfWeek().map((day, index) => (
                     <div
                       key={index}
-                      className={`p-3 rounded-lg border text-center ${
+                      className={`p-1.5 sm:p-3 rounded-lg border text-center ${
                         day.isToday
                           ? 'border-primary bg-primary/5'
                           : day.completed === day.total && day.total > 0
@@ -337,13 +337,13 @@ export default function Progress() {
                           : 'border-gray-200'
                       }`}
                     >
-                      <div className="text-xs font-medium text-gray-700 whitespace-nowrap">
+                      <div className="text-[10px] sm:text-xs font-medium text-gray-700 whitespace-nowrap">
                         {t(`progressPage.daysOfWeekShort.${day.key}`)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">{day.date.getDate()}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{day.date.getDate()}</div>
                       {day.total > 0 && (
-                        <div className="mt-2">
-                          <div className={`w-7 h-7 sm:w-6 sm:h-6 rounded-full mx-auto flex items-center justify-center text-[10px] sm:text-xs ${
+                        <div className="mt-1 sm:mt-2">
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full mx-auto flex items-center justify-center text-[9px] sm:text-xs ${
                             day.completed === day.total
                               ? 'bg-green-500 text-white'
                               : day.completed > 0
