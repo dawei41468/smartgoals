@@ -11,6 +11,8 @@ from ..db import get_db
 from ..auth_utils import get_current_user
 from ..models import InsertGoal, Goal
 from ..models import new_id
+from ..exceptions import NotFoundError, ValidationError, AuthorizationError
+from ..validation import UpdateGoalRequest, validate_object_id, validate_user_ownership
 
 router = APIRouter()
 
@@ -87,9 +89,11 @@ async def list_goals_detailed(current_user=Depends(get_current_user), db: AsyncI
 
 @router.get("/goals/{goal_id}")
 async def get_goal(goal_id: str, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    validate_object_id(goal_id, "goal_id")
+    
     goal = await db["goals"].find_one({"id": goal_id, "userId": current_user["id"]})
     if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
+        raise NotFoundError("Goal", goal_id)
 
     weekly_cursor = db["weekly_goals"].find({"goalId": goal_id}).sort("weekNumber")
     weekly = [wg async for wg in weekly_cursor]
@@ -107,33 +111,45 @@ async def get_goal(goal_id: str, current_user=Depends(get_current_user), db: Asy
 
 
 @router.patch("/goals/{goal_id}")
-async def update_goal(goal_id: str, updates: Dict[str, Any], current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
-    updates = {k: v for k, v in updates.items() if k not in {"id", "userId", "createdAt"}}
-    if not updates:
-        doc = await db["goals"].find_one({"id": goal_id, "userId": current_user["id"]})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Goal not found")
-        return _clean(doc)
-    updates["updatedAt"] = datetime.now(timezone.utc)
+async def update_goal(goal_id: str, updates: UpdateGoalRequest, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    validate_object_id(goal_id, "goal_id")
+    
+    # Check if goal exists and user owns it
+    existing_goal = await db["goals"].find_one({"id": goal_id})
+    if not existing_goal:
+        raise NotFoundError("Goal", goal_id)
+    
+    validate_user_ownership(current_user["id"], existing_goal["userId"], "goal")
+    
+    # Convert to dict and filter out None values
+    update_dict = {k: v for k, v in updates.model_dump(exclude_none=True).items()}
+    
+    if not update_dict:
+        return _clean(existing_goal)
+    
+    update_dict["updatedAt"] = datetime.now(timezone.utc)
     res = await db["goals"].find_one_and_update(
         {"id": goal_id, "userId": current_user["id"]},
-        {"$set": updates},
+        {"$set": update_dict},
         return_document=ReturnDocument.AFTER,
     )
     if not res:
-        raise HTTPException(status_code=404, detail="Goal not found")
+        raise NotFoundError("Goal", goal_id)
     return _clean(res)
 
 
 @router.delete("/goals/{goal_id}")
 async def delete_goal(goal_id: str, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    validate_object_id(goal_id, "goal_id")
     user_id = current_user["id"]
+    
     goal = await db["goals"].find_one({"id": goal_id, "userId": user_id})
     if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
+        raise NotFoundError("Goal", goal_id)
+    
     res = await db["goals"].delete_one({"id": goal_id, "userId": user_id})
     if res.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Goal not found")
+        raise NotFoundError("Goal", goal_id)
 
     # Log delete activity
     now = datetime.now(timezone.utc)

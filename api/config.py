@@ -5,44 +5,56 @@ from functools import lru_cache
 from typing import Optional
 
 from dotenv import load_dotenv
+from .config_validation import validate_required_config, validate_optional_services
 
 # Load .env if present but do not overwrite process env
 load_dotenv(override=False)
 
 
 class Settings:
-    ENV: str = os.getenv("ENV", os.getenv("NODE_ENV", "development"))
-    DEBUG: bool = ENV != "production"
+    def __init__(self):
+        # Validate configuration on initialization
+        validate_required_config()
+        self.service_availability = validate_optional_services()
+        
+        self.ENV: str = os.getenv("ENV", os.getenv("NODE_ENV", "development"))
+        self.DEBUG: bool = self.ENV != "production"
 
-    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://127.0.0.1:27017/goalforge")
-    MONGODB_DB: str = os.getenv("MONGODB_DB", "goalforge")
+        # Required configurations (no fallbacks)
+        self.MONGODB_URI: str = os.environ["MONGODB_URI"]
+        self.MONGODB_DB: str = os.environ["MONGODB_DB"]
+        self.JWT_SECRET: str = os.environ["JWT_SECRET"]
+        
+        # Configuration with safe defaults
+        self.JWT_ALG: str = "HS256"
+        self.JWT_EXPIRES_MIN: int = int(os.getenv("JWT_EXPIRES_MIN", "10080"))  # 7 days
 
-    JWT_SECRET: str = os.getenv("JWT_SECRET", "change-me-in-prod")
-    JWT_ALG: str = "HS256"
-    JWT_EXPIRES_MIN: int = int(os.getenv("JWT_EXPIRES_MIN", "10080"))  # 7 days
+        # Optional AI service configuration
+        self.DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
+        self.DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 
-    DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
-    DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+        # CORS configuration
+        cors_origins_env = os.getenv("CORS_ORIGINS")
+        if cors_origins_env:
+            self.CORS_ORIGINS: list[str] = [origin.strip() for origin in cors_origins_env.split(",")]
+        elif self.ENV == "development":
+            self.CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+        else:
+            # Production requires explicit CORS configuration
+            raise ValueError("CORS_ORIGINS must be explicitly set in production environment")
 
-    CORS_ORIGINS: list[str] = (
-        os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
-        .split(",")
-        if os.getenv("CORS_ORIGINS") is not None
-        else ["http://localhost:5173", "http://127.0.0.1:5173"]
-    )
+        # SMTP email settings (optional service)
+        self.SMTP_HOST: Optional[str] = os.getenv("SMTP_HOST")
+        self.SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+        self.SMTP_USERNAME: Optional[str] = os.getenv("SMTP_USERNAME")
+        self.SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")
+        self.SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+        self.EMAIL_FROM: Optional[str] = os.getenv("EMAIL_FROM")
 
-    # SMTP email settings (choose a China-friendly provider; do not hardcode secrets)
-    SMTP_HOST: Optional[str] = os.getenv("SMTP_HOST")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USERNAME: Optional[str] = os.getenv("SMTP_USERNAME")
-    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")
-    SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
-    EMAIL_FROM: Optional[str] = os.getenv("EMAIL_FROM")
-
-    # Web Push VAPID settings
-    VAPID_PUBLIC_KEY: Optional[str] = os.getenv("VAPID_PUBLIC_KEY")
-    VAPID_PRIVATE_KEY: Optional[str] = os.getenv("VAPID_PRIVATE_KEY")
-    VAPID_SUBJECT: str = os.getenv("VAPID_SUBJECT", "mailto:admin@example.com")
+        # Web Push VAPID settings (optional service)
+        self.VAPID_PUBLIC_KEY: Optional[str] = os.getenv("VAPID_PUBLIC_KEY")
+        self.VAPID_PRIVATE_KEY: Optional[str] = os.getenv("VAPID_PRIVATE_KEY")
+        self.VAPID_SUBJECT: str = os.getenv("VAPID_SUBJECT", "mailto:admin@example.com")
 
 
 @lru_cache
