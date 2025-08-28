@@ -175,9 +175,40 @@ async def get_productivity_patterns(db: AsyncIOMotorDatabase, user_id: str) -> L
             "$addFields": {
                 "dayOfWeek": {
                     "$dayOfWeek": {
-                        "$dateFromString": {
-                            "dateString": "$date",
-                            "onError": {"$dateFromString": {"dateString": "$createdAt"}}
+                        "$cond": {
+                            "if": {
+                                "$and": [
+                                    {"$eq": [{"$type": "$date"}, "string"]},
+                                    {"$ne": ["$date", ""]},
+                                    {"$ne": ["$date", None]}
+                                ]
+                            },
+                            "then": {"$dateFromString": {"dateString": "$date"}},
+                            "else": {
+                                "$cond": {
+                                    "if": {"$eq": [{"$type": "$date"}, "date"]},
+                                    "then": "$date",
+                                    "else": {
+                                        "$cond": {
+                                            "if": {
+                                                "$and": [
+                                                    {"$eq": [{"$type": "$createdAt"}, "string"]},
+                                                    {"$ne": ["$createdAt", ""]},
+                                                    {"$ne": ["$createdAt", None]}
+                                                ]
+                                            },
+                                            "then": {"$dateFromString": {"dateString": "$createdAt"}},
+                                            "else": {
+                                                "$cond": {
+                                                    "if": {"$eq": [{"$type": "$createdAt"}, "date"]},
+                                                    "then": "$createdAt",
+                                                    "else": {"$dateFromString": {"dateString": "2025-01-01T00:00:00.000Z"}}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

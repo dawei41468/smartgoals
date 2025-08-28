@@ -45,6 +45,15 @@ async def update_task(task_id: str, updates: UpdateTaskRequest, current_user=Dep
     if update_dict:
         update_dict["updatedAt"] = datetime.now(timezone.utc)
 
+    # Ensure required fields have defaults when creating new tasks
+    # For updates, only set defaults if the task doesn't exist yet
+    existing_task = await db["daily_tasks"].find_one({"id": task_id})
+    if not existing_task:
+        # Set defaults for new tasks
+        update_dict.setdefault("completed", False)
+        update_dict.setdefault("priority", "medium")
+        update_dict.setdefault("estimatedHours", 1)
+
     updated = await db["daily_tasks"].find_one_and_update(
         {"id": task_id},
         {"$set": update_dict},

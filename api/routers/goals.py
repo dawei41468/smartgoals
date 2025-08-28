@@ -29,13 +29,22 @@ def _clean(doc: Dict[str, Any] | None) -> Dict[str, Any] | None:
 async def create_goal(payload: InsertGoal, draft: bool = False, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
     now = datetime.now(timezone.utc)
-    doc: Dict[str, Any] = {
-        **payload.model_dump(),
+    goal_data = payload.model_dump()
+    doc = {
         "id": new_id(),
         "userId": user_id,
-        "description": payload.description,
-        "progress": 0,
-        "status": "paused" if draft else "active",
+        "title": goal_data.title,
+        "description": goal_data.description,
+        "category": goal_data.category,
+        "specific": goal_data.specific,
+        "measurable": goal_data.measurable,
+        "achievable": goal_data.achievable,
+        "relevant": goal_data.relevant,
+        "timebound": goal_data.timebound,
+        "exciting": goal_data.exciting,
+        "deadline": goal_data.deadline,
+        "progress": 0,  # Always ensure progress is set
+        "status": "paused" if draft else "active",  # Always ensure status is set
         "createdAt": now,
         "updatedAt": now,
     }

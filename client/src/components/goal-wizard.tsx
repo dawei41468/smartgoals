@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { insertGoalSchema } from "@/lib/schema";
 import type { InsertGoal, AIBreakdownRequest, Goal, AIBreakdownResponse } from "@/lib/schema";
-import { api } from "@/lib/api";
+import { GoalService } from "@/services/goalService";
 
 interface GoalWizardProps {
   onClose: () => void;
@@ -65,14 +65,9 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
 
   const saveDraftMutation = useMutation({
     mutationFn: async (goalData: InsertGoal) => {
-      return api.createGoalDraft(goalData);
+      return GoalService.createGoalDraft(goalData);
     },
     onSuccess: (goal) => {
-      // Ensure lists refresh so the new draft appears immediately
-      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       toast({
         title: "Draft saved",
         description: `Saved draft goal: ${goal.title}`,
@@ -121,9 +116,9 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
         partialWeeks: [],
       });
 
-      return api.generateBreakdownStream(
+      return GoalService.generateBreakdownStream(
         breakdownRequest,
-        (message, currentChunk, totalChunks) => {
+        (message: string, currentChunk: number, totalChunks: number) => {
           setStreamingProgress(prev => ({
             ...prev,
             message,
@@ -131,7 +126,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
             totalChunks,
           }));
         },
-        (weeks) => {
+        (weeks: any) => {
           setStreamingProgress(prev => ({
             ...prev,
             partialWeeks: [...prev.partialWeeks, ...weeks],

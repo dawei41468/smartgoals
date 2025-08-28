@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { Plus, Target, CheckSquare, TrendingUp, ArrowRight, Clock, User, Settings, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/navigation";
 import GoalWizard from "@/components/goal-wizard";
 import AIBreakdown from "@/components/ai-breakdown";
-import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAppStore, useGoals, useStats, useActivities, useIsLoading } from "@/stores/appStore";
+import { GoalService } from "@/services/goalService";
+import { ActivityService } from "@/services/activityService";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { InsertGoal, AIBreakdownRequest, AIBreakdownResponse, Activity } from "@/lib/schema";
 
 type View = "dashboard" | "wizard" | "breakdown";
@@ -22,20 +25,27 @@ export default function Dashboard() {
     breakdown?: AIBreakdownResponse;
   } | null>(null);
 
-  const { data: goals = [], isLoading: goalsLoading } = useQuery({
-    queryKey: ["/api/goals"],
-    queryFn: () => api.getGoals(),
-  });
+  // Use Zustand store instead of React Query
+  const goals = useGoals();
+  const stats = useStats();
+  const activities = useActivities();
+  const isLoading = useIsLoading();
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["/api/analytics/stats"],
-    queryFn: () => api.getStats(),
-  });
-
-  const { data: activities = [], isLoading: activitiesLoading } = useQuery({
-    queryKey: ["/api/activities"],
-    queryFn: () => api.getActivities(),
-  });
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          GoalService.fetchGoals(),
+          ActivityService.fetchActivities(),
+          // TODO: Add stats service when available
+        ]);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      }
+    };
+    loadData();
+  }, []);
 
   const handleStartGoalCreation = () => {
     setCurrentView("wizard");
@@ -48,7 +58,7 @@ export default function Dashboard() {
 
   const handleProceedToBreakdown = async (goalData: InsertGoal, breakdownRequest: AIBreakdownRequest) => {
     try {
-      const breakdown = await api.generateBreakdown(breakdownRequest);
+      const breakdown = await GoalService.generateBreakdown(breakdownRequest);
       setWizardData({ goalData, breakdownRequest, breakdown });
       setCurrentView("breakdown");
     } catch (error) {
@@ -139,7 +149,7 @@ export default function Dashboard() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-muted-foreground">{t('dashboard.activeGoals')}</p>
                     <p className="text-xl sm:text-2xl font-bold" data-testid="stat-active-goals">
-                      {statsLoading ? t('common.loading') : stats?.activeGoalsCount || 0}
+                      {isLoading ? t('common.loading') : stats?.activeGoalsCount || 0}
                     </p>
                   </div>
                 </div>
@@ -155,7 +165,7 @@ export default function Dashboard() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-muted-foreground">{t('dashboard.tasksCompleted')}</p>
                     <p className="text-xl sm:text-2xl font-bold" data-testid="stat-completed-tasks">
-                      {statsLoading ? t('common.loading') : stats?.completedTasksCount || 0}
+                      {isLoading ? t('common.loading') : stats?.completedTasksCount || 0}
                     </p>
                   </div>
                 </div>
@@ -171,7 +181,7 @@ export default function Dashboard() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-muted-foreground">{t('dashboard.successRate')}</p>
                     <p className="text-xl sm:text-2xl font-bold" data-testid="stat-success-rate">
-                      {statsLoading ? t('common.loading') : `${stats?.successRate || 0}%`}
+                      {isLoading ? t('common.loading') : `${stats?.successRate || 0}%`}
                     </p>
                   </div>
                 </div>
@@ -194,7 +204,7 @@ export default function Dashboard() {
               </div>
             </div>
             
-            {goalsLoading ? (
+            {isLoading ? (
               <div className="p-6">
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -282,7 +292,7 @@ export default function Dashboard() {
               <h2 className="text-lg sm:text-xl font-bold">{t('dashboard.recentActivity')}</h2>
             </div>
             <div className="p-4 sm:p-6">
-              {activitiesLoading ? (
+              {isLoading ? (
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-secondary rounded-full flex-shrink-0 animate-pulse"></div>

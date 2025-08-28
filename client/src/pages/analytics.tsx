@@ -77,19 +77,42 @@ export default function Analytics() {
     queryKey: ["/api/goals/detailed"],
   });
 
-  // Fetch analytics data from API
-  const { data: analyticsData, isLoading: analyticsLoading } = useQuery<AnalyticsData>({
+  // Provide fallback data for analytics when API fails
+  const fallbackAnalyticsData: AnalyticsData = {
+    goalSuccessRate: 0,
+    avgCompletionTime: 0,
+    totalGoalsCreated: 0,
+    completedGoals: 0,
+    activeGoals: 0,
+    pausedGoals: 0,
+    totalTasksCompleted: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    bestPerformingDay: "Monday",
+    mostProductiveHour: 10,
+    weeklyProgressTrend: [0, 0, 0, 0, 0, 0, 0],
+    monthlyComparison: { thisMonth: 0, lastMonth: 0, change: 0 }
+  };
+
+  // Fetch analytics data from API with error handling
+  const { data: analyticsData = fallbackAnalyticsData, isLoading: analyticsLoading } = useQuery<AnalyticsData>({
     queryKey: ["/api/analytics/summary"],
+    retry: 1,
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 
-  // Fetch category performance from API
+  // Fetch category performance from API with error handling
   const { data: goalCategories = [], isLoading: categoriesLoading } = useQuery<GoalCategory[]>({
     queryKey: ["/api/analytics/categories"],
+    retry: 1,
+    staleTime: 5 * 60 * 1000
   });
 
-  // Fetch productivity patterns from API
+  // Fetch productivity patterns from API with error handling
   const { data: productivityPatterns = [], isLoading: patternsLoading } = useQuery<ProductivityPattern[]>({
     queryKey: ["/api/analytics/patterns"],
+    retry: 1,
+    staleTime: 5 * 60 * 1000
   });
 
   // Mock insights data (keep for now)
@@ -191,7 +214,7 @@ export default function Analytics() {
             </div>
             <div className="flex gap-2">
               <Select value={timePeriod} onValueChange={setTimePeriod}>
-                <SelectTrigger className="w-28 sm:w-32" data-testid="select-time-period">
+                <SelectTrigger className="min-w-fit" data-testid="select-time-period">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,10 +234,10 @@ export default function Analytics() {
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">{t('dashboard.successRate')}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('dashboard.successRate')}</p>
                   <p className="text-xl sm:text-2xl font-bold text-green-600">{safeAnalyticsData.goalSuccessRate}%</p>
                 </div>
-                <div className="p-2 sm:p-3 bg-green-100 rounded-full">
+                <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
                   <Target className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </div>
@@ -224,7 +247,7 @@ export default function Analytics() {
                 ) : (
                   <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
                 )}
-                <span className={`text-sm ${safeAnalyticsData.monthlyComparison.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`text-xs sm:text-sm ${safeAnalyticsData.monthlyComparison.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {Math.abs(safeAnalyticsData.monthlyComparison.change)}% {t('analytics.vsLastMonth')}
                 </span>
               </div>
@@ -232,47 +255,47 @@ export default function Analytics() {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('analytics.avgCompletionTime')}</p>
-                  <p className="text-2xl font-bold text-blue-600">{safeAnalyticsData.avgCompletionTime} days</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('analytics.avgCompletionTime')}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600">{safeAnalyticsData.avgCompletionTime} days</p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Clock className="h-6 w-6 text-blue-600" />
+                <div className="p-2 sm:p-3 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">{t('analytics.timeToComplete')}</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">{t('analytics.timeToComplete')}</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('analytics.streakDays')}</p>
-                  <p className="text-2xl font-bold text-orange-600">{safeAnalyticsData.currentStreak} days</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('analytics.streakDays')}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600">{safeAnalyticsData.currentStreak} days</p>
                 </div>
-                <div className="p-3 bg-orange-100 rounded-full">
-                  <Zap className="h-6 w-6 text-orange-600" />
+                <div className="p-2 sm:p-3 bg-orange-100 dark:bg-orange-900/20 rounded-full">
+                  <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">{t('analytics.personalBest')}: {safeAnalyticsData.longestStreak} {t('analytics.days')}</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">{t('analytics.personalBest')}: {safeAnalyticsData.longestStreak} {t('analytics.days')}</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('dashboard.tasksCompleted')}</p>
-                  <p className="text-2xl font-bold text-purple-600">{safeAnalyticsData.totalTasksCompleted}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('dashboard.tasksCompleted')}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600">{safeAnalyticsData.totalTasksCompleted}</p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <CheckCircle className="h-6 w-6 text-purple-600" />
+                <div className="p-2 sm:p-3 bg-purple-100 dark:bg-purple-900/20 rounded-full">
+                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">{t('analytics.acrossAllGoals')}</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">{t('analytics.acrossAllGoals')}</p>
             </CardContent>
           </Card>
         </div>
