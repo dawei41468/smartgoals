@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -35,7 +35,7 @@ async def update_task(task_id: str, updates: Dict[str, Any], current_user=Depend
     was_completed = bool(existing.get("completed", False))
 
     if updates:
-        updates["updatedAt"] = datetime.utcnow()
+        updates["updatedAt"] = datetime.now(timezone.utc)
 
     updated = await db["daily_tasks"].find_one_and_update(
         {"id": task_id},
@@ -54,7 +54,7 @@ async def update_task(task_id: str, updates: Dict[str, Any], current_user=Depend
             "type": "task_completed",
             "description": f"Completed task: {updated.get('title', '')}",
             "metadata": {"taskId": updated.get("id"), "taskTitle": updated.get("title")},
-            "createdAt": datetime.utcnow(),
+            "createdAt": datetime.now(timezone.utc),
         })
 
     return _clean(updated)

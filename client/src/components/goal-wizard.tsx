@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, Target, Ruler, Mountain, Crosshair, Calendar, Star, ArrowRight, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -11,22 +11,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { insertGoalSchema } from "@/lib/schema";
-import type { InsertGoal, AIBreakdownRequest } from "@/lib/schema";
+import type { InsertGoal, AIBreakdownRequest, Goal, AIBreakdownResponse } from "@/lib/schema";
 import { api } from "@/lib/api";
 
 interface GoalWizardProps {
   onClose: () => void;
-  onProceedToBreakdown: (goalData: InsertGoal, breakdownData: AIBreakdownRequest) => void;
+  onProceedToBreakdown: (goalData: InsertGoal, breakdownData: AIBreakdownRequest, breakdown: AIBreakdownResponse) => void;
+  editGoal?: Goal;
 }
 
-export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizardProps) {
+export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: GoalWizardProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   
   const form = useForm<InsertGoal>({
     resolver: zodResolver(insertGoalSchema),
-    defaultValues: {
+    defaultValues: editGoal ? {
+      title: editGoal.title || "",
+      description: editGoal.description || "",
+      category: editGoal.category,
+      specific: editGoal.specific,
+      measurable: editGoal.measurable,
+      achievable: editGoal.achievable,
+      relevant: editGoal.relevant,
+      timebound: editGoal.timebound,
+      exciting: editGoal.exciting,
+      deadline: editGoal.deadline,
+    } : {
       title: "",
       description: "",
       category: "Health" as const,
@@ -55,6 +68,11 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
       return api.createGoalDraft(goalData);
     },
     onSuccess: (goal) => {
+      // Ensure lists refresh so the new draft appears immediately
+      queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       toast({
         title: "Draft saved",
         description: `Saved draft goal: ${goal.title}`,
@@ -71,6 +89,18 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
     },
   });
 
+  const [streamingProgress, setStreamingProgress] = useState<{
+    message: string;
+    currentChunk: number;
+    totalChunks: number;
+    partialWeeks: any[];
+  }>({
+    message: "",
+    currentChunk: 0,
+    totalChunks: 0,
+    partialWeeks: [],
+  });
+
   const generateBreakdownMutation = useMutation({
     mutationFn: async (goalData: InsertGoal) => {
       const breakdownRequest: AIBreakdownRequest = {
@@ -82,7 +112,32 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
         exciting: goalData.exciting,
         deadline: goalData.deadline,
       };
-      return api.generateBreakdown(breakdownRequest);
+
+      // Reset streaming state
+      setStreamingProgress({
+        message: "",
+        currentChunk: 0,
+        totalChunks: 0,
+        partialWeeks: [],
+      });
+
+      return api.generateBreakdownStream(
+        breakdownRequest,
+        (message, currentChunk, totalChunks) => {
+          setStreamingProgress(prev => ({
+            ...prev,
+            message,
+            currentChunk,
+            totalChunks,
+          }));
+        },
+        (weeks) => {
+          setStreamingProgress(prev => ({
+            ...prev,
+            partialWeeks: [...prev.partialWeeks, ...weeks],
+          }));
+        }
+      );
     },
     onSuccess: (breakdown, goalData) => {
       const breakdownRequest: AIBreakdownRequest = {
@@ -94,7 +149,8 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
         exciting: goalData.exciting,
         deadline: goalData.deadline,
       };
-      onProceedToBreakdown(goalData, breakdownRequest);
+      console.log("Breakdown generation successful:", breakdown);
+      onProceedToBreakdown(goalData, breakdownRequest, breakdown);
     },
     onError: (error) => {
       toast({
@@ -107,6 +163,8 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
   });
 
   const onSubmit = async (values: InsertGoal) => {
+    console.log("Form submitted with values:", values);
+    
     // Generate title from specific field if not provided
     const goalData = {
       ...values,
@@ -114,6 +172,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
       description: values.description || values.specific,
     };
 
+    console.log("Processed goal data:", goalData);
     setIsGenerating(true);
     try {
       await generateBreakdownMutation.mutateAsync(goalData);
@@ -137,7 +196,9 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Create Your SMART(ER) Goal</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {editGoal ? "Edit Your SMART(ER) Goal" : "Create Your SMART(ER) Goal"}
+          </h1>
           <Button variant="ghost" size="sm" onClick={onClose} data-testid="button-close-wizard">
             <X className="h-5 w-5" />
           </Button>
@@ -183,7 +244,14 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            console.log("Form validation errors:", errors);
+            toast({
+              title: "Form Validation Error",
+              description: "Please fill in all required fields completely.",
+              variant: "destructive",
+            });
+          })} className="space-y-6">
             {/* Category Field */}
             <FormField
               control={form.control}
@@ -402,26 +470,56 @@ export default function GoalWizard({ onClose, onProceedToBreakdown }: GoalWizard
               </div>
             </div>
 
+            {/* Progress Indicator */}
+            {generateBreakdownMutation.isPending && (
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      {streamingProgress.message || "Starting generation..."}
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-xs text-blue-700 dark:text-blue-300">
+                      {streamingProgress.totalChunks > 0 && streamingProgress.currentChunk > 0 && (
+                        <span>
+                          Chunk {streamingProgress.currentChunk} of {streamingProgress.totalChunks}
+                        </span>
+                      )}
+                      {streamingProgress.partialWeeks.length > 0 && (
+                        <span>
+                          {streamingProgress.partialWeeks.length} weeks completed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200 dark:border-gray-800">
               <Button
                 type="button"
                 variant="outline"
+                onClick={onSaveDraft}
+                disabled={generateBreakdownMutation.isPending}
                 className="w-full sm:w-auto"
                 data-testid="button-save-draft"
-                onClick={onSaveDraft}
-                disabled={saveDraftMutation.isPending || isGenerating}
               >
-                {saveDraftMutation.isPending ? "Saving..." : "Save as Draft"}
-              </Button>
+                <Folder className="mr-2 h-4 w-4" />
+                Save as Draft
+              </Button> 
               <Button 
                 type="submit" 
-                disabled={isGenerating}
+                disabled={generateBreakdownMutation.isPending}
                 className="w-full sm:w-auto"
                 data-testid="button-generate-breakdown"
               >
-                {isGenerating ? (
-                  "Generating..."
+                {generateBreakdownMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Generating...
+                  </>
                 ) : (
                   <>
                     <span className="hidden sm:inline">Generate AI Breakdown</span>

@@ -200,7 +200,7 @@ export default function Dashboard() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
               </div>
-            ) : goals.length === 0 ? (
+            ) : goals.filter(g => g.status === 'active').length === 0 ? (
               <div className="p-4 sm:p-6">
                 <div className="text-center py-6 sm:py-8">
                   <Target className="text-secondary mx-auto h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
@@ -216,9 +216,9 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                {goals.map((goal) => (
-                  <div key={goal.id} className="p-6 border-b border-border last:border-b-0" data-testid={`goal-${goal.id}`}>
-                    <div className="flex items-start justify-between">
+                {goals.filter(g => g.status === 'active').map((goal) => (
+                  <div key={goal.id} className="p-4 sm:p-6 border-b border-border last:border-b-0" data-testid={`goal-${goal.id}`}>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold mb-2" data-testid={`text-goal-title-${goal.id}`}>
                           {goal.title}
@@ -259,7 +259,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       
-                      <div className="ml-6 flex flex-col items-end space-y-2">
+                      <div className="ml-0 sm:ml-6 flex flex-col items-start sm:items-end space-y-2 w-full sm:w-auto">
                         <span className="text-sm text-muted-foreground" data-testid={`text-goal-deadline-${goal.id}`}>
                           {t('myGoals.due')}: {formatDate(goal.deadline)}
                         </span>
@@ -310,7 +310,16 @@ export default function Dashboard() {
                     const formatTime = (date: string | Date | null | undefined) => {
                       if (!date) return t('dashboard.justNow');
                       const now = new Date();
-                      const activityDate = new Date(date);
+                      let activityDate: Date;
+                      if (typeof date === 'string') {
+                        // Treat strings without timezone as UTC to avoid local offset issues
+                        const hasTZ = /[zZ]|[+-]\d{2}:?\d{2}$/.test(date);
+                        const normalized = hasTZ ? date : `${date}Z`;
+                        activityDate = new Date(normalized);
+                        if (isNaN(activityDate.getTime())) activityDate = new Date(date);
+                      } else {
+                        activityDate = new Date(date);
+                      }
                       if (isNaN(activityDate.getTime())) return t('dashboard.justNow');
                       const diffMs = now.getTime() - activityDate.getTime();
                       const diffMins = Math.floor(diffMs / (1000 * 60));

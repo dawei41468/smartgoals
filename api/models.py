@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr, Field
 import uuid
@@ -9,7 +9,7 @@ import uuid
 # Helpers
 
 def now() -> datetime:
-    return datetime.utcnow()
+    return datetime.now(timezone.utc)
 
 
 def new_id() -> str:

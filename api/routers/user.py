@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ReturnDocument
@@ -30,7 +30,7 @@ async def get_profile(current_user=Depends(get_current_user), db: AsyncIOMotorDa
 async def update_profile(payload: UpdateUserProfile, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
     update_doc = {k: v for k, v in payload.model_dump(exclude_none=True).items()}
-    update_doc["updatedAt"] = datetime.utcnow()
+    update_doc["updatedAt"] = datetime.now(timezone.utc)
 
     res = await db["users"].find_one_and_update(
         {"id": user_id},
@@ -47,7 +47,7 @@ async def update_profile(payload: UpdateUserProfile, current_user=Depends(get_cu
         "type": "profile_updated",
         "description": "Updated profile information",
         "metadata": {"updatedFields": list(update_doc.keys())},
-        "createdAt": datetime.utcnow(),
+        "createdAt": datetime.now(timezone.utc),
     }
     await db["activities"].insert_one(activity)
 
@@ -67,7 +67,7 @@ async def get_settings_route(current_user=Depends(get_current_user), db: AsyncIO
 async def update_settings(payload: UpdateUserSettings, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
     existing = await db["user_settings"].find_one({"userId": user_id})
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     if not existing:
         new_settings = UserSettings(id=new_id(), userId=user_id, createdAt=now, updatedAt=now, **payload.model_dump(exclude_none=True))

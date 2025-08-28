@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -26,7 +26,7 @@ async def register(user_data: RegisterData, db: AsyncIOMotorDatabase = Depends(g
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User with this email already exists")
 
     user_id = new_id()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     user: User = User(
         id=user_id,
         username=user_data.email.split("@")[0],

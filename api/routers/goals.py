@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -26,7 +26,7 @@ def _clean(doc: Dict[str, Any] | None) -> Dict[str, Any] | None:
 @router.post("/goals")
 async def create_goal(payload: InsertGoal, draft: bool = False, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     doc: Dict[str, Any] = {
         **payload.model_dump(),
         "id": new_id(),
@@ -114,7 +114,7 @@ async def update_goal(goal_id: str, updates: Dict[str, Any], current_user=Depend
         if not doc:
             raise HTTPException(status_code=404, detail="Goal not found")
         return _clean(doc)
-    updates["updatedAt"] = datetime.utcnow()
+    updates["updatedAt"] = datetime.now(timezone.utc)
     res = await db["goals"].find_one_and_update(
         {"id": goal_id, "userId": current_user["id"]},
         {"$set": updates},
@@ -127,7 +127,23 @@ async def update_goal(goal_id: str, updates: Dict[str, Any], current_user=Depend
 
 @router.delete("/goals/{goal_id}")
 async def delete_goal(goal_id: str, current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
-    res = await db["goals"].delete_one({"id": goal_id, "userId": current_user["id"]})
+    user_id = current_user["id"]
+    goal = await db["goals"].find_one({"id": goal_id, "userId": user_id})
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    res = await db["goals"].delete_one({"id": goal_id, "userId": user_id})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Goal not found")
+
+    # Log delete activity
+    now = datetime.now(timezone.utc)
+    await db["activities"].insert_one({
+        "id": new_id(),
+        "userId": user_id,
+        "type": "goal_deleted",
+        "description": f"Deleted goal: {goal.get('title', '')}",
+        "metadata": {"goalId": goal_id, "goalTitle": goal.get("title"), "status": goal.get("status")},
+        "createdAt": now,
+    })
+
     return {"message": "Goal deleted successfully"}

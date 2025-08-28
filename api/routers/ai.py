@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+import asyncio
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from ..db import get_db
@@ -14,9 +16,10 @@ from ..models import new_id
 from ..auth_utils import get_current_user
 
 try:
-    from openai import OpenAI  # type: ignore
+    from openai import OpenAI, AsyncOpenAI  # type: ignore
 except Exception:  # pragma: no cover
     OpenAI = None  # type: ignore
+    AsyncOpenAI = None  # type: ignore
 
 router = APIRouter()
 
@@ -25,26 +28,53 @@ def _weeks_until(deadline_iso: str) -> int:
     try:
         deadline = datetime.fromisoformat(deadline_iso.replace("Z", "+00:00"))
     except Exception:
-        # fallback parse
+        # fallback parse - make timezone aware
         deadline = datetime.strptime(deadline_iso.split(".")[0], "%Y-%m-%dT%H:%M:%S")
-    now = datetime.utcnow()
+        deadline = deadline.replace(tzinfo=timezone.utc)
+    
+    # Ensure deadline is timezone aware
+    if deadline.tzinfo is None:
+        deadline = deadline.replace(tzinfo=timezone.utc)
+    
+    now = datetime.now(timezone.utc)
     diff = deadline - now
     weeks = int((diff.days + (1 if diff.seconds or diff.microseconds else 0)) / 7)
     return max(1, weeks)
 
 
-@router.post("/goals/breakdown")
-async def generate_breakdown(payload: AIBreakdownRequest, current_user=Depends(get_current_user)):
+@router.get("/test-deepseek")
+async def test_deepseek(current_user=Depends(get_current_user)):
+    """Test endpoint to verify DeepSeek API connectivity"""
     settings = get_settings()
     if not settings.DEEPSEEK_API_KEY or OpenAI is None:
         raise HTTPException(status_code=500, detail="DeepSeek API not configured")
+    
+    print("Testing DeepSeek API connectivity...")
+    client = OpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_BASE_URL, timeout=10.0)
+    
+    try:
+        resp = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "user", "content": "Hello, this is a test message. Please respond with 'Test successful'."}
+            ],
+            max_tokens=50,
+        )
+        content = resp.choices[0].message.content
+        print(f"DeepSeek test response: {content}")
+        return {"status": "success", "response": content}
+    except Exception as e:
+        print(f"DeepSeek test failed: {e}")
+        raise HTTPException(status_code=502, detail=f"DeepSeek API test failed: {str(e)}")
 
-    total_weeks = _weeks_until(payload.deadline)
 
+async def _generate_chunk(client, payload: AIBreakdownRequest, start_week: int, end_week: int, total_weeks: int):
+    """Generate a chunk of weeks for the breakdown"""
+    chunk_weeks = end_week - start_week + 1
+    
     prompt = f"""
-You are an expert goal coach and project manager. Break down the following SMART(ER) goal into a detailed weekly plan with daily tasks.
+Create a weekly breakdown for weeks {start_week} to {end_week} of this {total_weeks}-week SMART(ER) goal:
 
-GOAL DETAILS:
 - Specific: {payload.specific}
 - Measurable: {payload.measurable}
 - Achievable: {payload.achievable}
@@ -52,27 +82,26 @@ GOAL DETAILS:
 - Time-bound: {payload.timebound}
 - Exciting: {payload.exciting}
 - Deadline: {payload.deadline}
-- Total weeks available: {total_weeks}
 
-Please create a breakdown with the following structure:
-1. Divide the goal into logical weekly milestones (use all {total_weeks} weeks)
-2. For each week, provide 3-7 specific daily tasks
-3. Each task should be actionable, measurable, and realistic
-4. Assign appropriate priority levels (low, medium, high)
-5. Estimate time required for each task (1-8 hours)
-6. Ensure tasks build upon each other progressively
+Context: This is part {start_week//2 + 1} of a {total_weeks}-week plan. Focus on weeks {start_week}-{end_week}.
 
-Return the response in this exact JSON format:
+For each week, provide:
+1. A clear weekly milestone/goal
+2. 2-3 key actionable tasks (keep it simple)
+3. Priority levels (medium, high only)
+4. Time estimates (1-4 hours per task)
+
+Return in this exact JSON format:
 {{
   "weeklyGoals": [
     {{
-      "title": "Week title",
+      "title": "Week {start_week} title",
       "description": "What will be accomplished this week",
-      "weekNumber": 1,
+      "weekNumber": {start_week},
       "tasks": [
         {{
           "title": "Specific task title",
-          "description": "Detailed task description",
+          "description": "Detailed task description", 
           "day": 1,
           "priority": "medium",
           "estimatedHours": 2
@@ -81,31 +110,106 @@ Return the response in this exact JSON format:
     }}
   ]
 }}
-
-Make sure the breakdown is realistic, actionable, and directly aligned with achieving the specified goal by the deadline.
 """
-
-    client = OpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_BASE_URL)
-    resp = client.chat.completions.create(
+    
+    resp = await client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "You are an expert goal coach and project manager. Provide detailed, actionable goal breakdowns in JSON format."},
+            {"role": "system", "content": "You are an expert goal coach. Create focused, actionable weekly breakdowns."},
             {"role": "user", "content": prompt},
         ],
         response_format={"type": "json_object"},
         temperature=0.7,
-        max_tokens=4000,
+        max_tokens=800,
     )
+    
+    content = resp.choices[0].message.content or "{}"
+    return json.loads(content)
+
+
+@router.post("/goals/breakdown/stream")
+async def generate_breakdown_stream(payload: AIBreakdownRequest, current_user=Depends(get_current_user)):
+    settings = get_settings()
+    if not settings.DEEPSEEK_API_KEY or AsyncOpenAI is None:
+        raise HTTPException(status_code=500, detail="DeepSeek API not configured")
+
+    print(f"Streaming breakdown request received for user {current_user['id']}")
+    total_weeks = _weeks_until(payload.deadline)
+    print(f"Calculated weeks until deadline: {total_weeks}")
+
+    async def generate_stream():
+        client = AsyncOpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_BASE_URL, timeout=60.0)
+        
+        try:
+            chunk_size = 2
+            all_weekly_goals = []
+            
+            # Send initial progress
+            yield f"data: {json.dumps({'type': 'progress', 'message': f'Starting generation for {total_weeks} weeks...', 'totalChunks': (total_weeks + chunk_size - 1) // chunk_size, 'currentChunk': 0})}\n\n"
+            
+            chunk_number = 0
+            for start_week in range(1, total_weeks + 1, chunk_size):
+                end_week = min(start_week + chunk_size - 1, total_weeks)
+                chunk_number += 1
+                
+                # Send progress update
+                yield f"data: {json.dumps({'type': 'progress', 'message': f'Generating weeks {start_week}-{end_week}...', 'currentChunk': chunk_number})}\n\n"
+                
+                chunk_data = await _generate_chunk(client, payload, start_week, end_week, total_weeks)
+                
+                if "weeklyGoals" in chunk_data and isinstance(chunk_data["weeklyGoals"], list):
+                    all_weekly_goals.extend(chunk_data["weeklyGoals"])
+                    
+                    # Send partial results
+                    yield f"data: {json.dumps({'type': 'chunk', 'weeks': chunk_data['weeklyGoals']})}\n\n"
+                
+            # Send final complete result
+            print(f"Sending complete result with {len(all_weekly_goals)} weeks")
+            yield f"data: {json.dumps({'type': 'complete', 'weeklyGoals': all_weekly_goals})}\n\n"
+            yield f"data: [DONE]\n\n"
+            
+        except Exception as e:
+            print(f"DeepSeek API error: {e}")
+            error_msg = "AI service timeout - please try again." if "timeout" in str(e).lower() else f"DeepSeek API error: {str(e)}"
+            yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+
+    return StreamingResponse(generate_stream(), media_type="text/plain")
+
+
+@router.post("/goals/breakdown")
+async def generate_breakdown(payload: AIBreakdownRequest, current_user=Depends(get_current_user)):
+    settings = get_settings()
+    if not settings.DEEPSEEK_API_KEY or AsyncOpenAI is None:
+        raise HTTPException(status_code=500, detail="DeepSeek API not configured")
+
+    print(f"Breakdown request received for user {current_user['id']}")
+    total_weeks = _weeks_until(payload.deadline)
+    print(f"Calculated weeks until deadline: {total_weeks}")
+
+    client = AsyncOpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_BASE_URL, timeout=60.0)
+    
     try:
-        content = resp.choices[0].message.content or "{}"
-        data = json.loads(content)
+        # Generate in chunks of 2 weeks for faster processing
+        chunk_size = 2
+        all_weekly_goals = []
+        
+        for start_week in range(1, total_weeks + 1, chunk_size):
+            end_week = min(start_week + chunk_size - 1, total_weeks)
+            print(f"Generating weeks {start_week}-{end_week}...")
+            
+            chunk_data = await _generate_chunk(client, payload, start_week, end_week, total_weeks)
+            
+            if "weeklyGoals" in chunk_data and isinstance(chunk_data["weeklyGoals"], list):
+                all_weekly_goals.extend(chunk_data["weeklyGoals"])
+            
+        print(f"Generated {len(all_weekly_goals)} weeks successfully")
+        return {"weeklyGoals": all_weekly_goals}
+        
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Invalid response from DeepSeek: {e}")
-
-    if not isinstance(data, dict) or "weeklyGoals" not in data or not isinstance(data["weeklyGoals"], list):
-        raise HTTPException(status_code=502, detail="Invalid response format from DeepSeek")
-
-    return data
+        print(f"DeepSeek API error: {e}")
+        if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+            raise HTTPException(status_code=504, detail="AI service timeout - please try again.")
+        raise HTTPException(status_code=502, detail=f"DeepSeek API error: {str(e)}")
 
 
 @router.post("/goals/breakdown/regenerate")
@@ -162,7 +266,11 @@ Return the response in this exact JSON format:
 Make sure the breakdown is realistic, actionable, and directly aligned with achieving the specified goal by the deadline.
 """
 
-    client = OpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_BASE_URL)
+    client = OpenAI(
+        api_key=settings.DEEPSEEK_API_KEY,
+        base_url=settings.DEEPSEEK_BASE_URL,
+        timeout=60.0,
+    )
     resp = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
@@ -192,7 +300,7 @@ async def save_complete_goal(body: dict, current_user=Depends(get_current_user),
     if not goal_data or not breakdown:
         raise HTTPException(status_code=400, detail="goalData and breakdown are required")
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     # create main goal
     goal_id = new_id()
     goal_doc = {

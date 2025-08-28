@@ -61,20 +61,6 @@ export default function Progress() {
   // Fetch progress statistics
   const { data: stats, isLoading: statsLoading } = useQuery<ProgressStats>({
     queryKey: ["/api/progress/stats"],
-    queryFn: async () => {
-      // Mock data for now - would be replaced with actual API
-      return {
-        totalGoals: goals.length,
-        completedGoals: goals.filter(g => g.status === "completed").length,
-        activeGoals: goals.filter(g => g.status === "active").length,
-        totalTasks: goals.reduce((acc, goal) => acc + (goal.weeklyGoals?.reduce((weekAcc, week) => weekAcc + (week.tasks?.length || 0), 0) || 0), 0),
-        completedTasks: goals.reduce((acc, goal) => acc + (goal.weeklyGoals?.reduce((weekAcc, week) => weekAcc + (week.tasks?.filter(t => t.completed).length || 0), 0) || 0), 0),
-        currentStreak: 7,
-        longestStreak: 14,
-        thisWeekProgress: 68,
-        avgCompletionTime: 21,
-      };
-    },
   });
 
   // Mock achievements data

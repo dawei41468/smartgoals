@@ -77,59 +77,22 @@ export default function Analytics() {
     queryKey: ["/api/goals/detailed"],
   });
 
-  // Mock analytics data - would be calculated from real data
-  const analyticsData: AnalyticsData = {
-    goalSuccessRate: goals.length > 0 ? Math.round((goals.filter(g => g.status === 'completed').length / goals.length) * 100) : 0,
-    avgCompletionTime: 23,
-    totalGoalsCreated: goals.length,
-    completedGoals: goals.filter(g => g.status === 'completed').length,
-    activeGoals: goals.filter(g => g.status === 'active').length,
-    pausedGoals: goals.filter(g => g.status === 'paused').length,
-    totalTasksCompleted: 47,
-    currentStreak: 5,
-    longestStreak: 12,
-    bestPerformingDay: "Tuesday",
-    mostProductiveHour: 10,
-    weeklyProgressTrend: [65, 72, 68, 75, 80, 78, 85],
-    monthlyComparison: {
-      thisMonth: 12,
-      lastMonth: 8,
-      change: 50,
-    },
-  };
+  // Fetch analytics data from API
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery<AnalyticsData>({
+    queryKey: ["/api/analytics/summary"],
+  });
 
-  // Calculate real category performance from goals data
-  const goalCategories: GoalCategory[] = ["Health", "Work", "Family", "Personal"].map(category => {
-    const categoryGoals = goals.filter(goal => goal.category === category);
-    const completedGoals = categoryGoals.filter(goal => goal.status === 'completed');
-    const successRate = categoryGoals.length > 0 ? Math.round((completedGoals.length / categoryGoals.length) * 100) : 0;
-    
-    // Calculate average time to complete (mock calculation for now)
-    const avgTimeToComplete = completedGoals.length > 0 ? 
-      Math.round(completedGoals.reduce((acc, goal) => {
-        const created = new Date(goal.createdAt || 0);
-        const updated = new Date(goal.updatedAt || 0);
-        return acc + Math.max(1, Math.ceil((updated.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
-      }, 0) / completedGoals.length) : 0;
-    
-    return {
-      name: category,
-      count: categoryGoals.length,
-      successRate,
-      avgTimeToComplete,
-    };
-  }).filter(category => category.count > 0); // Only show categories with goals
+  // Fetch category performance from API
+  const { data: goalCategories = [], isLoading: categoriesLoading } = useQuery<GoalCategory[]>({
+    queryKey: ["/api/analytics/categories"],
+  });
 
-  const productivityPatterns: ProductivityPattern[] = [
-    { dayOfWeek: "Monday", completionRate: 78, tasksCompleted: 12 },
-    { dayOfWeek: "Tuesday", completionRate: 85, tasksCompleted: 15 },
-    { dayOfWeek: "Wednesday", completionRate: 72, tasksCompleted: 11 },
-    { dayOfWeek: "Thursday", completionRate: 80, tasksCompleted: 14 },
-    { dayOfWeek: "Friday", completionRate: 68, tasksCompleted: 10 },
-    { dayOfWeek: "Saturday", completionRate: 60, tasksCompleted: 8 },
-    { dayOfWeek: "Sunday", completionRate: 55, tasksCompleted: 7 },
-  ];
+  // Fetch productivity patterns from API
+  const { data: productivityPatterns = [], isLoading: patternsLoading } = useQuery<ProductivityPattern[]>({
+    queryKey: ["/api/analytics/patterns"],
+  });
 
+  // Mock insights data (keep for now)
   const insights: Insight[] = [
     {
       type: 'success',
@@ -179,7 +142,7 @@ export default function Analytics() {
     }
   };
 
-  if (goalsLoading) {
+  if (goalsLoading || analyticsLoading || categoriesLoading || patternsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
@@ -193,6 +156,23 @@ export default function Analytics() {
       </div>
     );
   }
+
+  // Provide fallback values if data is still undefined
+  const safeAnalyticsData = analyticsData || {
+    goalSuccessRate: 0,
+    avgCompletionTime: 0,
+    totalGoalsCreated: 0,
+    completedGoals: 0,
+    activeGoals: 0,
+    pausedGoals: 0,
+    totalTasksCompleted: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    bestPerformingDay: "Monday",
+    mostProductiveHour: 10,
+    weeklyProgressTrend: [0, 0, 0, 0, 0, 0, 0],
+    monthlyComparison: { thisMonth: 0, lastMonth: 0, change: 0 },
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -232,20 +212,20 @@ export default function Analytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{t('dashboard.successRate')}</p>
-                  <p className="text-2xl font-bold text-green-600">{analyticsData.goalSuccessRate}%</p>
+                  <p className="text-2xl font-bold text-green-600">{safeAnalyticsData.goalSuccessRate}%</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
                   <Target className="h-6 w-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-2 flex items-center">
-                {analyticsData.monthlyComparison.change > 0 ? (
+                {safeAnalyticsData.monthlyComparison.change > 0 ? (
                   <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
                 ) : (
                   <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
                 )}
-                <span className={`text-sm ${analyticsData.monthlyComparison.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Math.abs(analyticsData.monthlyComparison.change)}% {t('analytics.vsLastMonth')}
+                <span className={`text-sm ${safeAnalyticsData.monthlyComparison.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {Math.abs(safeAnalyticsData.monthlyComparison.change)}% {t('analytics.vsLastMonth')}
                 </span>
               </div>
             </CardContent>
@@ -256,7 +236,7 @@ export default function Analytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{t('analytics.avgCompletionTime')}</p>
-                  <p className="text-2xl font-bold text-blue-600">{analyticsData.avgCompletionTime} days</p>
+                  <p className="text-2xl font-bold text-blue-600">{safeAnalyticsData.avgCompletionTime} days</p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
                   <Clock className="h-6 w-6 text-blue-600" />
@@ -271,13 +251,13 @@ export default function Analytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{t('analytics.streakDays')}</p>
-                  <p className="text-2xl font-bold text-orange-600">{analyticsData.currentStreak} days</p>
+                  <p className="text-2xl font-bold text-orange-600">{safeAnalyticsData.currentStreak} days</p>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-full">
                   <Zap className="h-6 w-6 text-orange-600" />
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">{t('analytics.personalBest')}: {analyticsData.longestStreak} {t('analytics.days')}</p>
+              <p className="text-sm text-gray-500 mt-2">{t('analytics.personalBest')}: {safeAnalyticsData.longestStreak} {t('analytics.days')}</p>
             </CardContent>
           </Card>
 
@@ -286,7 +266,7 @@ export default function Analytics() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{t('dashboard.tasksCompleted')}</p>
-                  <p className="text-2xl font-bold text-purple-600">{analyticsData.totalTasksCompleted}</p>
+                  <p className="text-2xl font-bold text-purple-600">{safeAnalyticsData.totalTasksCompleted}</p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
                   <CheckCircle className="h-6 w-6 text-purple-600" />
@@ -318,7 +298,7 @@ export default function Analytics() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {analyticsData.weeklyProgressTrend.map((progress, index) => {
+                    {safeAnalyticsData.weeklyProgressTrend.map((progress, index) => {
                       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                       return (
                         <div key={index} className="flex items-center gap-3">
@@ -348,9 +328,9 @@ export default function Analytics() {
                         <span className="text-sm">{t('myGoals.completed')}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{analyticsData.completedGoals}</span>
+                        <span className="text-sm font-medium">{safeAnalyticsData.completedGoals}</span>
                         <span className="text-xs text-gray-500">
-                          ({analyticsData.totalGoalsCreated > 0 ? Math.round((analyticsData.completedGoals / analyticsData.totalGoalsCreated) * 100) : 0}%)
+                          ({safeAnalyticsData.totalGoalsCreated > 0 ? Math.round((safeAnalyticsData.completedGoals / safeAnalyticsData.totalGoalsCreated) * 100) : 0}%)
                         </span>
                       </div>
                     </div>
@@ -360,9 +340,9 @@ export default function Analytics() {
                         <span className="text-sm">{t('myGoals.active')}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{analyticsData.activeGoals}</span>
+                        <span className="text-sm font-medium">{safeAnalyticsData.activeGoals}</span>
                         <span className="text-xs text-gray-500">
-                          ({analyticsData.totalGoalsCreated > 0 ? Math.round((analyticsData.activeGoals / analyticsData.totalGoalsCreated) * 100) : 0}%)
+                          ({safeAnalyticsData.totalGoalsCreated > 0 ? Math.round((safeAnalyticsData.activeGoals / safeAnalyticsData.totalGoalsCreated) * 100) : 0}%)
                         </span>
                       </div>
                     </div>
@@ -372,9 +352,9 @@ export default function Analytics() {
                         <span className="text-sm">{t('myGoals.paused')}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{analyticsData.pausedGoals}</span>
+                        <span className="text-sm font-medium">{safeAnalyticsData.pausedGoals}</span>
                         <span className="text-xs text-gray-500">
-                          ({analyticsData.totalGoalsCreated > 0 ? Math.round((analyticsData.pausedGoals / analyticsData.totalGoalsCreated) * 100) : 0}%)
+                          ({safeAnalyticsData.totalGoalsCreated > 0 ? Math.round((safeAnalyticsData.pausedGoals / safeAnalyticsData.totalGoalsCreated) * 100) : 0}%)
                         </span>
                       </div>
                     </div>
@@ -401,12 +381,12 @@ export default function Analytics() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <h3 className="font-semibold text-blue-900 mb-1">{t('analytics.bestPerformingDay')}</h3>
-                      <p className="text-2xl font-bold text-blue-600">{analyticsData.bestPerformingDay}</p>
+                      <p className="text-2xl font-bold text-blue-600">{safeAnalyticsData.bestPerformingDay}</p>
                       <p className="text-sm text-blue-700">{t('analytics.scheduleImportantTasks')}</p>
                     </div>
                     <div className="p-4 bg-purple-50 rounded-lg">
                       <h3 className="font-semibold text-purple-900 mb-1">{t('analytics.mostProductiveHour')}</h3>
-                      <p className="text-2xl font-bold text-purple-600">{analyticsData.mostProductiveHour}:00 AM</p>
+                      <p className="text-2xl font-bold text-purple-600">{safeAnalyticsData.mostProductiveHour}:00 AM</p>
                       <p className="text-sm text-purple-700">{t('analytics.peakFocusTime')}</p>
                     </div>
                   </div>

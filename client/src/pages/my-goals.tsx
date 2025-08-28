@@ -34,6 +34,7 @@ export default function MyGoals() {
   const [sortBy, setSortBy] = useState("created");
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<View>("goals");
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [wizardData, setWizardData] = useState<{
     goalData: InsertGoal;
     breakdownRequest: AIBreakdownRequest;
@@ -82,6 +83,7 @@ export default function MyGoals() {
       queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
       queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
       toast({
         title: "Goal Deleted",
         description: "The goal has been permanently deleted.",
@@ -97,6 +99,7 @@ export default function MyGoals() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
       queryClient.invalidateQueries({ queryKey: ["/api/analytics/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
     },
   });
 
@@ -179,22 +182,24 @@ export default function MyGoals() {
   };
 
   const handleStartGoalCreation = () => {
+    setEditingGoal(null);
+    setCurrentView("wizard");
+  };
+
+  const handleEditGoal = (goal: Goal) => {
+    setEditingGoal(goal);
     setCurrentView("wizard");
   };
 
   const handleCloseWizard = () => {
     setCurrentView("goals");
+    setEditingGoal(null);
     setWizardData(null);
   };
 
-  const handleProceedToBreakdown = async (goalData: InsertGoal, breakdownRequest: AIBreakdownRequest) => {
-    try {
-      const breakdown = await api.generateBreakdown(breakdownRequest);
-      setWizardData({ goalData, breakdownRequest, breakdown });
-      setCurrentView("breakdown");
-    } catch (error) {
-      console.error("Failed to generate breakdown:", error);
-    }
+  const handleProceedToBreakdown = (goalData: InsertGoal, breakdownRequest: AIBreakdownRequest, breakdown: AIBreakdownResponse) => {
+    setWizardData({ goalData, breakdownRequest, breakdown });
+    setCurrentView("breakdown");
   };
 
   const handleSaveComplete = () => {
@@ -203,6 +208,7 @@ export default function MyGoals() {
     // Refetch goals to show the newly created goal
     queryClient.invalidateQueries({ queryKey: ["/api/goals"] });
     queryClient.invalidateQueries({ queryKey: ["/api/goals/detailed"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
   };
 
   if (currentView === "wizard") {
@@ -210,7 +216,11 @@ export default function MyGoals() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <GoalWizard onClose={handleCloseWizard} onProceedToBreakdown={handleProceedToBreakdown} />
+          <GoalWizard 
+            onClose={handleCloseWizard} 
+            onProceedToBreakdown={handleProceedToBreakdown}
+            editGoal={editingGoal || undefined}
+          />
         </div>
       </div>
     );
@@ -336,13 +346,13 @@ export default function MyGoals() {
             {filteredGoals.map((goal) => (
               <Card key={goal.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:gap-4">
+                    <div className="order-1 flex-1">
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
-                          <CardTitle className="text-xl mb-2">{goal.title}</CardTitle>
+                          <CardTitle className="text-lg sm:text-xl mb-2">{goal.title}</CardTitle>
                           {goal.description && (
-                            <CardDescription className="text-base">{goal.description}</CardDescription>
+                            <CardDescription className="text-sm sm:text-base">{goal.description}</CardDescription>
                           )}
                           <div className="flex flex-wrap items-center gap-2 mt-3">
                             <Badge className={getStatusColor(goal.status)}>
@@ -362,14 +372,14 @@ export default function MyGoals() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">{goal.progress || 0}%</div>
-                        <Progress value={goal.progress || 0} className="w-20" />
+                    <div className="order-3 sm:order-2 flex flex-row justify-between sm:flex-row-reverse sm:justify-end items-start gap-2 w-full">
+                      <div className="text-left sm:text-right w-full sm:w-auto">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{goal.progress || 0}%</div>
+                        <Progress value={goal.progress || 0} className="w-full sm:w-20" />
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" data-testid={`button-goal-menu-${goal.id}`}>
+                          <Button variant="ghost" size="sm" className="self-start sm:self-start shrink-0" data-testid={`button-goal-menu-${goal.id}`}>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -381,7 +391,10 @@ export default function MyGoals() {
                             <TrendingUp className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem data-testid={`menu-edit-${goal.id}`}>
+                          <DropdownMenuItem 
+                            onClick={() => handleEditGoal(goal)}
+                            data-testid={`menu-edit-${goal.id}`}
+                          >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Goal
                           </DropdownMenuItem>
@@ -478,7 +491,7 @@ export default function MyGoals() {
                                     <Badge className={getStatusColor(weeklyGoal.status)}>
                                       {weeklyGoal.status}
                                     </Badge>
-                                    <div className="text-sm text-gray-600">
+                                    <div className="text-sm text-gray-600 dark:text-gray-300">
                                       {weeklyGoal.progress || 0}%
                                     </div>
                                   </div>

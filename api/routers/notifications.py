@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -41,7 +41,7 @@ async def subscribe_push(
         "userId": current_user["id"],
         "endpoint": endpoint,
         "subscription": subscription,
-        "createdAt": datetime.utcnow(),
+        "createdAt": datetime.now(timezone.utc),
     }
 
     # Upsert by userId+endpoint
