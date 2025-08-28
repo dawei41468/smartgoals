@@ -2,12 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, Target, Ruler, Mountain, Crosshair, Calendar, Star, ArrowRight, Folder } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Target, Ruler, Mountain, Crosshair, Star } from "lucide-react";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { insertGoalSchema } from "@/lib/schema";
@@ -15,6 +11,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import type { InsertGoal, AIBreakdownRequest, Goal, AIBreakdownResponse, UserSettings } from "@/lib/schema";
 import { GoalService } from "@/services/goalService";
+import StepIndicator from "@/components/shared/StepIndicator";
+import { GoalWizardHeader } from "@/components/goal-wizard/GoalWizardHeader";
+import { CategoryField } from "@/components/goal-wizard/CategoryField";
+import { SMARTFormField } from "@/components/goal-wizard/SMARTFormField";
+import { TimeboundField } from "@/components/goal-wizard/TimeboundField";
+import { GenerationProgressIndicator } from "@/components/goal-wizard/GenerationProgressIndicator";
+import { GoalWizardActionButtons } from "@/components/goal-wizard/GoalWizardActionButtons";
 
 interface GoalWizardProps {
   onClose: () => void;
@@ -212,66 +215,21 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
     }
   };
 
-  const validateField = (value: string) => {
-    if (value.length < 10) return "Could use more detail";
-    if (value.length > 30) return "Good detail level";
-    return "Basic information provided";
-  };
-
-  const getValidationIcon = (value: string) => {
-    if (value.length < 10) return "⚠️";
-    return "✅";
-  };
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {editGoal ? "Edit Your SMART(ER) Goal" : "Create Your SMART(ER) Goal"}
-          </h1>
-          <Button variant="ghost" size="sm" onClick={onClose} data-testid="button-close-wizard">
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
+        <GoalWizardHeader isEditing={!!editGoal} onClose={onClose} />
         
-        {/* Step Indicator */}
         <div className="mb-6 sm:mb-8">
-          {/* Mobile compact version */}
-          <div className="flex items-center justify-between sm:hidden px-2">
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-semibold">1</div>
-              <span className="ml-1 text-xs font-medium text-primary">Setup</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300 dark:bg-gray-700"></div>
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-xs font-semibold">2</div>
-              <span className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400">AI</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300 dark:bg-gray-700"></div>
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-xs font-semibold">3</div>
-              <span className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400">Save</span>
-            </div>
-          </div>
-          
-          {/* Desktop version */}
-          <div className="hidden sm:flex items-center space-x-4">
-            <div className="flex items-center flex-shrink-0">
-              <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-semibold">1</div>
-              <span className="ml-2 text-sm font-medium text-primary whitespace-nowrap">SMART(ER) Setup</span>
-            </div>
-            <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700 min-w-4"></div>
-            <div className="flex items-center flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
-              <span className="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">AI Breakdown</span>
-            </div>
-            <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700 min-w-4"></div>
-            <div className="flex items-center flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
-              <span className="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Review & Save</span>
-            </div>
-          </div>
+          <StepIndicator 
+            currentStep={1}
+            steps={[
+              { label: "SMART(ER) Setup", mobileLabel: "Setup" },
+              { label: "AI Breakdown", mobileLabel: "AI" },
+              { label: "Review & Save", mobileLabel: "Save" }
+            ]}
+          />
         </div>
 
         <Form {...form}>
@@ -283,280 +241,86 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
               variant: "destructive",
             });
           })} className="space-y-6">
-            {/* Category Field */}
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    <Folder className="text-secondary mr-2 h-4 w-4" />
-                    Goal Category
-                  </FormLabel>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Choose the area of your life this goal focuses on.</p>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-category">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Health">Health</SelectItem>
-                      <SelectItem value="Work">Work</SelectItem>
-                      <SelectItem value="Family">Family</SelectItem>
-                      <SelectItem value="Personal">Personal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <CategoryField control={form.control} name="category" />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
               <div className="space-y-6">
-                {/* Specific */}
-                <FormField
+                <SMARTFormField
                   control={form.control}
                   name="specific"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
-                        <Target className="text-secondary mr-2 h-4 w-4" />
-                        Specific
-                      </FormLabel>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">What exactly do you want to accomplish? Be clear and detailed.</p>
-                      <FormControl>
-                        <Textarea 
-                          {...field}
-                          className="resize-none"
-                          rows={3}
-                          placeholder="e.g., Launch a mobile fitness app with user authentication, workout tracking, and social features..."
-                          data-testid="input-specific"
-                        />
-                      </FormControl>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {getValidationIcon(field.value)} {validateField(field.value)}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Specific"
+                  description="What exactly do you want to accomplish? Be clear and detailed."
+                  placeholder="e.g., Launch a mobile fitness app with user authentication, workout tracking, and social features..."
+                  icon={Target}
+                  iconColor="text-secondary"
+                  testId="input-specific"
                 />
 
-                {/* Measurable */}
-                <FormField
+                <SMARTFormField
                   control={form.control}
                   name="measurable"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
-                        <Ruler className="text-secondary mr-2 h-4 w-4" />
-                        Measurable
-                      </FormLabel>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">How will you track progress and know when you've achieved your goal?</p>
-                      <FormControl>
-                        <Textarea 
-                          {...field}
-                          className="resize-none"
-                          rows={3}
-                          placeholder="e.g., App published on both iOS and Android app stores with 1000+ downloads..."
-                          data-testid="input-measurable"
-                        />
-                      </FormControl>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {getValidationIcon(field.value)} {validateField(field.value)}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Measurable"
+                  description="How will you track progress? What metrics will you use?"
+                  placeholder="e.g., 1,000 registered users, 4.5+ app store rating, $5,000 monthly revenue..."
+                  icon={Ruler}
+                  iconColor="text-green-500"
+                  testId="input-measurable"
                 />
 
-                {/* Achievable */}
-                <FormField
+                <SMARTFormField
                   control={form.control}
                   name="achievable"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
-                        <Mountain className="text-accent mr-2 h-4 w-4" />
-                        Achievable
-                      </FormLabel>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Is this goal realistic given your resources, skills, and timeframe?</p>
-                      <FormControl>
-                        <Textarea 
-                          {...field}
-                          className="resize-none"
-                          rows={3}
-                          placeholder="e.g., I have 3 years of React Native experience and $5000 budget for development tools..."
-                          data-testid="input-achievable"
-                        />
-                      </FormControl>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {getValidationIcon(field.value)} {validateField(field.value)}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Achievable"
+                  description="Is this goal realistic? What resources and skills do you have?"
+                  placeholder="e.g., I have 5 years of React experience, $10,000 budget, and 20 hours/week to dedicate..."
+                  icon={Mountain}
+                  iconColor="text-blue-500"
+                  testId="input-achievable"
                 />
               </div>
 
               <div className="space-y-6">
-                {/* Relevant */}
-                <FormField
+                <SMARTFormField
                   control={form.control}
                   name="relevant"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
-                        <Crosshair className="text-purple-500 mr-2 h-4 w-4" />
-                        Relevant
-                      </FormLabel>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Why is this goal important to you? How does it align with your values?</p>
-                      <FormControl>
-                        <Textarea 
-                          {...field}
-                          className="resize-none"
-                          rows={3}
-                          placeholder="e.g., Aligns with my passion for health tech and career goal to become a mobile app entrepreneur..."
-                          data-testid="input-relevant"
-                        />
-                      </FormControl>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {getValidationIcon(field.value)} {validateField(field.value)}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Relevant"
+                  description="Why is this goal important to you? How does it align with your values?"
+                  placeholder="e.g., Aligns with my passion for health tech and career goal to become a mobile app entrepreneur..."
+                  icon={Crosshair}
+                  iconColor="text-purple-500"
+                  testId="input-relevant"
                 />
 
-                {/* Time-bound */}
-                <FormField
+                <TimeboundField
                   control={form.control}
-                  name="timebound"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
-                        <Calendar className="text-pink-500 mr-2 h-4 w-4" />
-                        Time-bound
-                      </FormLabel>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">When will you complete this goal? Set a specific deadline.</p>
-                      <div className="space-y-3">
-                        <FormField
-                          control={form.control}
-                          name="deadline"
-                          render={({ field: deadlineField }) => (
-                            <FormControl>
-                              <Input 
-                                {...deadlineField}
-                                type="date"
-                                data-testid="input-deadline"
-                              />
-                            </FormControl>
-                          )}
-                        />
-                        <FormControl>
-                          <Textarea 
-                            {...field}
-                            className="resize-none"
-                            rows={2}
-                            placeholder="e.g., Complete development by October, testing by November, launch by December 31st..."
-                            data-testid="input-timebound"
-                          />
-                        </FormControl>
-                      </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {getValidationIcon(field.value)} {validateField(field.value)}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  timeboundName="timebound"
+                  deadlineName="deadline"
                 />
 
-                {/* Exciting & Rewarding */}
-                <FormField
+                <SMARTFormField
                   control={form.control}
                   name="exciting"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200">
-                        <Star className="text-yellow-500 mr-2 h-4 w-4" />
-                        Exciting & Rewarding
-                      </FormLabel>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">What makes this goal exciting? How will you celebrate success?</p>
-                      <FormControl>
-                        <Textarea 
-                          {...field}
-                          className="resize-none"
-                          rows={3}
-                          placeholder="e.g., Seeing users achieve their fitness goals using my app will be incredibly fulfilling..."
-                          data-testid="input-exciting"
-                        />
-                      </FormControl>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {getValidationIcon(field.value)} {validateField(field.value)}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Exciting & Rewarding"
+                  description="What makes this goal exciting? How will you celebrate success?"
+                  placeholder="e.g., Seeing users achieve their fitness goals using my app will be incredibly fulfilling..."
+                  icon={Star}
+                  iconColor="text-yellow-500"
+                  testId="input-exciting"
                 />
               </div>
             </div>
 
-            {/* Progress Indicator */}
-            {generateBreakdownMutation.isPending && (
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                      {streamingProgress.message || "Starting generation..."}
-                    </div>
-                    <div className="flex items-center gap-4 mt-1 text-xs text-blue-700 dark:text-blue-300">
-                      {streamingProgress.totalChunks > 0 && streamingProgress.currentChunk > 0 && (
-                        <span>
-                          Chunk {streamingProgress.currentChunk} of {streamingProgress.totalChunks}
-                        </span>
-                      )}
-                      {streamingProgress.partialWeeks.length > 0 && (
-                        <span>
-                          {streamingProgress.partialWeeks.length} weeks completed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <GenerationProgressIndicator
+              isGenerating={generateBreakdownMutation.isPending}
+              streamingProgress={streamingProgress}
+            />
 
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 pt-6 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onSaveDraft}
-                disabled={saveDraftMutation.isPending}
-                className="flex-1 text-sm"
-              >
-                {saveDraftMutation.isPending ? t('common.loading') : t('goalWizard.saveDraft')}
-              </Button>
-              <Button
-                type="submit"
-                disabled={isGenerating || !form.formState.isValid}
-                className="flex-1 text-sm"
-              >
-                {isGenerating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {t('goalWizard.generating')}
-                  </>
-                ) : (
-                  <>
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">{t('goalWizard.generateBreakdown')}</span>
-                    <span className="sm:hidden">{t('goalWizard.generateBreakdownMobile')}</span>
-                  </>
-                )}
-              </Button>
-            </div>
+            <GoalWizardActionButtons
+              onSaveDraft={onSaveDraft}
+              saveDraftPending={saveDraftMutation.isPending}
+              isGenerating={isGenerating}
+              isFormValid={form.formState.isValid}
+            />
           </form>
         </Form>
       </div>
