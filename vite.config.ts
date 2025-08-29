@@ -50,12 +50,13 @@ export default defineConfig({
     },
   },
   server: {
+    port: 6100,
     fs: {
       strict: true,
       deny: ["**/.*"],
     },
     proxy: {
-      "/api": "http://127.0.0.1:8000",
+      "/api": "http://127.0.0.1:6000",
     },
   },
 });

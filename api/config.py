@@ -38,7 +38,7 @@ class Settings:
         if cors_origins_env:
             self.CORS_ORIGINS: list[str] = [origin.strip() for origin in cors_origins_env.split(",")]
         elif self.ENV == "development":
-            self.CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+            self.CORS_ORIGINS = ["http://localhost:6100", "http://127.0.0.1:6100"]
         else:
             # Production requires explicit CORS configuration
             raise ValueError("CORS_ORIGINS must be explicitly set in production environment")
