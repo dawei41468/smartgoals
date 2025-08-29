@@ -81,71 +81,76 @@ export const GoalCard = memo(function GoalCard({
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="grid grid-cols-1 gap-3">
-          <div className="flex-1">
-            <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <CardTitle className="text-lg sm:text-xl mb-2">{goal.title}</CardTitle>
-                {goal.description && (
-                  <CardDescription className="text-sm sm:text-base">{goal.description}</CardDescription>
-                )}
-                <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                   <Badge className={`${getStatusColor(optimisticStatus)} transition-colors ${
-                     isStatusUpdating ? 'opacity-70 animate-pulse' : ''
-                   }`}>
-                     {getStatusDisplayText(optimisticStatus)}
-                   </Badge>
-                  <div className={`flex items-center text-sm ${isOverdue(goal.deadline) ? 'text-red-600' : 'text-gray-600'}`}>
-                    <Calendar className="h-4 w-4 mr-1" />
-                    {formatDate(goal.deadline)}
-                    {isOverdue(goal.deadline) && (
-                      <Badge className="ml-2 bg-red-100 text-red-800 border-red-200">
-                        Overdue
-                      </Badge>
-                    )}
-                  </div>
-                  {goal.deadline && getDaysUntilDeadline(goal.deadline) >= 0 && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {getDaysUntilDeadline(goal.deadline)} {t('myGoals.daysLeft')}
-                    </div>
-                  )}
-                  {goal.deadline && isOverdue(goal.deadline) && (
-                    <div className="flex items-center text-sm text-red-600">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {Math.abs(getDaysUntilDeadline(goal.deadline))} days overdue
-                    </div>
-                  )}
-                </div>
-              </div>
+      <CardHeader className="pb-3">
+        <div className="space-y-3">
+          {/* Title and Description */}
+          <div>
+            <CardTitle className="text-lg leading-tight mb-1">{goal.title}</CardTitle>
+            {goal.description && (
+              <CardDescription className="text-sm leading-relaxed">{goal.description}</CardDescription>
+            )}
+          </div>
+
+          {/* Status and Date Badges - Mobile optimized */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className={`${getStatusColor(optimisticStatus)} transition-colors text-xs px-2 py-1 ${
+              isStatusUpdating ? 'opacity-70 animate-pulse' : ''
+            }`}>
+              {getStatusDisplayText(optimisticStatus)}
+            </Badge>
+
+            <div className={`flex items-center text-xs ${isOverdue(goal.deadline) ? 'text-red-600' : 'text-gray-600'}`}>
+              <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="truncate">{formatDate(goal.deadline)}</span>
+              {isOverdue(goal.deadline) && (
+                <Badge className="ml-1 bg-red-100 text-red-800 border-red-200 text-xs px-1.5 py-0.5">
+                  Overdue
+                </Badge>
+              )}
             </div>
           </div>
-          
-          <div className="flex items-center justify-between mt-2 gap-2">
-            <div className="flex items-center gap-2 flex-1">
-              <div className="flex items-center gap-1 text-sm text-gray-600">
-                <TrendingUp className="h-3 w-3" />
-                <span className="text-xs">{goal.progress || 0}%</span>
+
+          {/* Time indicators - Mobile optimized */}
+          <div className="flex flex-wrap items-center gap-3">
+            {goal.deadline && getDaysUntilDeadline(goal.deadline) >= 0 && (
+              <div className="flex items-center text-xs text-gray-600">
+                <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                {getDaysUntilDeadline(goal.deadline)} {t('myGoals.daysLeft')}
               </div>
-              <Progress value={goal.progress || 0} className="flex-1" />
+            )}
+            {goal.deadline && isOverdue(goal.deadline) && (
+              <div className="flex items-center text-xs text-red-600">
+                <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                {Math.abs(getDaysUntilDeadline(goal.deadline))} days overdue
+              </div>
+            )}
+          </div>
+
+          {/* Progress and Actions - Mobile optimized */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="flex items-center gap-1 text-xs text-gray-600 flex-shrink-0">
+                <TrendingUp className="h-3 w-3" />
+                <span className="font-medium">{goal.progress || 0}%</span>
+              </div>
+              <Progress value={goal.progress || 0} className="flex-1 h-2" />
             </div>
-            
-            <div className="flex gap-0.5">
+
+            <div className="flex gap-1 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onToggleExpand(goal.id)}
                 data-testid={`button-expand-${goal.id}`}
-                className="h-8 px-2 text-xs"
+                className="h-8 px-3 text-xs font-medium"
               >
                 {isExpanded ? 'Less' : 'More'}
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" data-testid={`button-menu-${goal.id}`} className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-3 w-3" />
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

@@ -67,7 +67,7 @@ export const TaskItem = memo(function TaskItem({
   };
 
   return (
-    <div className="flex items-center gap-2.5 p-2.5 border rounded-lg bg-white hover:bg-gray-50 transition-colors" style={{ minHeight: 'auto' }}>
+    <div className="flex items-start gap-4 p-5 border rounded-lg bg-white hover:bg-gray-50 transition-colors w-full" style={{ minHeight: 'auto' }}>
       <div
         onClick={(e) => {
           e.preventDefault();
@@ -76,42 +76,44 @@ export const TaskItem = memo(function TaskItem({
         onMouseDown={(e) => {
           e.preventDefault();
         }}
-        className="flex-shrink-0"
+        className="flex-shrink-0 pt-1"
       >
         <Checkbox
           checked={optimisticCompleted}
           onCheckedChange={handleToggle}
           disabled={isUpdating}
           data-testid={`${testIdPrefix}-${task.id}`}
-          className="mt-0.5"
+          className="mt-0"
         />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className={`font-medium text-sm leading-tight transition-colors duration-200 ${
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className={`font-medium text-base leading-relaxed transition-colors duration-200 break-words ${
           optimisticCompleted ? 'line-through text-gray-500' : ''
         } ${isUpdating ? 'opacity-70' : ''}`}>
           {task.title}
         </div>
         {task.description && (
-          <div className={`text-xs leading-relaxed transition-colors duration-200 mt-0.5 ${
+          <div className={`text-sm leading-relaxed transition-colors duration-200 mt-2 break-words ${
             optimisticCompleted ? 'line-through text-gray-400' : 'text-gray-600'
           } ${isUpdating ? 'opacity-70' : ''}`}
           style={{
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 4,
             WebkitBoxOrient: 'vertical' as const,
-            lineHeight: '1.3'
+            lineHeight: '1.5',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word'
           }}>
             {task.description}
           </div>
         )}
       </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <Badge className={`${getPriorityColor(task.priority)} text-xs px-1.5 py-0.5 h-5`}>
+      <div className="flex flex-col items-end gap-3 flex-shrink-0 min-w-0">
+        <Badge className={`${getPriorityColor(task.priority)} text-xs px-3 py-1.5 h-7 font-medium whitespace-nowrap`}>
           {getPriorityDisplayText(task.priority)}
         </Badge>
         {showEstimatedHours && (
-          <div className="text-xs text-gray-500 font-medium">
+          <div className="text-xs text-gray-500 font-medium whitespace-nowrap">
             {task.estimatedHours || 1}h
           </div>
         )}

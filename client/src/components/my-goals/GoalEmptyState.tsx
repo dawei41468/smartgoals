@@ -13,19 +13,19 @@ export function GoalEmptyState({ hasGoals, onCreateGoal }: GoalEmptyStateProps) 
   const { t } = useLanguage();
 
   return (
-    <Card className="text-center py-12">
-      <CardContent>
-        <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+    <Card className="text-center py-8">
+      <CardContent className="px-4">
+        <Target className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+        <h3 className="text-base font-medium text-gray-900 mb-2 leading-tight">
           {!hasGoals ? t('myGoals.noGoalsYet') : t('myGoals.noGoalsFound')}
         </h3>
-        <p className="text-gray-600 mb-6">
-          {!hasGoals 
+        <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+          {!hasGoals
             ? t('myGoals.startJourney')
             : t('myGoals.adjustSearch')}
         </p>
         {!hasGoals && (
-          <Button onClick={onCreateGoal} data-testid="button-empty-create-goal">
+          <Button onClick={onCreateGoal} data-testid="button-empty-create-goal" className="w-full h-11 text-base">
             <Plus className="h-4 w-4 mr-2" />
             {t('myGoals.createFirstGoal')}
           </Button>

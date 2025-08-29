@@ -12,12 +12,12 @@ export function GoalHeader({ onCreateGoal }: GoalHeaderProps) {
   const { t } = useLanguage();
   
   return (
-    <PageHeader 
-      icon={Target} 
-      titleKey="myGoals.title" 
+    <PageHeader
+      icon={Target}
+      titleKey="myGoals.title"
       subtitleKey="myGoals.trackProgress"
     >
-      <Button onClick={onCreateGoal} data-testid="button-create-new-goal">
+      <Button onClick={onCreateGoal} data-testid="button-create-new-goal" className="h-11 px-4 text-base font-medium">
         <Plus className="h-4 w-4 mr-2" />
         {t('myGoals.createNewGoal')}
       </Button>

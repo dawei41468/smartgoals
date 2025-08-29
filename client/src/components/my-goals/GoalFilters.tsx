@@ -24,24 +24,25 @@ export function GoalFilters({
   const { t } = useLanguage();
 
   return (
-    <div className="mb-6 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
-      <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder={t('myGoals.searchGoals')}
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-            data-testid="input-search-goals"
-          />
-        </div>
+    <div className="mb-4 space-y-3">
+      {/* Search Input - Full width on mobile */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          placeholder={t('myGoals.searchGoals')}
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-10 w-full h-11 text-base"
+          data-testid="input-search-goals"
+        />
       </div>
+
+      {/* Filter Controls - Optimized for mobile */}
       <div className="flex gap-2">
         <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-          <SelectTrigger className="flex-1" data-testid="select-status-filter">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue />
+          <SelectTrigger className="flex-1 h-11 min-w-0" data-testid="select-status-filter">
+            <Filter className="h-4 w-4 mr-1 flex-shrink-0" />
+            <SelectValue className="truncate" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('myGoals.allStatus')}</SelectItem>
@@ -51,8 +52,8 @@ export function GoalFilters({
           </SelectContent>
         </Select>
         <Select value={sortBy} onValueChange={onSortByChange}>
-          <SelectTrigger className="flex-1" data-testid="select-sort-by">
-            <SelectValue />
+          <SelectTrigger className="flex-1 h-11 min-w-0" data-testid="select-sort-by">
+            <SelectValue className="truncate" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="created">{t('myGoals.newest')}</SelectItem>

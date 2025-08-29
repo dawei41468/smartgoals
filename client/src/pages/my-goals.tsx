@@ -208,9 +208,9 @@ function MyGoals() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <GoalWizard 
-            onClose={handleCloseWizard} 
+        <div className="max-w-7xl mx-auto px-3 py-4">
+          <GoalWizard
+            onClose={handleCloseWizard}
             onProceedToBreakdown={handleProceedToBreakdown}
             editGoal={editingGoal || undefined}
           />
@@ -223,7 +223,7 @@ function MyGoals() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-3 py-4">
           <AIBreakdown
             goalData={wizardData.goalData}
             breakdownRequest={wizardData.breakdownRequest}
@@ -239,11 +239,11 @@ function MyGoals() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center py-16">
+        <div className="max-w-7xl mx-auto px-3 py-4">
+          <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <LoadingSpinner size="lg" className="mx-auto mb-4" />
-              <p className="text-muted-foreground">{t('common.loading')}</p>
+              <p className="text-muted-foreground text-sm">{t('common.loading')}</p>
             </div>
           </div>
         </div>
@@ -254,8 +254,8 @@ function MyGoals() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navigation />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+      <div className="max-w-7xl mx-auto px-3 py-3">
         <GoalHeader onCreateGoal={handleStartGoalCreation} />
 
         <GoalFilters
@@ -270,7 +270,7 @@ function MyGoals() {
         {filteredGoals.length === 0 ? (
           <GoalEmptyState hasGoals={goals.length > 0} onCreateGoal={handleStartGoalCreation} />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredGoals.map((goal) => (
               <div key={goal.id}>
                 <GoalCard
