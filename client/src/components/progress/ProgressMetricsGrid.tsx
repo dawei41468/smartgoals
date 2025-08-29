@@ -25,7 +25,7 @@ export function ProgressMetricsGrid({ progressStats, weeklyCompletedTasks }: Pro
             <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 mr-1 sm:mr-2" />
             <div className="text-2xl font-bold">{safeStats.avgCompletionTime}</div>
           </div>
-          <p className="text-xs sm:text-sm text-gray-600">{t('analytics.streakDays')}</p>
+          <p className="text-xs sm:text-sm text-gray-600">{t('progressPage.daysInRow')}</p>
           <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.daysInRow')}</p>
         </CardContent>
       </Card>

@@ -4,10 +4,10 @@ import { PageHeader } from '@/components/shared/PageHeader';
 
 export function ProgressHeader() {
   return (
-    <PageHeader 
-      icon={TrendingUp} 
-      titleKey="progressPage.title" 
-      subtitleKey="progressPage.trackYourJourney" 
+    <PageHeader
+      icon={TrendingUp}
+      titleKey="progressPage.title"
+      subtitleKey="progressPage.description"
     />
   );
 }

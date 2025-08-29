@@ -13,18 +13,18 @@ export function AnalyticsHeader({ timePeriod, onTimePeriodChange }: AnalyticsHea
   const { t } = useLanguage();
 
   return (
-    <PageHeader 
-      icon={BarChart3} 
-      titleKey="analytics.title" 
-      subtitleKey="analytics.trackYourProgress"
+    <PageHeader
+      icon={BarChart3}
+      titleKey="analytics.title"
+      subtitleKey="analytics.description"
     >
       <Select value={timePeriod} onValueChange={onTimePeriodChange}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder={t('analytics.selectPeriod')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="week">{t('analytics.thisWeek')}</SelectItem>
-          <SelectItem value="month">{t('analytics.thisMonth')}</SelectItem>
+          <SelectItem value="week">{t('common.thisWeek')}</SelectItem>
+          <SelectItem value="month">{t('common.thisMonth')}</SelectItem>
           <SelectItem value="quarter">{t('analytics.thisQuarter')}</SelectItem>
           <SelectItem value="year">{t('analytics.thisYear')}</SelectItem>
         </SelectContent>

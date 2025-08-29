@@ -103,6 +103,9 @@ export const api = {
   },
 
   getAchievements: async (): Promise<Achievement[]> => {
-    return validatedArrayApiRequest("GET", "/api/progress/achievements", undefined, validateAchievement);
+    const response = await validatedApiRequest<{ achievements: Achievement[] }>("GET", "/api/progress/achievements");
+    // Extract achievements array from the response data structure
+    const achievements = response.achievements || [];
+    return achievements.map(validateAchievement);
   },
 };

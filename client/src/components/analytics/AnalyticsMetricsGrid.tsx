@@ -28,7 +28,7 @@ export function AnalyticsMetricsGrid({ analyticsData }: AnalyticsMetricsGridProp
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('dashboard.completionRate')}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('analytics.completionRate')}</p>
               <p className="text-xl sm:text-2xl font-bold text-green-600">{analyticsData.completionRate}%</p>
             </div>
             <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
@@ -82,7 +82,7 @@ export function AnalyticsMetricsGrid({ analyticsData }: AnalyticsMetricsGridProp
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('dashboard.tasksCompleted')}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">{t('analytics.tasksCompleted')}</p>
               <p className="text-xl sm:text-2xl font-bold text-purple-600">{analyticsData.totalTasksCompleted}</p>
             </div>
             <div className="p-2 sm:p-3 bg-purple-100 dark:bg-purple-900/20 rounded-full">
