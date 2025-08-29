@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Calendar, Clock, TrendingUp, MoreHorizontal, Edit, Pause, Play, CheckCircle, Trash2 } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,20 +22,49 @@ interface GoalCardProps {
   isExpanded: boolean;
   onToggleExpand: (goalId: string) => void;
   onEditGoal: (goal: GoalWithBreakdown) => void;
-  onStatusChange: (goalId: string, status: Goal["status"]) => void;
+  onStatusChange: (goalId: string, status: Goal["status"]) => Promise<void>;
   onDeleteGoal: (goalId: string) => void;
 }
 
-export const GoalCard = memo(function GoalCard({ 
-  goal, 
-  isExpanded, 
-  onToggleExpand, 
-  onEditGoal, 
-  onStatusChange, 
-  onDeleteGoal 
+export const GoalCard = memo(function GoalCard({
+  goal,
+  isExpanded,
+  onToggleExpand,
+  onEditGoal,
+  onStatusChange,
+  onDeleteGoal
 }: GoalCardProps) {
   const { t } = useLanguage();
   const { showConfirmDialog, ConfirmDialog } = useConfirmDialog();
+
+  // Optimistic state for goal status
+  const [optimisticStatus, setOptimisticStatus] = useState<Goal["status"]>(goal.status);
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+
+  // Sync with prop changes
+  React.useEffect(() => {
+    setOptimisticStatus(goal.status);
+  }, [goal.status]);
+
+  // Optimistic status change handler
+  const handleStatusChange = async (newStatus: Goal["status"]) => {
+    const originalStatus = optimisticStatus;
+
+    // Optimistic update - immediate UI change
+    setOptimisticStatus(newStatus);
+    setIsStatusUpdating(true);
+
+    try {
+      // API call in background
+      await onStatusChange(goal.id, newStatus);
+    } catch (error) {
+      // Rollback on error
+      setOptimisticStatus(originalStatus);
+      console.error('Failed to update goal status:', error);
+    } finally {
+      setIsStatusUpdating(false);
+    }
+  };
 
   const handleDeleteClick = () => {
     showConfirmDialog(
@@ -62,9 +91,11 @@ export const GoalCard = memo(function GoalCard({
                   <CardDescription className="text-sm sm:text-base">{goal.description}</CardDescription>
                 )}
                 <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                  <Badge className={getStatusColor(goal.status)}>
-                    {getStatusDisplayText(goal.status)}
-                  </Badge>
+                   <Badge className={`${getStatusColor(optimisticStatus)} transition-colors ${
+                     isStatusUpdating ? 'opacity-70 animate-pulse' : ''
+                   }`}>
+                     {getStatusDisplayText(optimisticStatus)}
+                   </Badge>
                   <div className={`flex items-center text-sm ${isOverdue(goal.deadline) ? 'text-red-600' : 'text-gray-600'}`}>
                     <Calendar className="h-4 w-4 mr-1" />
                     {formatDate(goal.deadline)}
@@ -125,27 +156,30 @@ export const GoalCard = memo(function GoalCard({
                     <Edit className="mr-2 h-4 w-4" />
                     Edit Goal
                   </DropdownMenuItem>
-                  {goal.status === "active" && (
-                    <DropdownMenuItem 
-                      onClick={() => onStatusChange(goal.id, "paused")}
+                  {optimisticStatus === "active" && (
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange("paused")}
+                      disabled={isStatusUpdating}
                       data-testid={`menu-pause-${goal.id}`}
                     >
                       <Pause className="mr-2 h-4 w-4" />
                       Pause Goal
                     </DropdownMenuItem>
                   )}
-                  {goal.status === "paused" && (
-                    <DropdownMenuItem 
-                      onClick={() => onStatusChange(goal.id, "active")}
+                  {optimisticStatus === "paused" && (
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange("active")}
+                      disabled={isStatusUpdating}
                       data-testid={`menu-resume-${goal.id}`}
                     >
                       <Play className="mr-2 h-4 w-4" />
                       Resume Goal
                     </DropdownMenuItem>
                   )}
-                  {goal.status !== "completed" && (
-                    <DropdownMenuItem 
-                      onClick={() => onStatusChange(goal.id, "completed")}
+                  {optimisticStatus !== "completed" && (
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange("completed")}
+                      disabled={isStatusUpdating}
                       data-testid={`menu-complete-${goal.id}`}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />

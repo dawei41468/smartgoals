@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Navigation from "@/components/navigation";
@@ -23,8 +23,10 @@ function MyGoals() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("created");
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
+  const [goalTabs, setGoalTabs] = useState<Record<string, string>>({});
   const [currentView, setCurrentView] = useState<View>("goals");
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [isTogglingTask, setIsTogglingTask] = useState(false);
   const [wizardData, setWizardData] = useState<{
     goalData: InsertGoal;
     breakdownRequest: AIBreakdownRequest;
@@ -65,8 +67,8 @@ function MyGoals() {
     fetchGoalsWithBreakdown();
   }, [toast]);
 
-  // Goal actions using services
-  const handleStatusChange = async (goalId: string, status: Goal["status"]) => {
+  // Goal actions using services - memoized to prevent unnecessary re-renders
+  const handleStatusChange = useCallback(async (goalId: string, status: Goal["status"]) => {
     try {
       await GoalService.updateGoal(goalId, { status });
       toast({
@@ -79,10 +81,11 @@ function MyGoals() {
         description: "Failed to update goal status",
         variant: "destructive",
       });
+      throw error; // Re-throw so optimistic update can handle rollback
     }
-  };
+  }, [toast]);
 
-  const handleDeleteGoal = async (goalId: string) => {
+  const handleDeleteGoal = useCallback(async (goalId: string) => {
     try {
       await GoalService.deleteGoal(goalId);
       toast({
@@ -96,9 +99,10 @@ function MyGoals() {
         variant: "destructive",
       });
     }
-  };
+  }, [toast]);
 
-  const handleTaskToggle = async (taskId: string, completed: boolean) => {
+  const handleTaskToggle = useCallback(async (taskId: string, completed: boolean) => {
+    setIsTogglingTask(true);
     try {
       await TaskService.updateTask(taskId, { completed });
     } catch (error) {
@@ -107,28 +111,50 @@ function MyGoals() {
         description: "Failed to update task",
         variant: "destructive",
       });
+      throw error; // Re-throw so optimistic update can handle rollback
+    } finally {
+      // Reset the flag after a short delay to allow state to settle
+      setTimeout(() => setIsTogglingTask(false), 100);
     }
-  };
+  }, [toast]);
 
-  // Filter and sort goals
+  // Filter and sort goals - make sorting stable to prevent scroll jumps
   const filteredGoals = goals
     .filter((goal) => {
       const matchesSearch = goal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           goal.description?.toLowerCase().includes(searchQuery.toLowerCase());
+                            goal.description?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === "all" || goal.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
+      // During task toggle, use completely stable sort to prevent DOM rearrangement
+      if (isTogglingTask) {
+        return a.id.localeCompare(b.id);
+      }
+
+      // Primary sort
+      let primaryCompare = 0;
       switch (sortBy) {
         case "progress":
-          return (b.progress || 0) - (a.progress || 0);
+          primaryCompare = (b.progress || 0) - (a.progress || 0);
+          break;
         case "deadline":
-          return new Date(a.deadline || '').getTime() - new Date(b.deadline || '').getTime();
+          primaryCompare = new Date(a.deadline || '').getTime() - new Date(b.deadline || '').getTime();
+          break;
         case "title":
-          return a.title.localeCompare(b.title);
+          primaryCompare = a.title.localeCompare(b.title);
+          break;
         default: // created
-          return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
+          primaryCompare = new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
+          break;
       }
+
+      // If primary sort is equal, use stable sort by ID to prevent reordering
+      if (primaryCompare === 0) {
+        return a.id.localeCompare(b.id);
+      }
+
+      return primaryCompare;
     });
 
   const handleStartGoalCreation = () => {
@@ -143,6 +169,13 @@ function MyGoals() {
 
   const handleToggleExpand = (goalId: string) => {
     setExpandedGoal(expandedGoal === goalId ? null : goalId);
+  };
+
+  const handleTabChange = (goalId: string, tabValue: string) => {
+    setGoalTabs(prev => ({
+      ...prev,
+      [goalId]: tabValue
+    }));
   };
 
   const handleCloseWizard = () => {
@@ -249,7 +282,12 @@ function MyGoals() {
                   onDeleteGoal={handleDeleteGoal}
                 />
                 {expandedGoal === goal.id && (
-                  <GoalDetailsModal goal={goal} onTaskToggle={handleTaskToggle} />
+                  <GoalDetailsModal
+                    goal={goal}
+                    onTaskToggle={handleTaskToggle}
+                    activeTab={goalTabs[goal.id] || "smart"}
+                    onTabChange={(tabValue: string) => handleTabChange(goal.id, tabValue)}
+                  />
                 )}
               </div>
             ))}

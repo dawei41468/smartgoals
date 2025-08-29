@@ -29,7 +29,7 @@ interface WeeklyProgressTabProps {
   weeklyTotalTasks: number;
   getDaysOfWeek: () => DayOfWeek[];
   currentWeekTasks: Task[];
-  handleTaskToggle: (taskId: string, completed: boolean) => void;
+  handleTaskToggle: (taskId: string, completed: boolean) => Promise<void>;
 }
 
 export function WeeklyProgressTab({

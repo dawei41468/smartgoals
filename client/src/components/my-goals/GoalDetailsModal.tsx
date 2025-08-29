@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, memo, useCallback } from 'react';
 import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -11,11 +11,23 @@ import type { GoalWithBreakdown } from '@/lib/schema';
 
 interface GoalDetailsModalProps {
   goal: GoalWithBreakdown;
-  onTaskToggle: (taskId: string, completed: boolean) => void;
+  onTaskToggle: (taskId: string, completed: boolean) => Promise<void>;
+  activeTab?: string;
+  onTabChange?: (tabValue: string) => void;
 }
 
-export function GoalDetailsModal({ goal, onTaskToggle }: GoalDetailsModalProps) {
+export const GoalDetailsModal = memo(function GoalDetailsModal({
+  goal,
+  onTaskToggle,
+  activeTab = "smart",
+  onTabChange
+}: GoalDetailsModalProps) {
   const { t } = useLanguage();
+
+  // Memoize the task toggle handler to prevent unnecessary re-renders
+  const handleTaskToggle = useCallback(async (taskId: string, completed: boolean) => {
+    await onTaskToggle(taskId, completed);
+  }, [onTaskToggle]);
 
   const weeklyGoalsWithTasks = useMemo(() => 
     goal.weeklyGoals?.filter(wg => wg.tasks?.length) || [],
@@ -34,7 +46,7 @@ export function GoalDetailsModal({ goal, onTaskToggle }: GoalDetailsModalProps) 
 
   return (
     <CardContent className="border-t pt-6">
-      <Tabs defaultValue="smart" className="w-full">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="smart">SMART(ER)</TabsTrigger>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
@@ -113,7 +125,7 @@ export function GoalDetailsModal({ goal, onTaskToggle }: GoalDetailsModalProps) 
                         <TaskItem
                           key={task.id}
                           task={task}
-                          onToggle={onTaskToggle}
+                          onToggle={handleTaskToggle}
                         />
                       ))}
                     </div>
@@ -128,4 +140,4 @@ export function GoalDetailsModal({ goal, onTaskToggle }: GoalDetailsModalProps) 
       </Tabs>
     </CardContent>
   );
-}
+});
