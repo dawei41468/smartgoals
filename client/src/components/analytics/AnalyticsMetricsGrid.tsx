@@ -23,7 +23,7 @@ export function AnalyticsMetricsGrid({ analyticsData }: AnalyticsMetricsGridProp
   const { t } = useLanguage();
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 gap-4 mb-8">
       <Card>
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
