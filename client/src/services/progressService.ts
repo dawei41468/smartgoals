@@ -1,5 +1,5 @@
-import { apiRequest } from '@/lib/queryClient';
 import { useAppStore, type ProgressStats, type Achievement } from '@/stores/appStore';
+import { api } from '@/lib/api';
 import { ErrorHandler } from '@/lib/errorHandling';
 
 export class ProgressService {
@@ -8,16 +8,9 @@ export class ProgressService {
    */
   static async fetchProgressStats(): Promise<ProgressStats> {
     try {
-      const response = await apiRequest('GET', '/api/progress/stats');
-      const result = await response.json();
-      
-      // Handle new standardized response format
-      const data = result.success ? result.data : result;
-      
-      // Update store with progress stats
-      useAppStore.getState().setProgressStats(data);
-      
-      return data;
+      const stats = await api.getProgressStats();
+      useAppStore.getState().setProgressStats(stats);
+      return stats;
     } catch (error) {
       console.error('Failed to fetch progress stats:', error);
       
@@ -45,12 +38,8 @@ export class ProgressService {
    */
   static async fetchAchievements(): Promise<Achievement[]> {
     try {
-      const response = await apiRequest('GET', '/api/progress/achievements');
-      const result = await response.json();
-      
-      // Handle new standardized response format
-      const data = result.success ? result.data : result;
-      const achievements = data.achievements || data || [];
+      const achievements = await api.getAchievements();
+      // Removed the line that was using response.json() because api.getAchievements() already returns the parsed response.
       
       // Update store with achievements
       useAppStore.getState().setAchievements(achievements);

@@ -9,6 +9,8 @@ import type {
   CreateGoalRequest,
   UpdateGoalRequest,
   UpdateTaskRequest,
+  ProgressStats,
+  Achievement,
 } from "./types";
 import type { AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
 
@@ -17,6 +19,8 @@ import {
   validateDailyTaskResponse,
   validateActivityResponse,
   validateGoalWithBreakdownResponse,
+  validateProgressStats,
+  validateAchievement,
 } from "./types";
 
 export const api = {
@@ -91,5 +95,14 @@ export const api = {
   getActivities: async (limit?: number): Promise<ActivityResponse[]> => {
     const params = limit ? `?limit=${limit}` : "";
     return validatedArrayApiRequest("GET", `/api/activities${params}`, undefined, validateActivityResponse);
+  },
+
+  // Progress
+  getProgressStats: async (): Promise<ProgressStats> => {
+    return validatedApiRequest("GET", "/api/progress/stats", undefined, validateProgressStats);
+  },
+
+  getAchievements: async (): Promise<Achievement[]> => {
+    return validatedArrayApiRequest("GET", "/api/progress/achievements", undefined, validateAchievement);
   },
 };
