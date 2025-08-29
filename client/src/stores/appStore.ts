@@ -40,7 +40,8 @@ export interface Achievement {
   title: string;
   description: string;
   icon: string;
-  unlockedAt?: string;
+  category?: string;
+  unlockedAt?: string | null;
   progress?: number;
   target?: number;
 }

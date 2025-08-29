@@ -1,6 +1,7 @@
 import { useAppStore, type ProgressStats, type Achievement } from '@/stores/appStore';
 import { api } from '@/lib/api';
 import { ErrorHandler } from '@/lib/errorHandling';
+import { toast } from '@/hooks/use-toast';
 
 export class ProgressService {
   /**
@@ -75,7 +76,33 @@ export class ProgressService {
   }
 
   /**
-   * Generate mock achievements based on current progress
+   * Check for newly unlocked achievements and show notifications
+   */
+  static async checkForNewAchievements(): Promise<void> {
+    try {
+      const result = await api.checkAchievements();
+
+      if (result.newlyUnlocked && result.newlyUnlocked.length > 0) {
+        // Update store with latest achievements
+        await this.fetchAchievements();
+
+        // Show notifications for newly unlocked achievements
+        result.newlyUnlocked.forEach((achievement) => {
+          toast({
+            title: "🏆 Achievement Unlocked!",
+            description: `Congratulations! You unlocked "${achievement.title}"`,
+            duration: 5000,
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Failed to check achievements:', error);
+      // Don't show error toast for achievement checks to avoid spam
+    }
+  }
+
+  /**
+   * Generate mock achievements based on current progress (fallback)
    */
   static generateMockAchievements(progressStats: ProgressStats | null): Achievement[] {
     if (!progressStats) return [];
@@ -86,7 +113,7 @@ export class ProgressService {
         title: "Goal Setter",
         description: "Created your first SMART goal",
         icon: "🎯",
-        unlockedAt: progressStats.totalGoals > 0 ? new Date().toISOString() : undefined,
+        unlockedAt: progressStats.totalGoals > 0 ? new Date().toISOString() : null,
       },
       {
         id: "week-warrior",
@@ -101,7 +128,7 @@ export class ProgressService {
         title: "Goal Achiever",
         description: "Complete your first goal",
         icon: "🏆",
-        unlockedAt: progressStats.completedGoals > 0 ? new Date().toISOString() : undefined,
+        unlockedAt: progressStats.completedGoals > 0 ? new Date().toISOString() : null,
       },
       {
         id: "consistency-king",
@@ -110,7 +137,7 @@ export class ProgressService {
         icon: "🔥",
         progress: progressStats.currentStreak,
         target: 14,
-        unlockedAt: progressStats.currentStreak >= 7 ? new Date().toISOString() : undefined,
+        unlockedAt: progressStats.currentStreak >= 7 ? new Date().toISOString() : null,
       },
       {
         id: "productive-month",

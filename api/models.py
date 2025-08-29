@@ -213,3 +213,52 @@ class AIWeeklyGoal(BaseModel):
 
 class AIBreakdownResponse(BaseModel):
     weeklyGoals: List[AIWeeklyGoal]
+
+
+# Achievement models
+class Achievement(BaseModel):
+    id: str
+    userId: str
+    achievementId: str  # Reference to achievement definition
+    title: str
+    description: str
+    icon: str
+    category: str
+    progress: int = 0
+    target: int = 1
+    unlockedAt: Optional[datetime] = None
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
+
+
+class AchievementDefinition(BaseModel):
+    id: str
+    title: str
+    description: str
+    icon: str
+    category: str
+    target: int = 1
+    triggerType: str  # 'goal_count', 'task_count', 'streak_count', 'time_based', etc.
+    triggerValue: int
+    isActive: bool = True
+    createdAt: Optional[datetime] = None
+
+
+class InsertAchievement(BaseModel):
+    userId: str
+    achievementId: str
+    title: str
+    description: str
+    icon: str
+    category: str
+    progress: int = 0
+    target: int = 1
+
+
+class AchievementProgress(BaseModel):
+    achievementId: str
+    userId: str
+    currentProgress: int
+    target: int
+    isCompleted: bool
+    completedAt: Optional[datetime] = None

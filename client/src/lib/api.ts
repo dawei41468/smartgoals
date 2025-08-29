@@ -108,4 +108,8 @@ export const api = {
     const achievements = response.achievements || [];
     return achievements.map(validateAchievement);
   },
+
+  checkAchievements: async (): Promise<{ newlyUnlocked: Achievement[]; totalNew: number }> => {
+    return validatedApiRequest("POST", "/api/progress/check-achievements");
+  },
 };

@@ -325,3 +325,342 @@ async def calculate_streaks(db: AsyncIOMotorDatabase, user_id: str) -> Dict[str,
                     break
     
     return {"currentStreak": current_streak, "longestStreak": longest_streak}
+
+
+# Achievement queries
+async def get_user_achievements(db: AsyncIOMotorDatabase, user_id: str) -> List[Dict[str, Any]]:
+    """Get all achievements for a user"""
+    achievements = await db["achievements"].find({"userId": user_id}).to_list(None)
+
+    # Convert ObjectId to string for JSON serialization
+    for achievement in achievements:
+        if "_id" in achievement:
+            achievement["_id"] = str(achievement["_id"])
+        if "createdAt" in achievement and hasattr(achievement["createdAt"], 'isoformat'):
+            achievement["createdAt"] = achievement["createdAt"].isoformat()
+        if "updatedAt" in achievement and hasattr(achievement["updatedAt"], 'isoformat'):
+            achievement["updatedAt"] = achievement["updatedAt"].isoformat()
+        if "unlockedAt" in achievement and achievement["unlockedAt"] and hasattr(achievement["unlockedAt"], 'isoformat'):
+            achievement["unlockedAt"] = achievement["unlockedAt"].isoformat()
+
+    return achievements
+
+
+async def get_achievement_definitions(db: AsyncIOMotorDatabase) -> List[Dict[str, Any]]:
+    """Get all active achievement definitions"""
+    definitions = await db["achievement_definitions"].find({"isActive": True}).to_list(None)
+
+    # Convert ObjectId to string for JSON serialization
+    for definition in definitions:
+        if "_id" in definition:
+            definition["_id"] = str(definition["_id"])
+        if "createdAt" in definition and hasattr(definition["createdAt"], 'isoformat'):
+            definition["createdAt"] = definition["createdAt"].isoformat()
+
+    return definitions
+
+
+async def create_or_update_achievement(db: AsyncIOMotorDatabase, user_id: str, achievement_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Create or update an achievement for a user"""
+    achievement_id = achievement_data["achievementId"]
+
+    # Check if achievement already exists
+    existing = await db["achievements"].find_one({"userId": user_id, "achievementId": achievement_id})
+
+    if existing:
+        # Update existing achievement
+        update_data = {
+            "progress": achievement_data.get("progress", existing.get("progress", 0)),
+            "updatedAt": datetime.now(timezone.utc)
+        }
+
+        # Check if newly unlocked
+        was_unlocked = existing.get("unlockedAt") is not None
+        is_now_unlocked = achievement_data.get("progress", 0) >= achievement_data.get("target", 1)
+
+        if not was_unlocked and is_now_unlocked:
+            update_data["unlockedAt"] = datetime.now(timezone.utc)
+
+        await db["achievements"].update_one(
+            {"userId": user_id, "achievementId": achievement_id},
+            {"$set": update_data}
+        )
+
+        # Return updated achievement
+        updated = await db["achievements"].find_one({"userId": user_id, "achievementId": achievement_id})
+        if updated:
+            # Convert ObjectId to string for JSON serialization
+            if "_id" in updated:
+                updated["_id"] = str(updated["_id"])
+            if "createdAt" in updated and hasattr(updated["createdAt"], 'isoformat'):
+                updated["createdAt"] = updated["createdAt"].isoformat()
+            if "updatedAt" in updated and hasattr(updated["updatedAt"], 'isoformat'):
+                updated["updatedAt"] = updated["updatedAt"].isoformat()
+            if "unlockedAt" in updated and updated["unlockedAt"] and hasattr(updated["unlockedAt"], 'isoformat'):
+                updated["unlockedAt"] = updated["unlockedAt"].isoformat()
+            return updated
+        return {}
+    else:
+        # Create new achievement
+        new_achievement = {
+            "id": f"{user_id}_{achievement_id}",
+            "userId": user_id,
+            **achievement_data,
+            "createdAt": datetime.now(timezone.utc),
+            "updatedAt": datetime.now(timezone.utc)
+        }
+
+        # Set unlockedAt if already completed
+        if achievement_data.get("progress", 0) >= achievement_data.get("target", 1):
+            new_achievement["unlockedAt"] = datetime.now(timezone.utc)
+
+        result = await db["achievements"].insert_one(new_achievement)
+        # Add the generated _id to the returned achievement
+        new_achievement["_id"] = str(result.inserted_id)
+        return new_achievement
+
+
+async def get_recently_unlocked_achievements(db: AsyncIOMotorDatabase, user_id: str, since: datetime) -> List[Dict[str, Any]]:
+    """Get achievements unlocked since a specific time"""
+    achievements = await db["achievements"].find({
+        "userId": user_id,
+        "unlockedAt": {"$gte": since}
+    }).to_list(None)
+
+    # Convert ObjectId to string for JSON serialization
+    for achievement in achievements:
+        if "_id" in achievement:
+            achievement["_id"] = str(achievement["_id"])
+        if "createdAt" in achievement and hasattr(achievement["createdAt"], 'isoformat'):
+            achievement["createdAt"] = achievement["createdAt"].isoformat()
+        if "updatedAt" in achievement and hasattr(achievement["updatedAt"], 'isoformat'):
+            achievement["updatedAt"] = achievement["updatedAt"].isoformat()
+        if "unlockedAt" in achievement and achievement["unlockedAt"] and hasattr(achievement["unlockedAt"], 'isoformat'):
+            achievement["unlockedAt"] = achievement["unlockedAt"].isoformat()
+
+    return achievements
+
+
+async def initialize_achievement_definitions(db: AsyncIOMotorDatabase) -> None:
+    """Initialize default achievement definitions if they don't exist"""
+    existing_count = await db["achievement_definitions"].count_documents({})
+
+    if existing_count == 0:
+        definitions = [
+            # Goal-based achievements
+            {
+                "id": "first_goal",
+                "title": "Goal Setter",
+                "description": "Created your first SMART goal",
+                "icon": "🎯",
+                "category": "goals",
+                "target": 1,
+                "triggerType": "goal_count",
+                "triggerValue": 1,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "goal_achiever",
+                "title": "Goal Achiever",
+                "description": "Complete your first goal",
+                "icon": "🏆",
+                "category": "goals",
+                "target": 1,
+                "triggerType": "completed_goal_count",
+                "triggerValue": 1,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "goal_master",
+                "title": "Goal Master",
+                "description": "Complete 5 goals",
+                "icon": "👑",
+                "category": "goals",
+                "target": 5,
+                "triggerType": "completed_goal_count",
+                "triggerValue": 5,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "perfectionist",
+                "title": "Perfectionist",
+                "description": "Complete 10 goals with 100% success rate",
+                "icon": "💎",
+                "category": "goals",
+                "target": 10,
+                "triggerType": "completed_goal_count",
+                "triggerValue": 10,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+
+            # Task-based achievements
+            {
+                "id": "first_task",
+                "title": "First Task Done",
+                "description": "Completed your first task",
+                "icon": "✅",
+                "category": "tasks",
+                "target": 1,
+                "triggerType": "completed_task_count",
+                "triggerValue": 1,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "task_ninja",
+                "title": "Task Ninja",
+                "description": "Complete 10 tasks",
+                "icon": "🥷",
+                "category": "tasks",
+                "target": 10,
+                "triggerType": "completed_task_count",
+                "triggerValue": 10,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "productive_month",
+                "title": "Productive Month",
+                "description": "Complete 50 tasks in a month",
+                "icon": "💫",
+                "category": "tasks",
+                "target": 50,
+                "triggerType": "monthly_task_count",
+                "triggerValue": 50,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "work_horse",
+                "title": "Work Horse",
+                "description": "Complete 100 tasks",
+                "icon": "🐎",
+                "category": "tasks",
+                "target": 100,
+                "triggerType": "completed_task_count",
+                "triggerValue": 100,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+
+            # Streak-based achievements
+            {
+                "id": "getting_started",
+                "title": "Getting Started",
+                "description": "Maintain a 3-day streak",
+                "icon": "🌱",
+                "category": "streaks",
+                "target": 3,
+                "triggerType": "streak_count",
+                "triggerValue": 3,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "week_warrior",
+                "title": "Week Warrior",
+                "description": "Complete all tasks for a full week",
+                "icon": "⚡",
+                "category": "streaks",
+                "target": 7,
+                "triggerType": "streak_count",
+                "triggerValue": 7,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "consistency_king",
+                "title": "Consistency King",
+                "description": "Maintain a 14-day streak",
+                "icon": "🔥",
+                "category": "streaks",
+                "target": 14,
+                "triggerType": "streak_count",
+                "triggerValue": 14,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "streak_master",
+                "title": "Streak Master",
+                "description": "Maintain a 30-day streak",
+                "icon": "🌟",
+                "category": "streaks",
+                "target": 30,
+                "triggerType": "streak_count",
+                "triggerValue": 30,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "legend",
+                "title": "Legend",
+                "description": "Maintain a 50-day streak",
+                "icon": "👑",
+                "category": "streaks",
+                "target": 50,
+                "triggerType": "streak_count",
+                "triggerValue": 50,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+
+            # Time-based achievements
+            {
+                "id": "early_bird",
+                "title": "Early Bird",
+                "description": "Complete 5 tasks before 9 AM",
+                "icon": "🐦",
+                "category": "time",
+                "target": 5,
+                "triggerType": "early_morning_tasks",
+                "triggerValue": 5,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "night_owl",
+                "title": "Night Owl",
+                "description": "Complete 5 tasks after 10 PM",
+                "icon": "🦉",
+                "category": "time",
+                "target": 5,
+                "triggerType": "late_night_tasks",
+                "triggerValue": 5,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+
+            # Special achievements
+            {
+                "id": "speed_demon",
+                "title": "Speed Demon",
+                "description": "Complete a goal in under 24 hours",
+                "icon": "💨",
+                "category": "special",
+                "target": 1,
+                "triggerType": "fast_goal_completion",
+                "triggerValue": 1,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            },
+            {
+                "id": "marathon_runner",
+                "title": "Marathon Runner",
+                "description": "Work on goals for 100 days",
+                "icon": "🏃",
+                "category": "special",
+                "target": 100,
+                "triggerType": "active_days",
+                "triggerValue": 100,
+                "isActive": True,
+                "createdAt": datetime.now(timezone.utc)
+            }
+        ]
+
+        result = await db["achievement_definitions"].insert_many(definitions)
+        # The definitions don't need to be returned, so we don't need to convert ObjectIds here

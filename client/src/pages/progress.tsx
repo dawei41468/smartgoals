@@ -91,6 +91,12 @@ function Progress() {
   const handleTaskToggle = async (taskId: string, completed: boolean) => {
     try {
       await TaskService.updateTask(taskId, { completed });
+
+      // Check for newly unlocked achievements after task completion
+      if (completed) {
+        await ProgressService.checkForNewAchievements();
+      }
+
       toast({
         title: "Task Updated",
         description: "Task completion status updated successfully",

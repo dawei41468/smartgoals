@@ -12,6 +12,7 @@ from ..auth_utils import get_current_user
 from ..models import new_id
 from ..exceptions import NotFoundError, AuthorizationError
 from ..validation import UpdateTaskRequest, validate_object_id
+from ..db_queries import get_user_analytics_aggregated, calculate_streaks, get_achievement_definitions, create_or_update_achievement, initialize_achievement_definitions
 
 router = APIRouter()
 
@@ -74,4 +75,68 @@ async def update_task(task_id: str, updates: UpdateTaskRequest, current_user=Dep
             "createdAt": datetime.now(timezone.utc),
         })
 
+        # Check for newly unlocked achievements
+        await _check_achievements_after_task_completion(db, current_user["id"])
+
     return _clean(updated)
+
+
+async def _check_achievements_after_task_completion(db: AsyncIOMotorDatabase, user_id: str) -> None:
+    """Check for newly unlocked achievements after task completion"""
+    try:
+        # Initialize achievement definitions if needed
+        await initialize_achievement_definitions(db)
+
+        # Get current user stats and streaks
+        stats = await get_user_analytics_aggregated(db, user_id)
+        streaks = await calculate_streaks(db, user_id)
+
+        # Get achievement definitions
+        definitions = await get_achievement_definitions(db)
+
+        # Check each achievement definition
+        for definition in definitions:
+            achievement_id = definition["id"]
+            trigger_type = definition["triggerType"]
+            trigger_value = definition["triggerValue"]
+
+            # Calculate current progress
+            progress = 0
+
+            if trigger_type == "goal_count":
+                progress = stats["totalGoals"]
+            elif trigger_type == "completed_goal_count":
+                progress = stats["completedGoals"]
+            elif trigger_type == "completed_task_count":
+                progress = stats["completedTasks"]
+            elif trigger_type == "streak_count":
+                progress = streaks["currentStreak"]
+            elif trigger_type == "monthly_task_count":
+                progress = stats["completedTasks"]
+
+            # Check if achievement should be unlocked
+            if progress >= trigger_value:
+                # Check if already unlocked
+                existing = await db["achievements"].find_one({
+                    "userId": user_id,
+                    "achievementId": achievement_id,
+                    "unlockedAt": {"$ne": None}
+                })
+
+                if not existing:
+                    # Create/update achievement
+                    achievement_data = {
+                        "achievementId": achievement_id,
+                        "title": definition["title"],
+                        "description": definition["description"],
+                        "icon": definition["icon"],
+                        "category": definition["category"],
+                        "progress": progress,
+                        "target": trigger_value
+                    }
+
+                    await create_or_update_achievement(db, user_id, achievement_data)
+
+    except Exception as e:
+        # Log error but don't fail the task update
+        print(f"Error checking achievements: {e}")

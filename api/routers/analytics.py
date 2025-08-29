@@ -7,7 +7,16 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from ..db import get_db
 from ..auth_utils import get_current_user
-from ..db_queries import get_user_analytics_aggregated, get_category_performance, get_productivity_patterns, calculate_streaks
+from ..db_queries import (
+    get_user_analytics_aggregated,
+    get_category_performance,
+    get_productivity_patterns,
+    calculate_streaks,
+    get_user_achievements,
+    get_achievement_definitions,
+    create_or_update_achievement,
+    initialize_achievement_definitions
+)
 from ..response_utils import success_response
 
 router = APIRouter()
@@ -62,123 +71,140 @@ async def get_progress_stats(current_user=Depends(get_current_user), db: AsyncIO
 @router.get("/progress/achievements")
 async def get_achievements(current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
     user_id = current_user["id"]
-    
-    # Use existing analytics data to generate achievements
+
+    # Initialize achievement definitions if needed
+    await initialize_achievement_definitions(db)
+
+    # Get current user stats and streaks
     stats = await get_user_analytics_aggregated(db, user_id)
     streaks = await calculate_streaks(db, user_id)
-    
+
+    # Get achievement definitions
+    definitions = await get_achievement_definitions(db)
+
+    # Get existing user achievements
+    existing_achievements = await get_user_achievements(db, user_id)
+    existing_ids = {ach["achievementId"] for ach in existing_achievements}
+
     achievements = []
-    
-    # Goal-based achievements
-    if stats["totalGoals"] >= 1:
-        achievements.append({
-            "id": "goal_setter",
-            "title": "Goal Setter",
-            "description": "Created your first goal",
-            "icon": "🎯",
-            "unlockedAt": None,  # Would need to track actual completion dates
-            "category": "goals"
-        })
-    
-    if stats["completedGoals"] >= 1:
-        achievements.append({
-            "id": "first_goal",
-            "title": "First Goal Completed",
-            "description": "Completed your first goal",
-            "icon": "🏆",
-            "unlockedAt": None,
-            "category": "goals"
-        })
-    
-    if stats["completedGoals"] >= 3:
-        achievements.append({
-            "id": "goal_achiever",
-            "title": "Goal Achiever",
-            "description": "Completed 3 goals",
-            "icon": "🌟",
-            "unlockedAt": None,
-            "category": "goals"
-        })
-    
-    if stats["completedGoals"] >= 10:
-        achievements.append({
-            "id": "goal_master",
-            "title": "Goal Master",
-            "description": "Completed 10 goals",
-            "icon": "👑",
-            "unlockedAt": None,
-            "category": "goals"
-        })
-    
-    # Streak-based achievements
-    if streaks["currentStreak"] >= 3:
-        achievements.append({
-            "id": "streak_starter",
-            "title": "Streak Starter",
-            "description": "Maintained a 3-day streak",
-            "icon": "🔥",
-            "unlockedAt": None,
-            "category": "streaks"
-        })
-    
-    if streaks["longestStreak"] >= 7:
-        achievements.append({
-            "id": "week_warrior",
-            "title": "Week Warrior",
-            "description": "Maintained a 7-day streak",
-            "icon": "⚡",
-            "unlockedAt": None,
-            "category": "streaks"
-        })
-    
-    if streaks["longestStreak"] >= 30:
-        achievements.append({
-            "id": "consistency_champion",
-            "title": "Consistency Champion",
-            "description": "Maintained a 30-day streak",
-            "icon": "💎",
-            "unlockedAt": None,
-            "category": "streaks"
-        })
-    
-    # Task-based achievements
-    if stats["completedTasks"] >= 1:
-        achievements.append({
-            "id": "first_task",
-            "title": "First Task Done",
-            "description": "Completed your first task",
-            "icon": "✅",
-            "unlockedAt": None,
-            "category": "tasks"
-        })
-    
-    if stats["completedTasks"] >= 5:
-        achievements.append({
-            "id": "task_crusher",
-            "title": "Task Crusher",
-            "description": "Completed 5 tasks",
-            "icon": "💪",
-            "unlockedAt": None,
-            "category": "tasks"
-        })
-    
-    if stats["completedTasks"] >= 25:
-        achievements.append({
-            "id": "productivity_pro",
-            "title": "Productivity Pro",
-            "description": "Completed 25 tasks",
-            "icon": "🚀",
-            "unlockedAt": None,
-            "category": "tasks"
-        })
-    
+
+    # Process each achievement definition
+    for definition in definitions:
+        achievement_id = definition["id"]
+        trigger_type = definition["triggerType"]
+        trigger_value = definition["triggerValue"]
+
+        # Calculate current progress based on trigger type
+        progress = 0
+
+        if trigger_type == "goal_count":
+            progress = stats["totalGoals"]
+        elif trigger_type == "completed_goal_count":
+            progress = stats["completedGoals"]
+        elif trigger_type == "completed_task_count":
+            progress = stats["completedTasks"]
+        elif trigger_type == "streak_count":
+            progress = streaks["currentStreak"]
+        elif trigger_type == "monthly_task_count":
+            # For monthly tasks, we'd need to calculate this month's completed tasks
+            # For now, use total completed tasks as approximation
+            progress = stats["completedTasks"]
+
+        # Create or update achievement
+        achievement_data = {
+            "achievementId": achievement_id,
+            "title": definition["title"],
+            "description": definition["description"],
+            "icon": definition["icon"],
+            "category": definition["category"],
+            "progress": progress,
+            "target": trigger_value
+        }
+
+        updated_achievement = await create_or_update_achievement(db, user_id, achievement_data)
+        achievements.append(updated_achievement)
+
+    # Add any existing achievements not in definitions (for backwards compatibility)
+    for existing in existing_achievements:
+        if existing["achievementId"] not in {d["id"] for d in definitions}:
+            achievements.append(existing)
+
     return success_response(
         data={
             "achievements": achievements,
-            "totalUnlocked": len(achievements),
-            "categories": ["goals", "streaks", "tasks"]
+            "totalUnlocked": len([a for a in achievements if a.get("unlockedAt")]),
+            "categories": list(set(a.get("category", "general") for a in achievements))
         },
         message="Achievements retrieved successfully"
+    )
+
+
+@router.post("/progress/check-achievements")
+async def check_achievements(current_user=Depends(get_current_user), db: AsyncIOMotorDatabase = Depends(get_db)):
+    """Check for newly unlocked achievements and return them"""
+    user_id = current_user["id"]
+
+    # Get current stats and streaks
+    stats = await get_user_analytics_aggregated(db, user_id)
+    streaks = await calculate_streaks(db, user_id)
+
+    # Get achievement definitions
+    definitions = await get_achievement_definitions(db)
+
+    newly_unlocked = []
+
+    # Check each achievement definition
+    for definition in definitions:
+        achievement_id = definition["id"]
+        trigger_type = definition["triggerType"]
+        trigger_value = definition["triggerValue"]
+
+        # Calculate current progress
+        progress = 0
+
+        if trigger_type == "goal_count":
+            progress = stats["totalGoals"]
+        elif trigger_type == "completed_goal_count":
+            progress = stats["completedGoals"]
+        elif trigger_type == "completed_task_count":
+            progress = stats["completedTasks"]
+        elif trigger_type == "streak_count":
+            progress = streaks["currentStreak"]
+        elif trigger_type == "monthly_task_count":
+            progress = stats["completedTasks"]
+
+        # Check if achievement should be unlocked
+        if progress >= trigger_value:
+            # Check if already unlocked
+            existing = await db["achievements"].find_one({
+                "userId": user_id,
+                "achievementId": achievement_id,
+                "unlockedAt": {"$ne": None}
+            })
+
+            if not existing:
+                # Create/update achievement and mark as newly unlocked
+                achievement_data = {
+                    "achievementId": achievement_id,
+                    "title": definition["title"],
+                    "description": definition["description"],
+                    "icon": definition["icon"],
+                    "category": definition["category"],
+                    "progress": progress,
+                    "target": trigger_value
+                }
+
+                updated_achievement = await create_or_update_achievement(db, user_id, achievement_data)
+
+                if updated_achievement.get("unlockedAt"):
+                    newly_unlocked.append(updated_achievement)
+
+    return success_response(
+        data={
+            "newlyUnlocked": newly_unlocked,
+            "totalNew": len(newly_unlocked)
+        },
+        message="Achievement check completed"
     )
 
 
