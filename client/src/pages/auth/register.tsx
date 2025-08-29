@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { registerSchema, type RegisterData } from '@/lib/schema';
 import { useAuth } from '@/contexts/AuthContext';
+import type { AuthResponse } from '@/lib/types';
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -33,8 +34,8 @@ export default function Register() {
     mutationFn: (data: RegisterData) => 
       apiRequest('POST', '/api/auth/register', data),
     onSuccess: async (response) => {
-      const result = await response.json();
-      login(result.user, result.token);
+      const result: AuthResponse = await response.json();
+      login(result.data.user, result.data.token);
       toast({
         title: 'Welcome!',
         description: result.message || 'Your account has been created successfully.',

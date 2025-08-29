@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { loginSchema, type LoginData } from '@/lib/schema';
 import { useAuth } from '@/contexts/AuthContext';
+import type { AuthResponse } from '@/lib/types';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -31,8 +32,8 @@ export default function Login() {
     mutationFn: (data: LoginData) => 
       apiRequest('POST', '/api/auth/login', data),
     onSuccess: async (response) => {
-      const result = await response.json();
-      login(result.user, result.token);
+      const result: AuthResponse = await response.json();
+      login(result.data.user, result.data.token);
       toast({
         title: 'Welcome back!',
         description: result.message || 'You have been logged in successfully.',

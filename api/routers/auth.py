@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -19,10 +20,16 @@ from ..response_utils import (
 router = APIRouter()
 
 
-class AuthResponse(BaseModel):
+class AuthResponseData(BaseModel):
     user: UserPublic
     token: str
+
+class AuthResponse(BaseModel):
+    success: bool
     message: str
+    data: AuthResponseData
+    meta: Dict[str, Any]
+    timestamp: datetime
 
 
 class TokenResponse(BaseModel):

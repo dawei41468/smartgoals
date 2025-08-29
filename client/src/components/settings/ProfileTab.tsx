@@ -16,8 +16,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { UpdateUserProfile } from "@/lib/schema";
 
 const profileSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  firstName: z.string().min(1, "First name must be at least 1 characters"),
+  lastName: z.string().min(1, "Last name must be at least 1 characters"),
   email: z.string().email("Invalid email address"),
   bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
 });
