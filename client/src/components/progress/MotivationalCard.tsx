@@ -11,14 +11,16 @@ export function MotivationalCard({ getMotivationalMessage }: MotivationalCardPro
   const { t, language } = useLanguage();
 
   return (
-    <Card className="mb-6 bg-gradient-to-r from-primary to-secondary text-white">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold mb-2">{t('progressPage.dailyMotivation')}</h3>
-            <p className="text-primary-foreground/90">{getMotivationalMessage(language)}</p>
+    <Card className="mb-4 sm:mb-6 bg-gradient-to-r from-primary to-secondary text-white">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">{t('progressPage.dailyMotivation')}</h3>
+            <p className="text-sm sm:text-base text-primary-foreground/90 leading-relaxed">
+              {getMotivationalMessage(language)}
+            </p>
           </div>
-          <Zap className="h-8 w-8 text-white/80" />
+          <Zap className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white/80 flex-shrink-0 mt-1" />
         </div>
       </CardContent>
     </Card>

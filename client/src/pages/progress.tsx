@@ -178,21 +178,27 @@ function Progress() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navigation />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+      <div className="max-w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-6">
         <ProgressHeader />
         <MotivationalCard getMotivationalMessage={getMotivationalMessage} />
 
         <ProgressMetricsGrid progressStats={progressStats} weeklyCompletedTasks={weeklyCompletedTasks} />
 
-        <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="week">{t('common.thisWeek')}</TabsTrigger>
-            <TabsTrigger value="achievements">{t('progressPage.achievements')}</TabsTrigger>
-            <TabsTrigger value="timeline">{t('progressPage.timeline')}</TabsTrigger>
+        <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3 h-10">
+            <TabsTrigger value="week" className="text-xs sm:text-sm px-2 sm:px-4">
+              {t('common.thisWeek')}
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="text-xs sm:text-sm px-2 sm:px-4">
+              {t('progressPage.achievements')}
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="text-xs sm:text-sm px-2 sm:px-4">
+              {t('progressPage.timeline')}
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="week" className="space-y-6">
+          <TabsContent value="week" className="space-y-4">
             <WeeklyProgressTab
               currentWeekProgress={currentWeekProgress}
               weeklyCompletedTasks={weeklyCompletedTasks}
@@ -203,11 +209,11 @@ function Progress() {
             />
           </TabsContent>
 
-          <TabsContent value="achievements" className="space-y-6">
+          <TabsContent value="achievements" className="space-y-4">
             <AchievementsTab achievements={achievements} />
           </TabsContent>
 
-          <TabsContent value="timeline" className="space-y-6">
+          <TabsContent value="timeline" className="space-y-4">
             <TimelineTab goals={goals} />
           </TabsContent>
         </Tabs>

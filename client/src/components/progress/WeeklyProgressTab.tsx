@@ -53,41 +53,44 @@ export function WeeklyProgressTab({
   const daysOfWeek = useMemo(() => getDaysOfWeek(), [getDaysOfWeek]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Calendar className="mr-2 h-5 w-5" />
-            {t('progressPage.weeklyProgress')}
-          </CardTitle>
-          <CardDescription>
-            {t('progressPage.completeDailyTasks')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProgressBar value={currentWeekProgress} className="w-full" />
-          <div className="text-sm text-gray-600 mt-2">
-            {weeklyCompletedTasks} of {weeklyTotalTasks} tasks completed
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Calendar className="mr-2 h-4 w-4" />
+              <h2 className="text-lg font-semibold">{t('progressPage.weeklyProgress')}</h2>
+            </div>
+            <div className="text-xs text-muted-foreground bg-gray-100 px-2 py-1 rounded-full">
+              {weeklyCompletedTasks}/{weeklyTotalTasks}
+            </div>
           </div>
-          <div className="grid grid-cols-7 gap-1 sm:gap-2 mt-4">
+          <p className="text-xs text-muted-foreground">{t('progressPage.completeDailyTasks')}</p>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ProgressBar value={currentWeekProgress} className="w-full h-2" />
+          <div className="text-xs text-gray-600 mt-2 text-center">
+            {currentWeekProgress}% complete this week
+          </div>
+          <div className="grid grid-cols-7 gap-0.5 mt-3">
             {daysOfWeek.map((day, index) => (
               <div
                 key={index}
-                className={`p-1.5 sm:p-3 rounded-lg border text-center ${
+                className={`p-1.5 rounded-md border text-center min-h-[50px] flex flex-col justify-between ${
                   day.isToday
-                    ? 'border-primary bg-primary/5'
+                    ? 'border-primary bg-primary/10'
                     : day.completed === day.total && day.total > 0
                     ? 'border-green-200 bg-green-50'
-                    : 'border-gray-200'
+                    : 'border-gray-200 bg-gray-50'
                 }`}
               >
-                <div className="text-[10px] sm:text-xs font-medium text-gray-700 whitespace-nowrap">
+                <div className="text-[9px] font-medium text-gray-700 leading-tight">
                   {t(`progressPage.daysOfWeekShort.${day.key}`)}
                 </div>
-                <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{day.date.getDate()}</div>
+                <div className="text-[10px] text-gray-500 font-medium">{day.date.getDate()}</div>
                 {day.total > 0 && (
-                  <div className="mt-1 sm:mt-2">
-                    <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full mx-auto flex items-center justify-center text-[9px] sm:text-xs ${
+                  <div className="mt-0.5">
+                    <div className={`w-4 h-4 rounded-full mx-auto flex items-center justify-center text-[8px] font-bold ${
                       day.completed === day.total
                         ? 'bg-green-500 text-white'
                         : day.completed > 0
@@ -107,12 +110,17 @@ export function WeeklyProgressTab({
       {/* Today's Tasks */}
       {todaysTasks.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>{t('progressPage.todaysTasks')}</CardTitle>
-            <CardDescription>{t('progressPage.todaysTasksSubtitle')}</CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">{t('progressPage.todaysTasks')}</h2>
+              <div className="text-xs text-muted-foreground bg-blue-100 px-2 py-1 rounded-full">
+                {todaysTasks.length} tasks
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">{t('progressPage.todaysTasksSubtitle')}</p>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="pt-0">
+            <div className="space-y-2">
               {todaysTasks.map((task) => (
                 <TaskItem
                   key={task.id}

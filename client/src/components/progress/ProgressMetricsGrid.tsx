@@ -18,48 +18,44 @@ export function ProgressMetricsGrid({ progressStats, weeklyCompletedTasks }: Pro
   const safeStats = progressStats || { avgCompletionTime: 0, completedGoals: 0 };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-      <Card>
-        <CardContent className="p-3 sm:p-4 text-center">
-          <div className="flex items-center justify-center mb-2">
-            <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 mr-1 sm:mr-2" />
-            <div className="text-2xl font-bold">{safeStats.avgCompletionTime}</div>
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4 mb-4 sm:mb-6">
+      <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+        <CardContent className="p-2.5 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1.5 sm:mb-2">
+            <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500 mr-1 sm:mr-1.5" />
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-700">{safeStats.avgCompletionTime}</div>
           </div>
-          <p className="text-xs sm:text-sm text-gray-600">{t('progressPage.daysInRow')}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.daysInRow')}</p>
+          <p className="text-[10px] sm:text-xs text-orange-600 font-medium">{t('progressPage.daysInRow')}</p>
         </CardContent>
       </Card>
-      
-      <Card>
-        <CardContent className="p-3 sm:p-4 text-center">
-          <div className="flex items-center justify-center mb-2">
-            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500 mr-1 sm:mr-2" />
-            <div className="text-2xl font-bold">{weeklyCompletedTasks}</div>
+
+      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <CardContent className="p-2.5 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1.5 sm:mb-2">
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-1 sm:mr-1.5" />
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">{weeklyCompletedTasks}</div>
           </div>
-          <p className="text-xs sm:text-sm text-gray-600">{t('common.thisWeek')}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.tasksCompleted')}</p>
+          <p className="text-[10px] sm:text-xs text-green-600 font-medium">{t('common.thisWeek')}</p>
         </CardContent>
       </Card>
-      
-      <Card>
-        <CardContent className="p-3 sm:p-4 text-center">
-          <div className="flex items-center justify-center mb-2">
-            <Target className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 mr-1 sm:mr-2" />
-            <span className="text-xl sm:text-2xl font-bold">{safeStats.completedGoals}</span>
+
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <CardContent className="p-2.5 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1.5 sm:mb-2">
+            <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-1 sm:mr-1.5" />
+            <span className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-700">{safeStats.completedGoals}</span>
           </div>
-          <p className="text-xs sm:text-sm text-gray-600">{t('progressPage.goalsAchieved')}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.totalCompleted')}</p>
+          <p className="text-[10px] sm:text-xs text-blue-600 font-medium">{t('progressPage.goalsAchieved')}</p>
         </CardContent>
       </Card>
-      
-      <Card>
-        <CardContent className="p-3 sm:p-4 text-center">
-          <div className="flex items-center justify-center mb-2">
-            <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500 mr-1 sm:mr-2" />
-            <span className="text-xl sm:text-2xl font-bold">{safeStats.avgCompletionTime}</span>
+
+      <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
+        <CardContent className="p-2.5 sm:p-3 text-center">
+          <div className="flex items-center justify-center mb-1.5 sm:mb-2">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 mr-1 sm:mr-1.5" />
+            <span className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-700">{safeStats.avgCompletionTime}</span>
           </div>
-          <p className="text-xs sm:text-sm text-gray-600">{t('analytics.avgCompletionTime')}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{t('progressPage.daysPerGoal')}</p>
+          <p className="text-[10px] sm:text-xs text-purple-600 font-medium">{t('analytics.avgCompletionTime')}</p>
         </CardContent>
       </Card>
     </div>

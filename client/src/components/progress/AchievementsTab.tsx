@@ -69,44 +69,45 @@ export function AchievementsTab({ achievements }: AchievementsTabProps) {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'goals': return <Target className="h-4 w-4" />;
-      case 'tasks': return <CheckCircle2 className="h-4 w-4" />;
-      case 'streaks': return <Flame className="h-4 w-4" />;
-      case 'time': return <Calendar className="h-4 w-4" />;
-      default: return <Trophy className="h-4 w-4" />;
+      case 'goals': return <Target className="h-3 w-3" />;
+      case 'tasks': return <CheckCircle2 className="h-3 w-3" />;
+      case 'streaks': return <Flame className="h-3 w-3" />;
+      case 'time': return <Calendar className="h-3 w-3" />;
+      default: return <Trophy className="h-3 w-3" />;
     }
   };
 
   const getAchievementIcon = (achievement: Achievement) => {
     if (achievement.unlockedAt) {
-      return <Star className="h-5 w-5 text-yellow-500" />;
+      return <Star className="h-4 w-4 text-yellow-500" />;
     } else if (achievement.progress && achievement.target && achievement.progress >= achievement.target) {
-      return <Trophy className="h-5 w-5 text-green-500" />;
+      return <Trophy className="h-4 w-4 text-green-500" />;
     } else {
-      return <Lock className="h-5 w-5 text-gray-400" />;
+      return <Lock className="h-4 w-4 text-gray-400" />;
     }
   };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
-            <Award className="mr-2 h-5 w-5" />
-            {t('progressPage.achievements')}
+            <Award className="mr-2 h-4 w-4" />
+            <h2 className="text-lg font-semibold">{t('progressPage.achievements')}</h2>
           </div>
-          <div className="text-sm text-muted-foreground">
-            {stats.unlocked}/{stats.total} unlocked ({stats.completionRate}%)
+          <div className="text-xs text-muted-foreground bg-gray-100 px-2 py-1 rounded-full">
+            {stats.unlocked}/{stats.total} ({stats.completionRate}%)
           </div>
-        </CardTitle>
-        <CardDescription>{t('progressPage.achievementsSubtitle')}</CardDescription>
+        </div>
+        <p className="text-xs text-muted-foreground">{t('progressPage.achievementsSubtitle')}</p>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-2 mt-4">
+        {/* Category Filter - Mobile Optimized */}
+        <div className="flex flex-wrap gap-1.5 mt-4 overflow-x-auto pb-2">
           <Button
             variant={selectedCategory === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedCategory('all')}
+            className="flex-shrink-0 text-xs px-3 py-1.5 h-8"
           >
             All ({achievements.length})
           </Button>
@@ -116,39 +117,42 @@ export function AchievementsTab({ achievements }: AchievementsTabProps) {
               variant={selectedCategory === category ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(category)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 flex-shrink-0 text-xs px-3 py-1.5 h-8"
             >
               {getCategoryIcon(category)}
-              {category} ({achievements.filter(a => (a.category || 'general') === category).length})
+              <span className="truncate max-w-[60px]">{category}</span>
+              <span className="text-xs opacity-75">
+                ({achievements.filter(a => (a.category || 'general') === category).length})
+              </span>
             </Button>
           ))}
         </div>
       </CardHeader>
       <CardContent>
         {filteredAchievements.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No achievements found in this category</p>
+          <div className="text-center py-6 text-muted-foreground">
+            <Trophy className="h-8 w-8 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">No achievements found in this category</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             {filteredAchievements.map((achievement, index) => (
               <div
                 key={achievement.id}
-                className={`achievement-card group relative p-4 border rounded-lg transition-all duration-300 hover:shadow-md ${
+                className={`achievement-card group relative p-2.5 border rounded-lg transition-all duration-300 hover:shadow-md ${
                   achievement.unlockedAt
                     ? 'achievement-unlocked border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100'
                     : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
                 }`}
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Achievement glow effect for unlocked */}
                 {achievement.unlockedAt && (
                   <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-lg blur-sm -z-10" />
                 )}
 
-                <div className="flex items-start gap-3 mb-3">
-                  <div className={`p-2 rounded-full transition-transform group-hover:scale-110 ${
+                <div className="flex items-start gap-2.5 mb-2.5">
+                  <div className={`p-2 rounded-full transition-transform group-hover:scale-110 flex-shrink-0 ${
                     achievement.unlockedAt
                       ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg'
                       : achievement.progress && achievement.target && achievement.progress >= achievement.target
@@ -160,40 +164,41 @@ export function AchievementsTab({ achievements }: AchievementsTabProps) {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm leading-tight">{achievement.title}</h3>
-                    <p className="text-xs text-gray-600 mt-1 leading-relaxed">{achievement.description}</p>
+                    <h3 className="font-semibold text-sm leading-tight mb-1">{achievement.title}</h3>
+                    <p className="text-xs text-gray-600 leading-relaxed">{achievement.description}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   {achievement.unlockedAt ? (
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs px-2 py-0.5 h-6">
                       <Star className="h-3 w-3 mr-1" />
                       {t('progressPage.unlocked')}
                     </Badge>
                   ) : achievement.target && achievement.progress !== undefined ? (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <ProgressBar
                         value={(achievement.progress / achievement.target) * 100}
-                        className="h-2"
+                        className="h-1.5"
                       />
                       <div className="flex justify-between items-center text-xs text-gray-500">
-                        <span>{achievement.progress} / {achievement.target}</span>
-                        <span>{Math.round((achievement.progress / achievement.target) * 100)}%</span>
+                        <span className="font-medium">{achievement.progress}/{achievement.target}</span>
+                        <span className="text-xs">{Math.round((achievement.progress / achievement.target) * 100)}%</span>
                       </div>
                     </div>
                   ) : (
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 h-6">
                       <Lock className="h-3 w-3 mr-1" />
                       {t('progressPage.locked')}
                     </Badge>
                   )}
                 </div>
 
-                {/* Category indicator */}
-                <div className="absolute top-2 right-2">
-                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                {/* Category indicator - Mobile optimized */}
+                <div className="flex justify-end mt-2">
+                  <div className="flex items-center gap-1 text-xs text-gray-400 bg-white/50 rounded-full px-2 py-0.5">
                     {getCategoryIcon(achievement.category || 'general')}
+                    <span className="text-xs capitalize">{achievement.category || 'general'}</span>
                   </div>
                 </div>
               </div>
