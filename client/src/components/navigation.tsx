@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Bell, Target, Settings, User, LogOut, Home, FolderOpen, TrendingUp, BarChart3, Globe, Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Target, Settings, User, LogOut, Home, TrendingUp, BarChart3, Globe, Moon, Sun } from "lucide-react";
+;
+;
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,21 +79,24 @@ export default function Navigation() {
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors" data-testid="avatar-user">
-                  <span className="text-white text-sm font-medium">
-                    {user ? (user.firstName?.[0] || '') + (user.lastName?.[0] || '') : 'U'}
-                  </span>
+                <button className="w-8 h-8 border border-primary rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors" data-testid="avatar-user">
+                  <User className="h-4 w-4 text-primary" strokeWidth={1.5} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'User'}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email || ''}
-                    </p>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 border border-primary rounded-full flex items-center justify-center bg-primary/5">
+                      <User className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'User'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email || ''}
+                      </p>
+                    </div>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -136,8 +139,8 @@ export default function Navigation() {
                   className="cursor-pointer logout-menu-item" 
                   data-testid="menu-logout"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>{t('nav.logout')}</span>
+                  <LogOut className="mr-2 h-4 w-4 text-red-600" />
+                  <span className="text-red-600">{t('nav.logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -147,22 +150,26 @@ export default function Navigation() {
       
       {/* Bottom Navigation - Mobile Only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 z-50">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           <Link href="/" className={getBottomNavClasses("/")} data-testid="nav-mobile-dashboard">
-            <Home className="h-5 w-5 mb-1" />
+            <Home className="h-5 w-5 mb-1" strokeWidth={1.5} />
             <span className="text-xs">{t('nav.dashboard')}</span>
           </Link>
-          <Link href="/my-goals" className={getBottomNavClasses("/my-goals")} data-testid="nav-mobile-goals">
-            <FolderOpen className="h-5 w-5 mb-1" />
-            <span className="text-xs">{t('nav.myGoals')}</span>
-          </Link>
           <Link href="/progress" className={getBottomNavClasses("/progress")} data-testid="nav-mobile-progress">
-            <TrendingUp className="h-5 w-5 mb-1" />
+            <TrendingUp className="h-5 w-5 mb-1" strokeWidth={1.5} />
             <span className="text-xs">{t('nav.progress')}</span>
           </Link>
+          <Link href="/my-goals" className={getBottomNavClasses("/my-goals")} data-testid="nav-mobile-goals">
+            <Target className="h-5 w-5 mb-1" strokeWidth={1.5} />
+            <span className="text-xs">{t('nav.myGoals')}</span>
+          </Link>
           <Link href="/analytics" className={getBottomNavClasses("/analytics")} data-testid="nav-mobile-analytics">
-            <BarChart3 className="h-5 w-5 mb-1" />
+            <BarChart3 className="h-5 w-5 mb-1" strokeWidth={1.5} />
             <span className="text-xs">{t('nav.analytics')}</span>
+          </Link>
+          <Link href="/settings" className={getBottomNavClasses("/settings")} data-testid="nav-mobile-profile">
+            <User className="h-5 w-5 mb-1" strokeWidth={1.5} />
+            <span className="text-xs">{t('nav.profile')}</span>
           </Link>
         </div>
       </nav>
