@@ -256,7 +256,8 @@ export const translations = {
       goals: "goals",
       na: "N/A",
       aiPoweredInsights: "AI-Powered Insights",
-      personalizedRecommendations: "Personalized recommendations to improve your goal achievement"
+      personalizedRecommendations: "Personalized recommendations to improve your goal achievement",
+      noDataAvailable: "No data available"
     },
     // AI Breakdown
     aiBreakdown: {
@@ -642,7 +643,8 @@ export const translations = {
       goals: "目标",
       na: "无",
       aiPoweredInsights: "AI驱动的洞察",
-      personalizedRecommendations: "个性化建议以提高您的目标实现能力"
+      personalizedRecommendations: "个性化建议以提高您的目标实现能力",
+      noDataAvailable: "无可用数据"
     },
     // AI Breakdown
     aiBreakdown: {

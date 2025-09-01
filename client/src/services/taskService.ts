@@ -2,6 +2,8 @@ import { api } from '@/lib/api';
 import { useAppStore } from '@/stores/appStore';
 import { ErrorHandler } from '@/lib/errorHandling';
 import type { DailyTaskResponse, UpdateTaskRequest } from '@/lib/types';
+import { ProgressService } from './progressService';
+import { StatsService } from './statsService';
 
 export class TaskService {
   /**
@@ -39,6 +41,19 @@ export class TaskService {
       });
 
       store.setGoals(updatedGoals);
+
+      // Refresh progress stats and analytics after task update
+      // This ensures goal progress, analytics, and achievements are updated
+      try {
+        await Promise.all([
+          ProgressService.fetchProgressStats(),
+          StatsService.fetchAllAnalyticsData()
+        ]);
+      } catch (refreshError) {
+        console.warn('Failed to refresh progress data after task update:', refreshError);
+        // Don't fail the task update if refresh fails
+      }
+
       return task;
     } catch (error) {
       const message = ErrorHandler.handleAndLog(error, {

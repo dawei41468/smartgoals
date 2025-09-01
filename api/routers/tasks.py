@@ -12,7 +12,7 @@ from ..auth_utils import get_current_user
 from ..models import new_id
 from ..exceptions import NotFoundError, AuthorizationError
 from ..validation import UpdateTaskRequest, validate_object_id
-from ..db_queries import get_user_analytics_aggregated, calculate_streaks, get_achievement_definitions, create_or_update_achievement, initialize_achievement_definitions
+from ..db_queries import get_user_analytics_aggregated, calculate_streaks, get_achievement_definitions, create_or_update_achievement, initialize_achievement_definitions, update_goal_and_weekly_progress
 
 router = APIRouter()
 
@@ -75,8 +75,14 @@ async def update_task(task_id: str, updates: UpdateTaskRequest, current_user=Dep
             "createdAt": datetime.now(timezone.utc),
         })
 
+        # Update goal and weekly goal progress
+        await update_goal_and_weekly_progress(db, updated)
+
         # Check for newly unlocked achievements
         await _check_achievements_after_task_completion(db, current_user["id"])
+    elif update_dict.get("completed") is False and was_completed and updated.get("completed") is False:
+        # Task was marked as incomplete - also update progress
+        await update_goal_and_weekly_progress(db, updated)
 
     return _clean(updated)
 

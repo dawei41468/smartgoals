@@ -664,3 +664,98 @@ async def initialize_achievement_definitions(db: AsyncIOMotorDatabase) -> None:
 
         result = await db["achievement_definitions"].insert_many(definitions)
         # The definitions don't need to be returned, so we don't need to convert ObjectIds here
+
+
+async def calculate_goal_progress(db: AsyncIOMotorDatabase, goal_id: str) -> int:
+    """
+    Calculate and return the progress percentage for a goal based on completed tasks.
+    Returns an integer percentage (0-100).
+    """
+    # Count total tasks for this goal
+    total_tasks = await db["daily_tasks"].count_documents({"goalId": goal_id})
+
+    if total_tasks == 0:
+        return 0
+
+    # Count completed tasks for this goal
+    completed_tasks = await db["daily_tasks"].count_documents({
+        "goalId": goal_id,
+        "completed": True
+    })
+
+    # Calculate progress as percentage
+    progress_percentage = int(round((completed_tasks / total_tasks) * 100))
+
+    return progress_percentage
+
+
+async def calculate_weekly_goal_progress(db: AsyncIOMotorDatabase, weekly_goal_id: str) -> int:
+    """
+    Calculate and return the progress percentage for a weekly goal based on completed tasks.
+    Returns an integer percentage (0-100).
+    """
+    # Count total tasks for this weekly goal
+    total_tasks = await db["daily_tasks"].count_documents({"weeklyGoalId": weekly_goal_id})
+
+    if total_tasks == 0:
+        return 0
+
+    # Count completed tasks for this weekly goal
+    completed_tasks = await db["daily_tasks"].count_documents({
+        "weeklyGoalId": weekly_goal_id,
+        "completed": True
+    })
+
+    # Calculate progress as percentage
+    progress_percentage = int(round((completed_tasks / total_tasks) * 100))
+
+    return progress_percentage
+
+
+async def update_goal_progress(db: AsyncIOMotorDatabase, goal_id: str) -> None:
+    """
+    Recalculate and update the progress for a specific goal.
+    """
+    progress = await calculate_goal_progress(db, goal_id)
+
+    await db["goals"].update_one(
+        {"id": goal_id},
+        {
+            "$set": {
+                "progress": progress,
+                "updatedAt": datetime.now(timezone.utc)
+            }
+        }
+    )
+
+
+async def update_weekly_goal_progress(db: AsyncIOMotorDatabase, weekly_goal_id: str) -> None:
+    """
+    Recalculate and update the progress for a specific weekly goal.
+    """
+    progress = await calculate_weekly_goal_progress(db, weekly_goal_id)
+
+    await db["weekly_goals"].update_one(
+        {"id": weekly_goal_id},
+        {
+            "$set": {
+                "progress": progress,
+                "updatedAt": datetime.now(timezone.utc)
+            }
+        }
+    )
+
+
+async def update_goal_and_weekly_progress(db: AsyncIOMotorDatabase, task: dict) -> None:
+    """
+    Update progress for both the goal and weekly goal when a task is updated.
+    This should be called whenever a task's completion status changes.
+    """
+    goal_id = task.get("goalId")
+    weekly_goal_id = task.get("weeklyGoalId")
+
+    if goal_id:
+        await update_goal_progress(db, goal_id)
+
+    if weekly_goal_id:
+        await update_weekly_goal_progress(db, weekly_goal_id)
