@@ -6,8 +6,8 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Target } from 'lucide-react';
 import { WeeklyGoalsManager } from '@/components/weekly-goals/WeeklyGoalsManager';
-import { useAppStore } from '@/stores/appStore';
 import { api } from '@/lib/api';
+import { useAppStore } from '@/stores/appStore';
 import type { GoalWithBreakdownResponse } from '@/lib/types';
 
 function WeeklyGoalsPage() {
@@ -19,7 +19,7 @@ function WeeklyGoalsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { setWeeklyGoals, setDailyTasks } = useAppStore();
+  // Avoid subscribing to the entire store: use getState() when needed below
 
   useEffect(() => {
     if (!goalId) {

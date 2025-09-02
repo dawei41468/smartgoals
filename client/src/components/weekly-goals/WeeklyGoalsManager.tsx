@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Target, Calendar, BarChart3 } from 'lucide-react';
-import { useAppStore, useWeeklyGoalsForGoal, useDailyTasksForWeeklyGoal } from '@/stores/appStore';
+import { Plus, Target } from 'lucide-react';
+import { useAppStore, useWeeklyGoals } from '@/stores/appStore';
 import { api } from '@/lib/api';
 import { WeeklyGoalResponse, DailyTaskResponse } from '@/lib/types';
 import { WeeklyGoalCard } from './WeeklyGoalCard';
-import { DailyTaskCard } from './DailyTaskCard';
 import { WeeklyGoalForm } from './WeeklyGoalForm';
 import { DailyTaskForm } from './DailyTaskForm';
-import { WeeklyGoalsOverview } from './WeeklyGoalsOverview';
 
 interface WeeklyGoalsManagerProps {
   goalId: string;
@@ -19,17 +16,30 @@ interface WeeklyGoalsManagerProps {
 
 export function WeeklyGoalsManager({ goalId, goalTitle }: WeeklyGoalsManagerProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
   const [showWeeklyGoalDialog, setShowWeeklyGoalDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [editingWeeklyGoal, setEditingWeeklyGoal] = useState<WeeklyGoalResponse | null>(null);
   const [editingTask, setEditingTask] = useState<DailyTaskResponse | null>(null);
   const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] = useState<string | null>(null);
 
-  // Zustand store
-  const weeklyGoals = useWeeklyGoalsForGoal(goalId);
-  const dailyTasks = useDailyTasksForWeeklyGoal(selectedWeeklyGoalId || '');
-  const { addWeeklyGoal, updateWeeklyGoal, removeWeeklyGoal, addDailyTask, updateDailyTask, removeDailyTask } = useAppStore();
+  // Zustand store (subscribe to broad slices, filter locally to avoid unstable selectors)
+  const allWeeklyGoals = useWeeklyGoals();
+
+  // Memoized sorted data to keep render stable
+  const weeklyGoals = useMemo(
+    () => allWeeklyGoals.filter(wg => wg.goalId === goalId).slice().sort((a, b) => (a.weekNumber || 0) - (b.weekNumber || 0)),
+    [allWeeklyGoals, goalId]
+  );
+  // No overview/daily tabs; we keep only Weekly Goals grid. Task dialog is available globally below.
+  // Select individual actions to avoid subscribing to full store object
+  const addWeeklyGoal = useAppStore(s => s.addWeeklyGoal);
+  const updateWeeklyGoal = useAppStore(s => s.updateWeeklyGoal);
+  const removeWeeklyGoal = useAppStore(s => s.removeWeeklyGoal);
+  const addDailyTask = useAppStore(s => s.addDailyTask);
+  const updateDailyTask = useAppStore(s => s.updateDailyTask);
+  const removeDailyTask = useAppStore(s => s.removeDailyTask);
+  // Also subscribe to dailyTasks slice so task toggles trigger re-render
+  const allDailyTasks = useAppStore(s => s.dailyTasks);
 
   // Load weekly goals on mount
   useEffect(() => {
@@ -130,7 +140,8 @@ export function WeeklyGoalsManager({ goalId, goalTitle }: WeeklyGoalsManagerProp
   const handleUpdateDailyTask = async (taskId: string, updates: Partial<DailyTaskResponse>) => {
     try {
       setIsLoading(true);
-      const updated = await api.updateDailyTask(goalId, taskId, {
+      // Use flat task endpoint that backend provides: PATCH /api/tasks/{task_id}
+      const updated = await api.updateTask(taskId, {
         title: updates.title,
         description: updates.description,
         completed: updates.completed,
@@ -163,31 +174,87 @@ export function WeeklyGoalsManager({ goalId, goalTitle }: WeeklyGoalsManagerProp
   };
 
   const handleTaskToggle = async (taskId: string, completed: boolean) => {
-    await handleUpdateDailyTask(taskId, { completed });
+    // Optimistic store update for immediate UI feedback
+    const store = useAppStore.getState();
+    const prevTask = store.dailyTasks.find(t => t.id === taskId);
+    const prevWeekly = prevTask ? store.weeklyGoals.find(w => w.id === prevTask.weeklyGoalId) : undefined;
+    const prevGoal = prevTask ? store.goals.find(g => g.id === prevTask.goalId) : undefined;
+
+    // Helper: recompute progress for a weekly goal from current store dailyTasks
+    const recomputeWeeklyProgress = (weeklyGoalId?: string): number => {
+      if (!weeklyGoalId) return 0;
+      const tasks = store.dailyTasks.filter(t => t.weeklyGoalId === weeklyGoalId);
+      const total = tasks.length;
+      const done = tasks.filter(t => t.completed).length;
+      return total > 0 ? (done / total) * 100 : 0;
+    };
+    // Helper: recompute parent goal progress as average of its weekly goals' progress
+    const recomputeGoalProgress = (goalId?: string): number => {
+      if (!goalId) return prevGoal?.progress || 0;
+      const wgs = store.weeklyGoals.filter(w => w.goalId === goalId);
+      if (wgs.length === 0) return 0;
+      const sum = wgs.reduce((acc, w) => acc + (w.progress || 0), 0);
+      return Math.round((sum / wgs.length) * 100) / 100;
+    };
+
+    // 1) Optimistically update the task
+    store.updateDailyTask(taskId, { completed });
+    // 2) Optimistically update the weekly goal progress
+    if (prevTask?.weeklyGoalId) {
+      const newWgProgress = recomputeWeeklyProgress(prevTask.weeklyGoalId);
+      store.updateWeeklyGoal(prevTask.weeklyGoalId, { progress: newWgProgress });
+    }
+    // 3) Optimistically update the parent goal progress
+    if (prevTask?.goalId) {
+      const newGoalProgress = recomputeGoalProgress(prevTask.goalId);
+      store.updateGoal(prevTask.goalId, { progress: newGoalProgress });
+    }
+
+    try {
+      await handleUpdateDailyTask(taskId, { completed });
+      // After success, recompute again in case server made adjustments
+      if (prevTask?.weeklyGoalId) {
+        const newWgProgress = recomputeWeeklyProgress(prevTask.weeklyGoalId);
+        store.updateWeeklyGoal(prevTask.weeklyGoalId, { progress: newWgProgress });
+      }
+      if (prevTask?.goalId) {
+        const newGoalProgress = recomputeGoalProgress(prevTask.goalId);
+        store.updateGoal(prevTask.goalId, { progress: newGoalProgress });
+      }
+    } catch (error) {
+      // Rollback on error
+      if (prevTask) {
+        store.updateDailyTask(taskId, { completed: prevTask.completed });
+      }
+      if (prevWeekly?.id) {
+        store.updateWeeklyGoal(prevWeekly.id, { progress: prevWeekly.progress });
+      }
+      if (prevGoal?.id) {
+        store.updateGoal(prevGoal.id, { progress: prevGoal.progress });
+      }
+      throw error;
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Target className="h-6 w-6" />
             Weekly Goals
           </h2>
-          {goalTitle && (
-            <p className="text-muted-foreground mt-1">For goal: {goalTitle}</p>
-          )}
         </div>
 
         <div className="flex items-center gap-2">
           <Dialog open={showWeeklyGoalDialog} onOpenChange={setShowWeeklyGoalDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Weekly Goal
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="w-[95vw] sm:max-w-lg p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle>
                   {editingWeeklyGoal ? 'Edit Weekly Goal' : 'Create Weekly Goal'}
@@ -216,162 +283,84 @@ export function WeeklyGoalsManager({ goalId, goalTitle }: WeeklyGoalsManagerProp
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="weekly-goals" className="flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            Weekly Goals ({weeklyGoals.length})
-          </TabsTrigger>
-          <TabsTrigger value="daily-tasks" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Daily Tasks
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <WeeklyGoalsOverview
-            weeklyGoals={weeklyGoals}
-            goalId={goalId}
-            onWeeklyGoalClick={(weeklyGoalId: string) => {
-              setSelectedWeeklyGoalId(weeklyGoalId);
-              setActiveTab('daily-tasks');
+      {/* Top-level Daily Task dialog (accessible from Weekly Goals grid) */}
+      <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
+        <DialogContent className="w-[95vw] sm:max-w-md p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTask ? 'Edit Daily Task' : 'Create Daily Task'}
+            </DialogTitle>
+          </DialogHeader>
+          <DailyTaskForm
+            task={editingTask}
+            weeklyGoalId={selectedWeeklyGoalId || ''}
+            onSubmit={editingTask
+              ? (data: {
+                  title: string;
+                  description?: string;
+                  day: number;
+                  date?: string;
+                  priority?: 'low' | 'medium' | 'high';
+                  estimatedHours?: number;
+                }) => handleUpdateDailyTask(editingTask.id!, data)
+              : async (data: {
+                  title: string;
+                  description?: string;
+                  day: number;
+                  date?: string;
+                  priority?: 'low' | 'medium' | 'high';
+                  estimatedHours?: number;
+                }) => {
+                  if (!selectedWeeklyGoalId) return;
+                  await handleCreateDailyTask(selectedWeeklyGoalId, data);
+                }
+            }
+            onCancel={() => {
+              setShowTaskDialog(false);
+              setEditingTask(null);
             }}
+            isLoading={isLoading}
           />
-        </TabsContent>
+        </DialogContent>
+      </Dialog>
 
-        <TabsContent value="weekly-goals" className="space-y-4">
-          {weeklyGoals.length === 0 ? (
-            <div className="text-center py-8">
-              <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Weekly Goals Yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Break down your goal into manageable weekly milestones.
-              </p>
-              <Button onClick={() => setShowWeeklyGoalDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Weekly Goal
-              </Button>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {weeklyGoals.map((weeklyGoal) => (
-                <WeeklyGoalCard
-                  key={weeklyGoal.id}
-                  weeklyGoal={weeklyGoal}
-                  onEdit={(wg) => {
-                    setEditingWeeklyGoal(wg);
-                    setShowWeeklyGoalDialog(true);
-                  }}
-                  onDelete={handleDeleteWeeklyGoal}
-                  onAddTask={(weeklyGoalId) => {
-                    setSelectedWeeklyGoalId(weeklyGoalId);
-                    setEditingTask(null);
-                    setShowTaskDialog(true);
-                  }}
-                  onTaskToggle={handleTaskToggle}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="daily-tasks" className="space-y-4">
-          {selectedWeeklyGoalId ? (
-            <>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">
-                  Tasks for Week {weeklyGoals.find(wg => wg.id === selectedWeeklyGoalId)?.weekNumber}
-                </h3>
-
-                <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Task
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingTask ? 'Edit Daily Task' : 'Create Daily Task'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <DailyTaskForm
-                      task={editingTask}
-                      weeklyGoalId={selectedWeeklyGoalId}
-                      onSubmit={editingTask
-                        ? (data: {
-                            title: string;
-                            description?: string;
-                            day: number;
-                            date?: string;
-                            priority?: 'low' | 'medium' | 'high';
-                            estimatedHours?: number;
-                          }) => handleUpdateDailyTask(editingTask.id!, data)
-                        : (data: {
-                            title: string;
-                            description?: string;
-                            day: number;
-                            date?: string;
-                            priority?: 'low' | 'medium' | 'high';
-                            estimatedHours?: number;
-                          }) => handleCreateDailyTask(selectedWeeklyGoalId, data)
-                      }
-                      onCancel={() => {
-                        setShowTaskDialog(false);
-                        setEditingTask(null);
-                      }}
-                      isLoading={isLoading}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {dailyTasks.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Daily Tasks Yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Add specific daily tasks to achieve this weekly goal.
-                  </p>
-                  <Button onClick={() => setShowTaskDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Task
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {dailyTasks.map((task) => (
-                    <DailyTaskCard
-                      key={task.id}
-                      task={task}
-                      onToggle={handleTaskToggle}
-                      onEdit={(task) => {
-                        setEditingTask(task);
-                        setShowTaskDialog(true);
-                      }}
-                      onDelete={handleDeleteDailyTask}
-                      showWeekContext={true}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Select a Weekly Goal</h3>
-              <p className="text-muted-foreground">
-                Choose a weekly goal from the overview to view its daily tasks.
-              </p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Weekly Goals grid only */}
+      {weeklyGoals.length === 0 ? (
+        <div className="text-center py-8">
+          <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium mb-2">No Weekly Goals Yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Break down your goal into manageable weekly milestones.
+          </p>
+          <Button className="w-full sm:w-auto" onClick={() => setShowWeeklyGoalDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Your First Weekly Goal
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {weeklyGoals.map((weeklyGoal) => (
+            <WeeklyGoalCard
+              key={weeklyGoal.id}
+              weeklyGoal={{
+                ...weeklyGoal,
+                tasks: allDailyTasks.filter(t => t.weeklyGoalId === weeklyGoal.id)
+              }}
+              onEdit={(wg) => {
+                setEditingWeeklyGoal(wg);
+                setShowWeeklyGoalDialog(true);
+              }}
+              onDelete={handleDeleteWeeklyGoal}
+              onAddTask={(weeklyGoalId) => {
+                setSelectedWeeklyGoalId(weeklyGoalId);
+                setEditingTask(null);
+                setShowTaskDialog(true);
+              }}
+              onTaskToggle={handleTaskToggle}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

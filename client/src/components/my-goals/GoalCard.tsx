@@ -24,6 +24,7 @@ interface GoalCardProps {
   onEditGoal: (goal: GoalWithBreakdown) => void;
   onStatusChange: (goalId: string, status: Goal["status"]) => Promise<void>;
   onDeleteGoal: (goalId: string) => void;
+  displayProgress?: number;
 }
 
 export const GoalCard = memo(function GoalCard({
@@ -32,7 +33,8 @@ export const GoalCard = memo(function GoalCard({
   onToggleExpand,
   onEditGoal,
   onStatusChange,
-  onDeleteGoal
+  onDeleteGoal,
+  displayProgress
 }: GoalCardProps) {
   const { t } = useLanguage();
   const { showConfirmDialog, ConfirmDialog } = useConfirmDialog();
@@ -131,9 +133,9 @@ export const GoalCard = memo(function GoalCard({
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <div className="flex items-center gap-1 text-xs text-gray-600 flex-shrink-0">
                 <TrendingUp className="h-3 w-3" />
-                <span className="font-medium">{goal.progress || 0}%</span>
+                <span className="font-medium">{typeof displayProgress === 'number' ? displayProgress.toFixed(1) : (goal.progress || 0)}%</span>
               </div>
-              <Progress value={goal.progress || 0} className="flex-1 h-2" />
+              <Progress value={typeof displayProgress === 'number' ? displayProgress : (goal.progress || 0)} className="flex-1 h-2" />
             </div>
 
             <div className="flex gap-1 flex-shrink-0">

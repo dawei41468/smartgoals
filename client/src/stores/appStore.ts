@@ -281,14 +281,11 @@ export const useGoalsByCategory = () => useAppStore((state) => {
   }, {} as Record<string, GoalResponse[]>);
 });
 
-export const useWeeklyGoalsForGoal = (goalId: string) => useAppStore((state) => 
-  state.weeklyGoals.filter(wg => wg.goalId === goalId).sort((a, b) => (a.weekNumber || 0) - (b.weekNumber || 0))
-);
+export const useWeeklyGoalsForGoal = (goalId: string) =>
+  useAppStore((state) => state.weeklyGoals.filter((wg) => wg.goalId === goalId));
 
-export const useDailyTasksForWeeklyGoal = (weeklyGoalId: string) => useAppStore((state) =>
-  state.dailyTasks.filter(task => task.weeklyGoalId === weeklyGoalId).sort((a, b) => (a.day || 0) - (b.day || 0))
-);
+export const useDailyTasksForWeeklyGoal = (weeklyGoalId: string) =>
+  useAppStore((state) => state.dailyTasks.filter((task) => task.weeklyGoalId === weeklyGoalId));
 
-export const useDailyTasksForGoal = (goalId: string) => useAppStore((state) =>
-  state.dailyTasks.filter(task => task.goalId === goalId)
-);
+export const useDailyTasksForGoal = (goalId: string) =>
+  useAppStore((state) => state.dailyTasks.filter(task => task.goalId === goalId));

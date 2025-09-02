@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Navigation from "@/components/navigation";
@@ -11,7 +11,7 @@ import { GoalFilters } from "@/components/my-goals/GoalFilters";
 import { GoalEmptyState } from "@/components/my-goals/GoalEmptyState";
 import { GoalCard } from "@/components/my-goals/GoalCard";
 import { GoalDetailsModal } from "@/components/my-goals/GoalDetailsModal";
-import { useGoals, useIsLoading } from "@/stores/appStore";
+import { useGoals, useIsLoading, useAppStore, useDailyTasks } from "@/stores/appStore";
 import { GoalService } from "@/services/goalService";
 import { TaskService } from "@/services/taskService";
 import type { Goal, GoalWithBreakdown, InsertGoal, AIBreakdownRequest, AIBreakdownResponse } from "@/lib/schema";
@@ -67,6 +67,45 @@ function MyGoals() {
     fetchGoalsWithBreakdown();
   }, [toast]);
 
+  // Compute live goal progress: prefer embedded weeklyGoals.tasks; fallback to store dailyTasks
+  const allDailyTasks = useDailyTasks();
+  const goalProgressById = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const goal of goals) {
+      const wgs = (goal as any).weeklyGoals || [];
+      let usedEmbedded = false;
+      if (wgs.length) {
+        const perWg: number[] = [];
+        for (const wg of wgs) {
+          const tasks = (wg as any).tasks || [];
+          if (!tasks.length) continue;
+          usedEmbedded = true;
+          const done = tasks.filter((t: any) => t.completed).length;
+          perWg.push((done / tasks.length) * 100);
+        }
+        if (perWg.length) {
+          const avg = perWg.reduce((a, b) => a + b, 0) / perWg.length;
+          map[goal.id] = Math.round(avg * 10) / 10; // 1 decimal
+          continue;
+        }
+      }
+      // Fallback to dailyTasks if no embedded data was used
+      const tasks = allDailyTasks.filter(t => t.goalId === goal.id);
+      if (!tasks.length) { map[goal.id] = goal.progress || 0; continue; }
+      const byWg: Record<string, { total: number; done: number }> = {};
+      for (const t of tasks) {
+        const wgId = t.weeklyGoalId || 'ungrouped';
+        if (!byWg[wgId]) byWg[wgId] = { total: 0, done: 0 };
+        byWg[wgId].total += 1;
+        if (t.completed) byWg[wgId].done += 1;
+      }
+      const groups = Object.values(byWg);
+      const avg = groups.length ? (groups.reduce((acc, g) => acc + (g.total ? (g.done / g.total) * 100 : 0), 0) / groups.length) : 0;
+      map[goal.id] = Math.round(avg * 10) / 10; // 1 decimal
+    }
+    return map;
+  }, [goals, allDailyTasks]);
+
   // Goal actions using services - memoized to prevent unnecessary re-renders
   const handleStatusChange = useCallback(async (goalId: string, status: Goal["status"]) => {
     try {
@@ -103,15 +142,90 @@ function MyGoals() {
 
   const handleTaskToggle = useCallback(async (taskId: string, completed: boolean) => {
     setIsTogglingTask(true);
+    const store = useAppStore.getState();
+    const prevGoalsSnapshot = store.goals;
+    const prevTask = store.dailyTasks.find(t => t.id === taskId);
+    const prevWeekly = prevTask ? store.weeklyGoals.find(w => w.id === prevTask.weeklyGoalId) : undefined;
+    const prevGoal = prevTask ? store.goals.find(g => g.id === prevTask.goalId) : undefined;
+
+    // Helpers to recompute progress using current store state
+    const recomputeWeeklyProgress = (weeklyGoalId?: string): number => {
+      if (!weeklyGoalId) return 0;
+      const tasks = store.dailyTasks.filter(t => t.weeklyGoalId === weeklyGoalId);
+      const total = tasks.length;
+      const done = tasks.filter(t => t.completed).length;
+      return total > 0 ? (done / total) * 100 : 0;
+    };
+    const recomputeGoalProgress = (goalId?: string): number => {
+      if (!goalId) return prevGoal?.progress || 0;
+      // Derive from daily tasks grouped by weeklyGoalId for this goal
+      const tasks = store.dailyTasks.filter(t => t.goalId === goalId);
+      if (tasks.length === 0) return 0;
+      const byWg: Record<string, { total: number; done: number }> = {};
+      for (const t of tasks) {
+        const wgId = t.weeklyGoalId || 'ungrouped';
+        if (!byWg[wgId]) byWg[wgId] = { total: 0, done: 0 };
+        byWg[wgId].total += 1;
+        if (t.completed) byWg[wgId].done += 1;
+      }
+      const groups = Object.values(byWg);
+      const avg = groups.length ? (groups.reduce((acc, g) => acc + (g.total ? (g.done / g.total) * 100 : 0), 0) / groups.length) : 0;
+      return Math.round(avg * 100) / 100;
+    };
+
+    // Optimistic updates: task, weekly goal, parent goal, and embedded task within goals' breakdown
+    store.updateDailyTask(taskId, { completed });
+    // Update embedded tasks inside goals so GoalCard progress can derive immediately
+    const optimisticGoals = prevGoalsSnapshot.map((goal) => {
+      const anyWgHasTask = (goal as any).weeklyGoals?.some((wg: any) => wg.tasks?.some((t: any) => t.id === taskId));
+      if (!anyWgHasTask) return goal;
+      const goalWithBreakdown = goal as any;
+      return {
+        ...goalWithBreakdown,
+        weeklyGoals: goalWithBreakdown.weeklyGoals?.map((wg: any) => ({
+          ...wg,
+          tasks: wg.tasks?.map((t: any) => t.id === taskId ? { ...t, completed } : t) || []
+        })) || []
+      };
+    });
+    store.setGoals(optimisticGoals as any);
+    if (prevTask?.weeklyGoalId) {
+      const newWgProgress = recomputeWeeklyProgress(prevTask.weeklyGoalId);
+      store.updateWeeklyGoal(prevTask.weeklyGoalId, { progress: newWgProgress });
+    }
+    if (prevTask?.goalId) {
+      const newGoalProgress = recomputeGoalProgress(prevTask.goalId);
+      store.updateGoal(prevTask.goalId, { progress: newGoalProgress });
+    }
+
     try {
       await TaskService.updateTask(taskId, { completed });
+      // Re-sync progress after server update
+      if (prevTask?.weeklyGoalId) {
+        const newWgProgress = recomputeWeeklyProgress(prevTask.weeklyGoalId);
+        store.updateWeeklyGoal(prevTask.weeklyGoalId, { progress: newWgProgress });
+      }
+      if (prevTask?.goalId) {
+        const newGoalProgress = recomputeGoalProgress(prevTask.goalId);
+        store.updateGoal(prevTask.goalId, { progress: newGoalProgress });
+      }
     } catch (error) {
+      // Rollback on error
       toast({
         title: "Error",
         description: "Failed to update task",
         variant: "destructive",
       });
-      throw error; // Re-throw so optimistic update can handle rollback
+      if (prevTask) {
+        store.updateDailyTask(taskId, { completed: prevTask.completed });
+      }
+      if (prevWeekly?.id) {
+        store.updateWeeklyGoal(prevWeekly.id, { progress: prevWeekly.progress });
+      }
+      if (prevGoal?.id) {
+        store.updateGoal(prevGoal.id, { progress: prevGoal.progress });
+      }
+      throw error;
     } finally {
       // Reset the flag after a short delay to allow state to settle
       setTimeout(() => setIsTogglingTask(false), 100);
@@ -167,9 +281,26 @@ function MyGoals() {
     setCurrentView("wizard");
   };
 
-  const handleToggleExpand = (goalId: string) => {
-    setExpandedGoal(expandedGoal === goalId ? null : goalId);
-  };
+  // Decide default tab per goal based on data availability
+  const getDefaultTabForGoal = useCallback((goal: GoalWithBreakdown): string => {
+    const hasAnyTasks = goal.weeklyGoals?.some(wg => (wg as any).tasks?.length) || false;
+    if (hasAnyTasks) return "tasks";
+    const hasMilestones = (goal.weeklyGoals?.length || 0) > 0;
+    if (hasMilestones) return "milestones";
+    return "smart";
+  }, []);
+
+  // Create a toggle handler bound to a specific goal to set default tab on first open
+  const makeToggleExpand = useCallback((goal: GoalWithBreakdown) => {
+    return (goalId: string) => {
+      const willExpand = expandedGoal !== goalId;
+      setExpandedGoal(willExpand ? goalId : null);
+      if (willExpand && !goalTabs[goalId]) {
+        const def = getDefaultTabForGoal(goal);
+        setGoalTabs(prev => ({ ...prev, [goalId]: def }));
+      }
+    };
+  }, [expandedGoal, goalTabs, getDefaultTabForGoal]);
 
   const handleTabChange = (goalId: string, tabValue: string) => {
     setGoalTabs(prev => ({
@@ -276,16 +407,17 @@ function MyGoals() {
                 <GoalCard
                   goal={goal}
                   isExpanded={expandedGoal === goal.id}
-                  onToggleExpand={handleToggleExpand}
+                  onToggleExpand={makeToggleExpand(goal)}
                   onEditGoal={handleEditGoal}
                   onStatusChange={handleStatusChange}
                   onDeleteGoal={handleDeleteGoal}
+                  displayProgress={goalProgressById[goal.id] ?? goal.progress ?? 0}
                 />
                 {expandedGoal === goal.id && (
                   <GoalDetailsModal
                     goal={goal}
                     onTaskToggle={handleTaskToggle}
-                    activeTab={goalTabs[goal.id] || "smart"}
+                    activeTab={goalTabs[goal.id] || getDefaultTabForGoal(goal)}
                     onTabChange={(tabValue: string) => handleTabChange(goal.id, tabValue)}
                   />
                 )}

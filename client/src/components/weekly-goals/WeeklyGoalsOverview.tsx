@@ -2,40 +2,49 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Target, Calendar, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Target, TrendingUp, Clock, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { WeeklyGoalResponse } from '@/lib/types';
 import { getStatusColor } from '@/lib/goalUtils';
-import { formatDateRange } from '@/lib/dateUtils';
 
 interface WeeklyGoalsOverviewProps {
   weeklyGoals: WeeklyGoalResponse[];
   goalId: string;
   onWeeklyGoalClick?: (weeklyGoalId: string) => void;
+  // Optional mapping to override progress values using up-to-date task completion
+  progressByWeeklyGoal?: Record<string, number>;
 }
 
 export function WeeklyGoalsOverview({
   weeklyGoals,
   goalId,
-  onWeeklyGoalClick
+  onWeeklyGoalClick,
+  progressByWeeklyGoal
 }: WeeklyGoalsOverviewProps) {
+  // Derive status from progress to ensure consistency
+  const normalized = weeklyGoals.map((wg) => {
+    const overridden = progressByWeeklyGoal?.[wg.id!];
+    const progress = typeof overridden === 'number' ? overridden : (typeof wg.progress === 'number' ? wg.progress : 0);
+    const derivedStatus = progress >= 100 ? 'completed' : progress > 0 ? 'active' : (wg.status || 'pending');
+    return { ...wg, __derivedStatus: derivedStatus as 'pending' | 'active' | 'completed', __progress: progress };
+  });
+
   // Calculate overall progress
-  const totalGoals = weeklyGoals.length;
-  const completedGoals = weeklyGoals.filter(wg => wg.status === 'completed').length;
-  const activeGoals = weeklyGoals.filter(wg => wg.status === 'active').length;
-  const pendingGoals = weeklyGoals.filter(wg => wg.status === 'pending').length;
+  const totalGoals = normalized.length;
+  const completedGoals = normalized.filter(wg => wg.__derivedStatus === 'completed').length;
+  const activeGoals = normalized.filter(wg => wg.__derivedStatus === 'active').length;
+  const pendingGoals = normalized.filter(wg => wg.__derivedStatus === 'pending').length;
 
   const overallProgress = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
 
   // Calculate total estimated hours across all goals
-  const totalEstimatedHours = weeklyGoals.reduce((total, wg) => {
+  const totalEstimatedHours = normalized.reduce((total, wg) => {
     // This would need to be calculated from tasks, but for now we'll use a placeholder
-    return total + (wg.progress || 0);
+    return total + (wg.__progress || 0);
   }, 0);
 
   // Get upcoming deadlines
-  const upcomingDeadlines = weeklyGoals
-    .filter(wg => wg.endDate && wg.status !== 'completed')
+  const upcomingDeadlines = normalized
+    .filter(wg => wg.endDate && wg.__derivedStatus !== 'completed')
     .sort((a, b) => new Date(a.endDate!).getTime() - new Date(b.endDate!).getTime())
     .slice(0, 3);
 
@@ -73,7 +82,7 @@ export function WeeklyGoalsOverview({
   return (
     <div className="space-y-6">
       {/* Overall Progress Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -138,7 +147,7 @@ export function WeeklyGoalsOverview({
                 {completedGoals} of {totalGoals} weekly goals completed
               </span>
               <span className="text-sm font-medium">
-                {Math.round(overallProgress)}%
+                {overallProgress.toFixed(1)}%
               </span>
             </div>
             <Progress value={overallProgress} className="h-3" />
@@ -146,55 +155,7 @@ export function WeeklyGoalsOverview({
         </CardContent>
       </Card>
 
-      {/* Weekly Goals List */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {weeklyGoals.map((weeklyGoal) => (
-          <Card
-            key={weeklyGoal.id}
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => onWeeklyGoalClick?.(weeklyGoal.id!)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg">Week {weeklyGoal.weekNumber}</CardTitle>
-                  <h3 className="font-medium mt-1 truncate">{weeklyGoal.title}</h3>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={getStatusColor(weeklyGoal.status || 'pending')}
-                >
-                  {weeklyGoal.status || 'pending'}
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              {weeklyGoal.description && (
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {weeklyGoal.description}
-                </p>
-              )}
-
-              {weeklyGoal.startDate && weeklyGoal.endDate && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                  <Calendar className="h-4 w-4" />
-                  <span>{formatDateRange(weeklyGoal.startDate, weeklyGoal.endDate)}</span>
-                </div>
-              )}
-
-              {/* Progress indicator - placeholder for now */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">
-                  {weeklyGoal.progress || 0}%
-                </span>
-              </div>
-              <Progress value={weeklyGoal.progress || 0} className="h-1.5 mt-1" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Removed per-goal list to avoid duplication with Milestones tab */}
 
       {/* Upcoming Deadlines */}
       {upcomingDeadlines.length > 0 && (
