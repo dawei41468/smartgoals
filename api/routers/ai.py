@@ -96,20 +96,22 @@ async def _generate_chunk(client, payload: AIBreakdownRequest, start_week: int, 
     """Generate a chunk of weeks for the breakdown"""
     chunk_weeks = end_week - start_week + 1
     
-    prompt = f"""
-Create a weekly breakdown for weeks {start_week} to {end_week} of this {total_weeks}-week SMART(ER) goal:
+    # We now generate one week at a time. Keep the response format as a list with a single week item.
+    prompt = (
+        """
+Create a weekly breakdown for week {start_week} of this {total_weeks}-week SMART(ER) goal:
 
-- Specific: {payload.specific}
-- Measurable: {payload.measurable}
-- Achievable: {payload.achievable}
-- Relevant: {payload.relevant}
-- Time-bound: {payload.timebound}
-- Exciting: {payload.exciting}
-- Deadline: {payload.deadline}
+- Specific: {specific}
+- Measurable: {measurable}
+- Achievable: {achievable}
+- Relevant: {relevant}
+- Time-bound: {timebound}
+- Exciting: {exciting}
+- Deadline: {deadline}
 
-Context: This is part {start_week//2 + 1} of a {total_weeks}-week plan. Focus on weeks {start_week}-{end_week}.
+Context: This is week {start_week} of a {total_weeks}-week plan. Focus only on week {start_week}.
 
-{_get_detail_instructions(detail_level)}
+{detail_instructions}
 
 Return in this exact JSON format:
 {{
@@ -131,6 +133,18 @@ Return in this exact JSON format:
   ]
 }}
 """
+    ).format(
+        start_week=start_week,
+        total_weeks=total_weeks,
+        specific=payload.specific,
+        measurable=payload.measurable,
+        achievable=payload.achievable,
+        relevant=payload.relevant,
+        timebound=payload.timebound,
+        exciting=payload.exciting,
+        deadline=payload.deadline,
+        detail_instructions=_get_detail_instructions(detail_level),
+    )
     
     resp = await client.chat.completions.create(
         model="deepseek-chat",
@@ -169,7 +183,7 @@ async def generate_breakdown_stream(payload: AIBreakdownRequest, current_user=De
         client = AsyncOpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_BASE_URL, timeout=60.0)
         
         try:
-            chunk_size = 2
+            chunk_size = 1
             all_weekly_goals = []
             
             # Send initial progress
@@ -181,7 +195,11 @@ async def generate_breakdown_stream(payload: AIBreakdownRequest, current_user=De
                 chunk_number += 1
                 
                 # Send progress update
-                yield f"data: {json.dumps({'type': 'progress', 'message': f'Generating weeks {start_week}-{end_week}...', 'currentChunk': chunk_number})}\n\n"
+                if start_week == end_week:
+                    msg = f"Generating week {start_week}..."
+                else:
+                    msg = f"Generating weeks {start_week}-{end_week}..."
+                yield f"data: {json.dumps({'type': 'progress', 'message': msg, 'currentChunk': chunk_number})}\n\n"
                 
                 chunk_data = await _generate_chunk(client, payload, start_week, end_week, total_weeks, detail_level)
                 
@@ -217,13 +235,16 @@ async def generate_breakdown(payload: AIBreakdownRequest, current_user=Depends(g
     client = AsyncOpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_BASE_URL, timeout=60.0)
     
     try:
-        # Generate in chunks of 2 weeks for faster processing
-        chunk_size = 2
+        # Generate in chunks of 1 week to provide smoother streaming/progress
+        chunk_size = 1
         all_weekly_goals = []
         
         for start_week in range(1, total_weeks + 1, chunk_size):
             end_week = min(start_week + chunk_size - 1, total_weeks)
-            print(f"Generating weeks {start_week}-{end_week}...")
+            if start_week == end_week:
+                print(f"Generating week {start_week}...")
+            else:
+                print(f"Generating weeks {start_week}-{end_week}...")
             
             chunk_data = await _generate_chunk(client, payload, start_week, end_week, total_weeks)
             
@@ -337,10 +358,18 @@ async def save_complete_goal(body: dict, current_user=Depends(get_current_user),
     now = datetime.now(timezone.utc)
     # create main goal
     goal_id = new_id()
+    # Ensure robust title/description fallbacks similar to /api/routers/goals.py
+    raw_title = (goal_data.get("title") or "").strip()
+    specific_text = (goal_data.get("specific") or "").strip()
+    derived_title = raw_title if len(raw_title) >= 3 else (specific_text[:50] + ("..." if len(specific_text) > 50 else ""))
+    safe_description = goal_data.get("description") or specific_text
     goal_doc = {
         **goal_data,
         "id": goal_id,
         "userId": current_user["id"],
+        # Override with safe fallbacks
+        "title": derived_title,
+        "description": safe_description,
         "progress": 0,
         "status": "active",
         "createdAt": now,

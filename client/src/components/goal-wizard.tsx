@@ -343,7 +343,7 @@ export default function GoalWizard({ onClose, onProceedToBreakdown, editGoal }: 
             </div>
 
             <GenerationProgressIndicator
-              isGenerating={generateBreakdownMutation.isPending}
+              isGenerating={isGenerating}
               streamingProgress={streamingProgress}
             />
 

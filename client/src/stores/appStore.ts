@@ -50,6 +50,8 @@ export interface Achievement {
 export interface DataState {
   goals: GoalResponse[];
   activities: ActivityResponse[];
+  weeklyGoals: WeeklyGoalResponse[];
+  dailyTasks: DailyTaskResponse[];
   stats: {
     activeGoalsCount: number;
     completedTasksCount: number;
@@ -81,6 +83,18 @@ export interface AppActions {
   setActivities: (activities: ActivityResponse[]) => void;
   addActivity: (activity: ActivityResponse) => void;
   
+  // Weekly Goals Actions
+  setWeeklyGoals: (weeklyGoals: WeeklyGoalResponse[]) => void;
+  addWeeklyGoal: (weeklyGoal: WeeklyGoalResponse) => void;
+  updateWeeklyGoal: (id: string, updates: Partial<WeeklyGoalResponse>) => void;
+  removeWeeklyGoal: (id: string) => void;
+  
+  // Daily Tasks Actions
+  setDailyTasks: (tasks: DailyTaskResponse[]) => void;
+  addDailyTask: (task: DailyTaskResponse) => void;
+  updateDailyTask: (id: string, updates: Partial<DailyTaskResponse>) => void;
+  removeDailyTask: (id: string) => void;
+  
   // Stats Actions
   setStats: (stats: DataState['stats']) => void;
   
@@ -110,6 +124,8 @@ const initialState: UIState & DataState = {
   // Data State
   goals: [],
   activities: [],
+  weeklyGoals: [],
+  dailyTasks: [],
   stats: null,
   // Analytics State
   analyticsSummary: null,
@@ -163,6 +179,46 @@ export const useAppStore = create<AppStore>()(
           'addActivity'
         ),
         
+        // Weekly Goals Actions
+        setWeeklyGoals: (weeklyGoals) => set({ weeklyGoals }, false, 'setWeeklyGoals'),
+        addWeeklyGoal: (weeklyGoal) => set(
+          (state) => ({ weeklyGoals: [...state.weeklyGoals, weeklyGoal] }),
+          false,
+          'addWeeklyGoal'
+        ),
+        updateWeeklyGoal: (id, updates) => set(
+          (state) => ({
+            weeklyGoals: state.weeklyGoals.map(wg => wg.id === id ? { ...wg, ...updates } : wg)
+          }),
+          false,
+          'updateWeeklyGoal'
+        ),
+        removeWeeklyGoal: (id) => set(
+          (state) => ({ weeklyGoals: state.weeklyGoals.filter(wg => wg.id !== id) }),
+          false,
+          'removeWeeklyGoal'
+        ),
+        
+        // Daily Tasks Actions
+        setDailyTasks: (tasks) => set({ dailyTasks: tasks }, false, 'setDailyTasks'),
+        addDailyTask: (task) => set(
+          (state) => ({ dailyTasks: [...state.dailyTasks, task] }),
+          false,
+          'addDailyTask'
+        ),
+        updateDailyTask: (id, updates) => set(
+          (state) => ({
+            dailyTasks: state.dailyTasks.map(task => task.id === id ? { ...task, ...updates } : task)
+          }),
+          false,
+          'updateDailyTask'
+        ),
+        removeDailyTask: (id) => set(
+          (state) => ({ dailyTasks: state.dailyTasks.filter(task => task.id !== id) }),
+          false,
+          'removeDailyTask'
+        ),
+        
         // Stats Actions
         setStats: (stats) => set({ stats }, false, 'setStats'),
         
@@ -195,6 +251,8 @@ export const useAppStore = create<AppStore>()(
 // Selectors for better performance
 export const useGoals = () => useAppStore((state) => state.goals);
 export const useActivities = () => useAppStore((state) => state.activities);
+export const useWeeklyGoals = () => useAppStore((state) => state.weeklyGoals);
+export const useDailyTasks = () => useAppStore((state) => state.dailyTasks);
 export const useStats = () => useAppStore((state) => state.stats);
 export const useCurrentView = () => useAppStore((state) => state.currentView);
 export const useIsLoading = () => useAppStore((state) => state.isLoading);
@@ -223,17 +281,14 @@ export const useGoalsByCategory = () => useAppStore((state) => {
   }, {} as Record<string, GoalResponse[]>);
 });
 
-export const useGoalStats = () => useAppStore((state) => {
-  const total = state.goals.length;
-  const active = state.goals.filter(g => g.status === 'active').length;
-  const completed = state.goals.filter(g => g.status === 'completed').length;
-  const paused = state.goals.filter(g => g.status === 'paused').length;
-  
-  return {
-    total,
-    active,
-    completed,
-    paused,
-    completionRate: total > 0 ? (completed / total) * 100 : 0,
-  };
-});
+export const useWeeklyGoalsForGoal = (goalId: string) => useAppStore((state) => 
+  state.weeklyGoals.filter(wg => wg.goalId === goalId).sort((a, b) => (a.weekNumber || 0) - (b.weekNumber || 0))
+);
+
+export const useDailyTasksForWeeklyGoal = (weeklyGoalId: string) => useAppStore((state) =>
+  state.dailyTasks.filter(task => task.weeklyGoalId === weeklyGoalId).sort((a, b) => (a.day || 0) - (b.day || 0))
+);
+
+export const useDailyTasksForGoal = (goalId: string) => useAppStore((state) =>
+  state.dailyTasks.filter(task => task.goalId === goalId)
+);

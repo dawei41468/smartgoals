@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Dashboard from "@/pages/dashboard";
 import MyGoals from "@/pages/my-goals";
+import WeeklyGoals from "@/pages/weekly-goals";
 import Progress from "@/pages/progress";
 import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/auth/register" component={Register} />
       <Route path="/" component={Dashboard} />
       <Route path="/my-goals" component={MyGoals} />
+      <Route path="/weekly-goals/:goalId" component={WeeklyGoals} />
       <Route path="/progress" component={Progress} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/settings" component={Settings} />

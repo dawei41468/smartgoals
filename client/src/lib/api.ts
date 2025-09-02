@@ -6,6 +6,7 @@ import type {
   UserResponse,
   ActivityResponse,
   GoalWithBreakdownResponse,
+  WeeklyGoalResponse,
   CreateGoalRequest,
   UpdateGoalRequest,
   UpdateTaskRequest,
@@ -21,6 +22,7 @@ import {
   validateGoalWithBreakdownResponse,
   validateProgressStats,
   validateAchievement,
+  validateWeeklyGoalResponse,
 } from "./types";
 
 export const api = {
@@ -84,6 +86,49 @@ export const api = {
   // Tasks
   updateTask: async (id: string, updates: UpdateTaskRequest): Promise<DailyTaskResponse> => {
     return validatedApiRequest("PATCH", `/api/tasks/${id}`, updates, validateDailyTaskResponse);
+  },
+
+  // Weekly Goals Management
+  createWeeklyGoal: async (goalId: string, weeklyGoalData: {
+    title: string;
+    description?: string;
+    weekNumber: number;
+    startDate: string;
+    endDate: string;
+  }): Promise<WeeklyGoalResponse> => {
+    return validatedApiRequest("POST", `/api/goals/${goalId}/weekly-goals`, weeklyGoalData, validateWeeklyGoalResponse);
+  },
+
+  updateWeeklyGoal: async (goalId: string, weeklyGoalId: string, updates: Partial<{
+    title: string;
+    description?: string;
+    status: 'pending' | 'active' | 'completed';
+  }>): Promise<WeeklyGoalResponse> => {
+    return validatedApiRequest("PATCH", `/api/goals/${goalId}/weekly-goals/${weeklyGoalId}`, updates, validateWeeklyGoalResponse);
+  },
+
+  deleteWeeklyGoal: async (goalId: string, weeklyGoalId: string): Promise<void> => {
+    await apiRequest("DELETE", `/api/goals/${goalId}/weekly-goals/${weeklyGoalId}`);
+  },
+
+  // Daily Tasks Management
+  createDailyTask: async (goalId: string, weeklyGoalId: string, taskData: {
+    title: string;
+    description?: string;
+    day: number;
+    date?: string;
+    priority?: 'low' | 'medium' | 'high';
+    estimatedHours?: number;
+  }): Promise<DailyTaskResponse> => {
+    return validatedApiRequest("POST", `/api/goals/${goalId}/weekly-goals/${weeklyGoalId}/tasks`, taskData, validateDailyTaskResponse);
+  },
+
+  updateDailyTask: async (goalId: string, taskId: string, updates: UpdateTaskRequest): Promise<DailyTaskResponse> => {
+    return validatedApiRequest("PATCH", `/api/goals/${goalId}/tasks/${taskId}`, updates, validateDailyTaskResponse);
+  },
+
+  deleteDailyTask: async (goalId: string, taskId: string): Promise<void> => {
+    await apiRequest("DELETE", `/api/goals/${goalId}/tasks/${taskId}`);
   },
 
   // Analytics
